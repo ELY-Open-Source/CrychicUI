@@ -70,8 +70,9 @@ health, home, marketing, content, desktop, geo · 6 gallery · 7 cmd/gallery
 
 ## Gallery entry
 
-Each component adds one `Entry` in `gallery/demos_<category>*.go`: ID, Name, Category, Summary, Demo. The demo reports
-every event through `log`. The code panel shows the demo function's own source.
+Each component adds one `Entry` in `gallery/demos_<category>*.go`: ID, Name, Category, Summary, Demo. Each file's list
+joins `entries` in `gallery/demos.go`. The demo is a top-level function and reports every event through `log`. The
+code panel shows the demo function's own source, cut from the embedded `demos*.go`.
 
 ## Tests
 
