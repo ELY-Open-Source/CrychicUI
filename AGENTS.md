@@ -74,6 +74,7 @@ every event through `log`. The code panel shows the demo function's own source.
 
 - `go vet ./... && go tool mygo vet ./... && go test ./...` and `GOOS=js GOARCH=wasm go vet ./...` before done.
 - Behavior tests drive `ui.NewTester` and assert values; interactive tests assert the cue in `sound.Recent()`.
+  Test binaries start muted, so tests make no sound.
   Advance the tester's clock; never sleep.
 - Web: `npm install && npm test` in `web/` builds `web/dist` and runs Playwright on a local server;
   `BASE_URL=<url> npx playwright test` checks a deployed site. Tests read `window.__crychic`.
