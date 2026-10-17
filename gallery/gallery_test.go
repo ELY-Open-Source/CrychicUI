@@ -183,3 +183,25 @@ func TestCategories(t *testing.T) {
 		t.Errorf("categories = %d, want 38", len(Categories))
 	}
 }
+
+func TestEveryEntry(t *testing.T) {
+	for i, e := range Entries() {
+		if i > 0 && e.ID <= Entries()[i-1].ID {
+			t.Errorf("%s: ID %d out of order", e.Name, e.ID)
+		}
+		if _, ok := category(e.Category); !ok {
+			t.Errorf("%s: unknown category %q", e.Name, e.Category)
+		}
+		if !strings.Contains(e.Code(), "func "+funcName(e.Demo)+"(") {
+			t.Errorf("%s: code panel lacks its demo", e.Name)
+		}
+		for _, dark := range []bool{false, true} {
+			a, tt := open(e.Path())
+			tt.SetDark(dark)
+			tt.Advance(3 * time.Second)
+			if a.Snapshot().Page != e.Path() || !tt.HasText(e.Name) || tt.FramePending() {
+				t.Errorf("%s dark=%v: page %q, pending %v", e.Name, dark, a.Snapshot().Page, tt.FramePending())
+			}
+		}
+	}
+}

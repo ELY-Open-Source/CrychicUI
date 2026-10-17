@@ -51,8 +51,8 @@ health, home, marketing, content, desktop, geo · 6 gallery · 7 cmd/gallery
 ## Components
 
 - `func Name(c *ui.Context, required...) ui.Element`; optional knobs in a final `NameOptions` (never variadic). Zero
-  options give the default look. Containers take content as a final `func()`. Several actions: a `NameResult` of
-  named `ui.Element` fields.
+  options give the default look. Containers take content as a final `func()`, after any options. Several actions:
+  named `ui.Element` results, root first; `mygo vet` forbids elements in structs.
 - Value-bound components take `*T` and call `SetChanged` on the returned element when input changes it.
 - Stateful components get their key from the caller (`c.Key`); private state lives in `ui.Local`.
 - Every component moves: pose, color animation, transition, content transition, keyframes, loop or animated drawing.
@@ -63,6 +63,9 @@ health, home, marketing, content, desktop, geo · 6 gallery · 7 cmd/gallery
 - Fail fast: panic on programmer errors. Never swallow an error.
 - Composites log state changes with `kit.Log`. Never log typed text or secrets: log counts.
 - No element or parts stored across builds; no goroutine touches elements. `go tool mygo vet ./...` passes.
+- A component deciding from laid-out sizes (`LayoutBounds`, a `ScrollState`'s `Max`) calls `kit.Settle` with the
+  values it used; paint rebuilds when layout disagrees. Arrivals on first build use `kit.Arrive`; `Enter` only
+  runs inside a shown parent.
 - Files under 500 lines (lock files exempt). Comments one line, ten words at most, only when needed. No dead
   code, no versioned APIs.
 - A category file holds one exported component, named in snake case (`KPIGrid` in `kpi_grid.go`), or private

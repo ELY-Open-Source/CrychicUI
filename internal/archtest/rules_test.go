@@ -107,21 +107,29 @@ func signature(fn *ast.FuncDecl) string {
 		ps[0].Names[0].Name != "c" {
 		return "must take c *ui.Context first"
 	}
+	last := ps[len(ps)-1]
+	contentLast := typeString(last.Type) == "func()" && len(last.Names) == 1
 	for i, p := range ps {
 		ts := typeString(p.Type)
 		if _, ok := p.Type.(*ast.Ellipsis); ok {
 			return "must not be variadic"
 		}
-		if strings.HasSuffix(ts, "Options") && (ts != name+"Options" || i != len(ps)-1 || len(p.Names) > 1) {
+		if strings.HasSuffix(ts, "Options") && (ts != name+"Options" || i != len(ps)-1 && !(i == len(ps)-2 && contentLast) ||
+			len(p.Names) > 1) {
 			return "options must be a final " + name + "Options"
 		}
 	}
 	rs := fn.Type.Results
-	if rs == nil || rs.NumFields() != 1 {
-		return "must return one value"
+	if rs == nil || rs.NumFields() == 0 {
+		return "must return ui.Element"
 	}
-	if r := typeString(rs.List[0].Type); r != "ui.Element" && r != name+"Result" {
-		return "must return ui.Element or " + name + "Result"
+	for _, r := range rs.List {
+		if typeString(r.Type) != "ui.Element" {
+			return "must return only ui.Element results"
+		}
+	}
+	if rs.NumFields() > 1 && (len(rs.List[0].Names) == 0 || rs.List[0].Names[0].Name != "root") {
+		return "several results must be named, root first"
 	}
 	return ""
 }
@@ -134,6 +142,10 @@ func typeString(e ast.Expr) string {
 		return "*" + typeString(t.X)
 	case *ast.SelectorExpr:
 		return typeString(t.X) + "." + t.Sel.Name
+	case *ast.FuncType:
+		if t.Params.NumFields() == 0 && t.Results.NumFields() == 0 {
+			return "func()"
+		}
 	}
 	return fmt.Sprintf("%T", e)
 }

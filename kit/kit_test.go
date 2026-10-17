@@ -200,3 +200,63 @@ func TestLog(t *testing.T) {
 		t.Errorf("log = %q", s)
 	}
 }
+
+func TestArriveFadesIn(t *testing.T) {
+	for _, delay := range []time.Duration{0, 200 * time.Millisecond} {
+		var bg, fill ui.Color
+		tt := ui.NewTester(func(c *ui.Context) {
+			th := c.Theme()
+			bg, fill = th.Background, th.Accent
+			ui.Column(c).Size(100, 100).Background(bg).Children(func() {
+				Arrive(ui.Box(c).Size(100, 100).Background(fill), ui.Pose{Fade: 1}, delay)
+			})
+		}, 100, 100)
+		if !tt.FramePending() || !near(tt.Image(), 50, 50, bg) {
+			t.Fatalf("delay %v: box shown before it arrived", delay)
+		}
+		tt.Advance(delay + 100*time.Millisecond)
+		if near(tt.Image(), 50, 50, bg) || near(tt.Image(), 50, 50, fill) {
+			t.Errorf("delay %v: box not mid-fade", delay)
+		}
+		tt.Advance(time.Second)
+		if tt.FramePending() || !near(tt.Image(), 50, 50, fill) {
+			t.Errorf("delay %v: box did not settle", delay)
+		}
+	}
+}
+
+func TestShade(t *testing.T) {
+	if s := Shade(0.5); s.R != 0 || s.G != 0 || s.B != 0 || s.A != 128 {
+		t.Errorf("Shade(0.5) = %+v", s)
+	}
+}
+
+func TestSettleRebuildsWhenLayoutMoves(t *testing.T) {
+	var w, prev, used float32 = 40, 0, 0
+	builds := 0
+	tt := ui.NewTester(func(c *ui.Context) {
+		builds++
+		b := ui.Box(c).FillWidth().MaxWidth(w).Height(10)
+		used = prev
+		prev = b.LayoutBounds().W
+		Settle(c, b, []float32{used}, func() []float32 { return []float32{b.LayoutBounds().W} })
+	}, 100, 100)
+	if builds != 3 || used != 40 {
+		t.Fatalf("first frame: %d builds used %v, want 3 using 40", builds, used)
+	}
+	builds = 0
+	tt.Frame()
+	if builds != 1 {
+		t.Errorf("steady layout ran %d builds, want 1", builds)
+	}
+	builds, w = 0, 60
+	tt.Frame()
+	if builds != 3 || used != 60 {
+		t.Errorf("changed layout: %d builds used %v, want 3 using 60", builds, used)
+	}
+	builds = 0
+	tt.SetSize(50, 100)
+	if builds != 3 || used != 50 {
+		t.Errorf("resize: %d builds used %v, want 3 using 50", builds, used)
+	}
+}

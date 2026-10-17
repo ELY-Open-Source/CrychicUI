@@ -3,6 +3,7 @@ package kit
 
 import (
 	"log/slog"
+	"slices"
 	"time"
 
 	"git.zacharyzhang.com/ZacharyZhang-NY/CrychicUI/sound"
@@ -25,6 +26,18 @@ func Lift(e ui.Element) ui.Element {
 		p.Y = -2
 	}
 	return e.AnimatePose(p, ui.Snappy)
+}
+
+// Arrive eases from a pose to rest on first build.
+func Arrive(e ui.Element, from ui.Pose, delay time.Duration) ui.Element {
+	p := e.Keyframes("crychic.arrive", []ui.Keyframe{{Value: 1}, {At: 200 * time.Millisecond, Value: 0, Ease: ui.EaseOut}},
+		ui.KeyframeOptions{Delay: delay})
+	s := from.Scale
+	if s == 0 {
+		s = 1
+	}
+	k := 1 + (s-1)*p
+	return e.Translate(from.X*p, from.Y*p).Scale(k, k).Opacity(1 - from.Fade*p)
 }
 
 var popSpring = ui.Bouncy
@@ -66,8 +79,20 @@ func Changed(e ui.Element, cue sound.Cue) bool {
 func Card(c *ui.Context) ui.Element {
 	t := c.Theme()
 	return ui.Column(c).Background(t.Background).Border(1, t.Border).Radius(t.Radius).
-		Shadow(0, 1, 3, 0, ui.RGBA(0, 0, 0, 0.06))
+		Shadow(0, 1, 3, 0, Shade(0.06))
 }
+
+// Settle rebuilds when e's laid-out read differs from used.
+func Settle(c *ui.Context, e ui.Element, used []float32, read func() []float32) {
+	e.DrawOver(func(*ui.Painter, ui.Rect) {
+		if !slices.Equal(read(), used) {
+			c.Invalidate()
+		}
+	})
+}
+
+// Shade is black at alpha a, for shadows.
+func Shade(a float32) ui.Color { return ui.RGBA(0, 0, 0, a) }
 
 // Muted returns secondary text.
 func Muted(c *ui.Context, s string) ui.Element {
