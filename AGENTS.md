@@ -27,7 +27,7 @@ kit/                helpers shared by three or more components
 <category>/         one component per file, package = folder name
 gallery/            registry, demos (demos_<category>*.go), app view, tests
 cmd/gallery/        one main for desktop and browser; hook_js.go for tests
-web/                shell, build.sh, deploy.sh, wrangler.jsonc, _headers, Playwright tests
+web/                shell, build.mjs, deploy.mjs, wrangler.jsonc, _headers, Playwright tests
 internal/archtest/  import and file rules
 ```
 
@@ -86,7 +86,8 @@ code panel shows the demo function's own source, cut from the embedded `demos*.g
 ## Deploy
 
 - `npm run deploy` in `web/` (clean tree only): live page beside new files first, then the new page tested on its
-  preview URL, promoted, and tested live at https://crychicui.zhangyanghaha0407.workers.dev.
+  preview URL, promoted, and tested live at https://crychicui.zhangyanghaha0407.workers.dev. The Worker's first
+  deploy is `npm run deploy -- --first`.
 - Rollback: `npx wrangler rollback <version-id>` in `web/`.
 
 ## Review

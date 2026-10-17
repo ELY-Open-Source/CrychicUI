@@ -1,0 +1,14 @@
+{
+  "name": "crychicui-web",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node build.mjs",
+    "test": "node build.mjs && playwright test",
+    "deploy": "node deploy.mjs"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.64.0",
+    "wrangler": "4.149.0"
+  }
+}

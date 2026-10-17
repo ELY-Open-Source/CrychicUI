@@ -50,6 +50,7 @@ func (a *App) View(c *ui.Context) {
 	}
 	ui.Column(c).Fill().Children(func() {
 		a.topBar(c)
+		ui.Divider(c)
 		ui.Row(c).Grow(1).AlignItems(ui.Stretch).Children(func() {
 			a.sidebar(c)
 			ui.Column(c).Grow(1).Children(func() {
@@ -60,6 +61,7 @@ func (a *App) View(c *ui.Context) {
 				a.pages(c)
 			})
 		})
+		ui.Divider(c)
 		a.statusBar(c)
 	})
 	a.mu.Lock()

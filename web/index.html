@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>CrychicUI</title>
+<meta name="description" content="1500 MyGo native UI components with motion and sound, drawn by Go compiled to WebAssembly.">
+<meta name="color-scheme" content="light dark">
+<style>
+  html, body { margin: 0; height: 100%; overflow: hidden; background: light-dark(#ffffff, #18181b); }
+  #mygo { position: fixed; inset: 0; }
+  #loading { position: fixed; inset: 0; display: grid; place-items: center; font: 14px system-ui, sans-serif;
+    color: light-dark(#71717a, #a1a1aa); }
+  #track { width: 240px; height: 4px; margin-top: 12px; border-radius: 999px; background: light-dark(#f4f4f5, #27272a); }
+  #fill { width: 0; height: 100%; border-radius: 999px; background: #2563eb; transition: width 120ms ease-out; }
+  #over { position: fixed; inset: 0; display: grid; place-items: center; padding: 24px;
+    background: light-dark(#ffffff, #18181b); color: light-dark(#18181b, #f4f4f5); font: 14px system-ui, sans-serif; }
+  #over[hidden] { display: none; }
+  #over h1 { font-size: 20px; margin: 0 0 12px; }
+  #over pre { max-width: 80vw; max-height: 50vh; overflow: auto; white-space: pre-wrap; padding: 12px;
+    border: 1px solid light-dark(#d9d9de, #3f3f46); border-radius: 6px; font: 12px ui-monospace, monospace; }
+  #over button { font: inherit; padding: 6px 14px; border: 0; border-radius: 6px; background: #2563eb; color: #fff;
+    cursor: pointer; }
+</style>
+</head>
+<body>
+<div id="mygo"></div>
+<div id="loading" role="progressbar" aria-label="Loading" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+  <div>Loading CrychicUI<div id="track"><div id="fill"></div></div></div>
+</div>
+<div id="over" hidden role="alertdialog" aria-labelledby="over-title">
+  <div><h1 id="over-title">The gallery stopped</h1><pre id="why"></pre><button id="reload">Reload</button></div>
+</div>
+<noscript>This gallery runs Go compiled to WebAssembly. Turn on JavaScript to see it.</noscript>
+<script src="__EXEC__"></script>
+<script src="__MAIN__"></script>
+</body>
+</html>

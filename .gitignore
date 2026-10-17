@@ -7,6 +7,7 @@ docs/prd/
 docs/acceptance.md
 /gallery.exe
 /web/dist/
+/web/.wrangler/
 /web/node_modules/
 /web/test-results/
 /web/playwright-report/

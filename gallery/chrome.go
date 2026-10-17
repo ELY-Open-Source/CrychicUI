@@ -15,8 +15,7 @@ var modes = []string{"System", "Light", "Dark"}
 
 func (a *App) topBar(c *ui.Context) {
 	t := c.Theme()
-	ui.Row(c).FillWidth().Gap(t.Space(3)).Padding(t.Space(2), t.Space(4)).AlignItems(ui.Center).
-		Border(1, t.Border).Children(func() {
+	ui.Row(c).FillWidth().Gap(t.Space(3)).Padding(t.Space(2), t.Space(4)).AlignItems(ui.Center).Children(func() {
 		ui.Text(c, "CrychicUI").Bold().FontSize(t.Rem(1.15))
 		ui.Spacer(c)
 		ui.SearchField(c, &a.query).Label("Search components").Width(240)
@@ -56,17 +55,16 @@ func (a *App) sidebar(c *ui.Context) {
 
 func (a *App) statusBar(c *ui.Context) {
 	t := c.Theme()
-	ui.Row(c).FillWidth().Gap(t.Space(3)).Padding(t.Space(1.5), t.Space(4)).Border(1, t.Border).
-		Children(func() {
-			kit.Muted(c, "Log")
-			ui.Text(c, strings.Join(a.events, "  ·  ")).MaxLines(1).Grow(1).Shrink(1)
-			kit.Muted(c, "Cues")
-			var cues []string
-			for _, q := range recentCues(8) {
-				cues = append(cues, q.String())
-			}
-			ui.Text(c, strings.Join(cues, " ")).MaxLines(1)
-		})
+	ui.Row(c).FillWidth().Gap(t.Space(3)).Padding(t.Space(1.5), t.Space(4)).Children(func() {
+		kit.Muted(c, "Log")
+		ui.Text(c, strings.Join(a.events, "  ·  ")).MaxLines(1).Grow(1).Shrink(1)
+		kit.Muted(c, "Cues")
+		var cues []string
+		for _, q := range recentCues(8) {
+			cues = append(cues, q.String())
+		}
+		ui.Text(c, strings.Join(cues, " ")).MaxLines(1)
+	})
 }
 
 func recentCues(n int) []sound.Cue {
