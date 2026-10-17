@@ -1,10 +1,5 @@
 // Streams the wasm, runs Go, shows crashes.
 const stderr = []
-const write = globalThis.fs.writeSync.bind(globalThis.fs)
-globalThis.fs.writeSync = (fd, buf) => {
-  if (fd === 2) stderr.push(new TextDecoder().decode(buf))
-  return write(fd, buf)
-}
 
 function crash (msg) {
   const why = [msg, stderr.join('').slice(-4000)].filter(Boolean).join('\n\n')
@@ -15,6 +10,12 @@ function crash (msg) {
 document.getElementById('reload').onclick = () => location.reload()
 
 async function load () {
+  if (!globalThis.Go || !globalThis.fs) throw new Error('wasm_exec.js did not load.')
+  const write = globalThis.fs.writeSync.bind(globalThis.fs)
+  globalThis.fs.writeSync = (fd, buf) => {
+    if (fd === 2) stderr.push(new TextDecoder().decode(buf))
+    return write(fd, buf)
+  }
   const t0 = performance.now()
   const res = await fetch('__WASM__')
   if (!res.ok) throw new Error(`${res.url}: HTTP ${res.status}`)

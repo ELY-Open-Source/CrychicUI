@@ -11,8 +11,18 @@ test.beforeEach(async ({ page }) => {
   page.on('pageerror', e => seen.push(e.message))
 })
 
+// Every page ends free of errors, unless it expects them.
 test.afterEach(async ({ page }) => {
+  if (test.info().annotations.some(a => a.type === 'expects errors')) return
   expect(pageErrors.get(page)).toEqual([])
+})
+
+test('a missing loader shows the crash overlay', async ({ page }) => {
+  test.info().annotations.push({ type: 'expects errors' })
+  await page.route('**/a/wasm_exec.*.js', route => route.abort())
+  await page.goto('/')
+  await expect(page.locator('#over')).toBeVisible()
+  await expect(page.locator('#why')).toContainText('wasm_exec.js did not load.')
 })
 
 async function open (page, hash = '') {
