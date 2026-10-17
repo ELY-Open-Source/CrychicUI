@@ -63,7 +63,10 @@ health, home, marketing, content, desktop, geo · 6 gallery · 7 cmd/gallery
 - Fail fast: panic on programmer errors. Never swallow an error.
 - Composites log state changes with `kit.Log`. Never log typed text or secrets: log counts.
 - No element or parts stored across builds; no goroutine touches elements. `go tool mygo vet ./...` passes.
-- Files under 500 lines. Comments one line, ten words at most, only when needed. No dead code, no versioned APIs.
+- Files under 500 lines (lock files exempt). Comments one line, ten words at most, only when needed. No dead
+  code, no versioned APIs.
+- A category file holds one exported component, named in snake case (`KPIGrid` in `kpi_grid.go`), or private
+  helpers only.
 
 ## Gallery entry
 
