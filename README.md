@@ -7,7 +7,7 @@ MyGo 原生 UI 的 Go 组件库。沿用 MyGo 自己的外观：锌灰底色，�
 ## 安装
 
 ```sh
-go get git.zacharyzhang.com/ZacharyZhang-NY/CrychicUI
+go get github.com/ELY-Open-Source/CrychicUI
 ```
 
 要求 Go 1.27.1 与 MyGo v0.5.5。

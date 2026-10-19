@@ -1,7 +1,7 @@
 # AGENTS.md
 
 CrychicUI: 1500 components for MyGo native UI, in MyGo's own look, with motion and sound cues. Go module
-`git.zacharyzhang.com/ZacharyZhang-NY/CrychicUI`.
+`github.com/ELY-Open-Source/CrychicUI`.
 Progress truth: `TASKS.md`. Requirements: `PRD.md` and `docs/prd/catalog-*.md` (both local, not committed).
 
 ## Stack
@@ -13,7 +13,7 @@ Progress truth: `TASKS.md`. Requirements: `PRD.md` and `docs/prd/catalog-*.md` (
 | Sound | `github.com/egoist/mygo/audio`, cues synthesized in `sound` |
 | Icons | Lucide (ISC), `icon/svg` |
 | Web | `cmd/gallery` built for `js/wasm`; MyGo's browser backend draws it with WebGL 2 |
-| Hosting | Cloudflare Workers static assets from `web/dist`; code on Gitea `git.zacharyzhang.com` |
+| Hosting | Cloudflare Workers static assets from `web/dist`; code on GitHub `github.com/ELY-Open-Source/CrychicUI` |
 
 Read MyGo source before using an API: `go list -m -f '{{.Dir}}' github.com/egoist/mygo` (`ui/*.go`, `ui/doc.go`,
 `docs/ui/*.md`, `audio/*.go`). Never guess.
@@ -102,5 +102,5 @@ missing enhancements.
 
 ## Secrets
 
-The Gitea token lives only in the environment (`GITEA_TOKEN`). Never write it to a file, a remote URL, a commit or a
-log. Pushes pass it as an HTTP header.
+Tokens (GitHub, Cloudflare) live only in the environment. Never write one to a file, a remote URL, a commit or a
+log.
