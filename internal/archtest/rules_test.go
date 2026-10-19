@@ -11,7 +11,7 @@ import (
 	"unicode"
 )
 
-const module = "git.zacharyzhang.com/ZacharyZhang-NY/CrychicUI"
+const module = "github.com/ELY-Open-Source/CrychicUI"
 
 var tiers = map[string]int{"sound": 0, "icon": 0, "kit": 1, "gallery": 6, "cmd/gallery": 7}
 

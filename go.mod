@@ -1,4 +1,4 @@
-module git.zacharyzhang.com/ZacharyZhang-NY/CrychicUI
+module github.com/ELY-Open-Source/CrychicUI
 
 go 1.27.1
 

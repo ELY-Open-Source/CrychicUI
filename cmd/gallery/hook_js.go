@@ -5,8 +5,8 @@ package main
 import (
 	"syscall/js"
 
-	"git.zacharyzhang.com/ZacharyZhang-NY/CrychicUI/gallery"
-	"git.zacharyzhang.com/ZacharyZhang-NY/CrychicUI/sound"
+	"github.com/ELY-Open-Source/CrychicUI/gallery"
+	"github.com/ELY-Open-Source/CrychicUI/sound"
 )
 
 // hook exports window.__crychic for Playwright.

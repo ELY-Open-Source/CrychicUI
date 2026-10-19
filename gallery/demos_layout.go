@@ -3,8 +3,8 @@ package gallery
 import (
 	"fmt"
 
-	"git.zacharyzhang.com/ZacharyZhang-NY/CrychicUI/kit"
-	"git.zacharyzhang.com/ZacharyZhang-NY/CrychicUI/layout"
+	"github.com/ELY-Open-Source/CrychicUI/kit"
+	"github.com/ELY-Open-Source/CrychicUI/layout"
 	"github.com/egoist/mygo/ui"
 )
 

@@ -6,8 +6,8 @@ import (
 	"testing/fstest"
 	"time"
 
-	"git.zacharyzhang.com/ZacharyZhang-NY/CrychicUI/icon"
-	"git.zacharyzhang.com/ZacharyZhang-NY/CrychicUI/sound"
+	"github.com/ELY-Open-Source/CrychicUI/icon"
+	"github.com/ELY-Open-Source/CrychicUI/sound"
 	"github.com/egoist/mygo/ui"
 )
 

@@ -2,6 +2,6 @@
 
 package main
 
-import "git.zacharyzhang.com/ZacharyZhang-NY/CrychicUI/gallery"
+import "github.com/ELY-Open-Source/CrychicUI/gallery"
 
 func hook(*gallery.App) {}

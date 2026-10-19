@@ -1,7 +1,7 @@
 package layout
 
 import (
-	"git.zacharyzhang.com/ZacharyZhang-NY/CrychicUI/kit"
+	"github.com/ELY-Open-Source/CrychicUI/kit"
 	"github.com/egoist/mygo/ui"
 )
 

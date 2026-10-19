@@ -4,7 +4,7 @@ package main
 import (
 	"log"
 
-	"git.zacharyzhang.com/ZacharyZhang-NY/CrychicUI/gallery"
+	"github.com/ELY-Open-Source/CrychicUI/gallery"
 	"github.com/egoist/mygo"
 	"github.com/egoist/mygo/ui"
 )
