@@ -199,6 +199,9 @@ func TestEveryEntry(t *testing.T) {
 			a, tt := open(e.Path())
 			tt.SetDark(dark)
 			tt.Advance(3 * time.Second)
+			if e.Name != "LoadingDots" && tt.FramePending() {
+				tt.Advance(time.Second)
+			}
 			pending := tt.FramePending()
 			if a.Snapshot().Page != e.Path() || !tt.HasText(e.Name) || (e.Name != "LoadingDots" && pending) {
 				t.Errorf("%s dark=%v: page %q, pending %v", e.Name, dark, a.Snapshot().Page, pending)

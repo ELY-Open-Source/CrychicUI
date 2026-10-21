@@ -14,9 +14,10 @@ import (
 var files embed.FS
 
 var (
-	names = list()
-	mu    sync.Mutex
-	cache = map[string]*ui.SVG{}
+	names       = list()
+	mu          sync.Mutex
+	cache       = map[string]*ui.SVG{}
+	filledCache = map[string]*ui.SVG{}
 )
 
 func list() []string {
@@ -48,6 +49,26 @@ func Must(name string) *ui.SVG {
 	}
 	s := ui.MustParseSVG(data)
 	cache[name] = s
+	return s
+}
+
+// Filled returns a filled Lucide icon by name.
+func Filled(name string) *ui.SVG {
+	mu.Lock()
+	defer mu.Unlock()
+	if s, ok := filledCache[name]; ok {
+		return s
+	}
+	if _, ok := slices.BinarySearch(names, name); !ok {
+		panic("icon: no icon " + name)
+	}
+	data, err := files.ReadFile("svg/" + name + ".svg")
+	if err != nil {
+		panic(err)
+	}
+	data = []byte(strings.Replace(string(data), `fill="none"`, `fill="currentColor"`, 1))
+	s := ui.MustParseSVG(data)
+	filledCache[name] = s
 	return s
 }
 

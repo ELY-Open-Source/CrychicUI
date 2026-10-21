@@ -1,6 +1,7 @@
 package icon
 
 import (
+	"image"
 	"slices"
 	"testing"
 
@@ -61,4 +62,36 @@ func TestIconDraws(t *testing.T) {
 	if inked < 20 {
 		t.Errorf("check drew %d pixels", inked)
 	}
+}
+
+func TestFilledHeart(t *testing.T) {
+	outline := ui.Render(func(c *ui.Context) { ui.Icon(c, Must("heart")).Size(24, 24) }, 32, 32, 1)
+	filled := ui.Render(func(c *ui.Context) { ui.Icon(c, Filled("heart")).Size(24, 24) }, 32, 32, 1)
+	count := func(img *image.RGBA) int {
+		bg, n := img.RGBAAt(0, 0), 0
+		for y := range 32 {
+			for x := range 32 {
+				if img.RGBAAt(x, y) != bg {
+					n++
+				}
+			}
+		}
+		return n
+	}
+	if count(filled) <= count(outline) {
+		t.Errorf("filled %d pixels, outline %d", count(filled), count(outline))
+	}
+	if Filled("heart") != Filled("heart") {
+		t.Error("Filled parsed heart twice")
+	}
+}
+
+func TestFilledDoesNotAliasNames(t *testing.T) {
+	Filled("heart")
+	defer func() {
+		if recover() == nil {
+			t.Error("Must accepted a filled cache key")
+		}
+	}()
+	Must("filled:heart")
 }
