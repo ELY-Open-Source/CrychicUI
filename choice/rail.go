@@ -1,0 +1,78 @@
+package choice
+
+import (
+	"math"
+
+	"github.com/ELY-Open-Source/CrychicUI/kit"
+	"github.com/ELY-Open-Source/CrychicUI/sound"
+	"github.com/egoist/mygo/ui"
+)
+
+// rail draws slider track, fill and knob at frac.
+func rail(c *ui.Context, s ui.Element, frac float32, vertical bool, extra func(knob ui.Element)) ui.Element {
+	t := c.Theme()
+	kw, kh, h, side := t.Space(5), t.Space(4), t.Space(1.5), t.Space(5)
+	if vertical {
+		kw, kh = kh, kw
+		s.Width(side).PaddingY(kh / 2)
+	} else {
+		s.Height(side).MinWidth(t.Space(20)).PaddingX(kw / 2)
+	}
+	_, _, held := s.Dragged()
+	rtl := c.Direction() == ui.RightToLeft
+	return s.Children(func() {
+		ui.Box(c).Fill().Children(func() {
+			tr := ui.Box(c).Absolute().Radius(h / 2).Background(t.Border)
+			fill := ui.Box(c).Absolute().Radius(h / 2).Background(t.Accent)
+			knob := ui.Box(c).Absolute().Size(kw, kh).Radius(min(kw, kh)/2).Background(t.AccentText).Border(1, t.Border).
+				Shadow(0, 1.5, 7, 0, kit.Shade(0.1))
+			if vertical {
+				x := (side - h) / 2
+				tr.Top(0).Bottom(0).Left(x).Width(h)
+				fill.Bottom(0).Left(x).Width(h).HeightPercent(frac * 100)
+				knob.BottomPercent(frac*100).Left((side-kw)/2).Translate(0, kh/2)
+			} else {
+				y := (side - h) / 2
+				tr.Start(0).End(0).Top(y).Height(h)
+				fill.Start(0).Top(y).Height(h).WidthPercent(frac * 100)
+				dx := -kw / 2
+				if rtl {
+					dx = kw / 2
+				}
+				knob.StartPercent(frac*100).Top((side-kh)/2).Translate(dx, 0)
+			}
+			pose := ui.Pose{}
+			if held {
+				pose.Scale = 1.2
+			}
+			knob.AnimatePose(pose, ui.Snappy)
+			if extra != nil {
+				knob.Children(func() { extra(knob) })
+			}
+		})
+	})
+}
+
+// fraction is where v sits from lo to hi.
+func fraction(v, lo, hi float64) float32 {
+	return float32(max(0, min(1, (v-lo)/(hi-lo))))
+}
+
+// released plays Tick after a drag or key move.
+func released(s ui.Element, component string, value float64) {
+	moved := ui.Local(s, "moved", func() bool { return false })
+	*moved = *moved || s.Changed()
+	if _, _, held := s.Dragged(); *moved && !held {
+		*moved = false
+		sound.Play(sound.Tick)
+		kit.Log(component, "changed", "value", value)
+	}
+}
+
+// sliderArgs panics on a bad slider range or step.
+func sliderArgs(component, label string, value *float64, lo, hi, step float64) {
+	if label == "" || value == nil || !(lo < hi) || math.IsInf(lo, 0) || math.IsInf(hi, 0) ||
+		!(*value >= lo && *value <= hi) || !(step >= 0) || math.IsInf(step, 0) {
+		panic("choice: " + component + " needs a label, finite lo < hi, a value within and a finite step")
+	}
+}
