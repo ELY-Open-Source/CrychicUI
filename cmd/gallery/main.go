@@ -2,6 +2,8 @@
 package main
 
 import (
+	"flag"
+	"fmt"
 	"log"
 
 	"github.com/ELY-Open-Source/CrychicUI/gallery"
@@ -10,6 +12,12 @@ import (
 )
 
 func main() {
+	stats := flag.Bool("stats", false, "print registry statistics")
+	flag.Parse()
+	if *stats {
+		fmt.Printf("%d %d\n", len(gallery.Entries()), len(gallery.Categories))
+		return
+	}
 	app := gallery.New("/")
 	hook(app)
 	mygo.App.WhenReady(func() {

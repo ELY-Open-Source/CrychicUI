@@ -16,7 +16,8 @@ function fail (msg) {
 }
 
 const run = (cmd, env = {}) => execSync(cmd, { cwd: web, stdio: 'inherit', env: { ...process.env, ...env } })
-const out = cmd => execSync(cmd, { cwd: web, encoding: 'utf8' })
+const root = dirname(web)
+const out = (cmd, cwd = web) => execSync(cmd, { cwd, encoding: 'utf8' })
 
 // patient retries check every 2 s for a minute.
 async function patient (what, check) {
@@ -49,6 +50,14 @@ const live = async main => (await fetch(site + '/', { cache: 'no-store' }).then(
 if (out('git status --porcelain').trim()) fail('commit first; each version names its commit')
 run('node build.mjs')
 const rev = out('git rev-parse --short HEAD').trim()
+const stats = out('go run ./cmd/gallery -stats', root).trim().split(/\s+/).map(Number)
+if (stats.length !== 2 || !stats.every(Number.isFinite) || stats.some(v => v <= 0)) fail('gallery -stats printed no counts')
+const [components, categories] = stats
+const testEnv = base => ({
+  BASE_URL: base,
+  EXPECTED_COMPONENTS: String(components),
+  EXPECTED_CATEGORIES: String(categories),
+})
 const mainOf = html => html.match(/src="(a\/main\.[0-9a-f]+\.js)"/)?.[1]
 const main = mainOf(readFileSync(join(web, 'dist', 'index.html'), 'utf8'))
 if (!main) fail('dist/index.html names no main script')
@@ -76,9 +85,9 @@ if (first) {
   rmSync(stage, { recursive: true, force: true })
   // Step two: the new page, tested on its preview first.
   const page = upload(join(web, 'dist'), rev)
-  run('npx playwright test', { BASE_URL: page.preview })
+  run('npx playwright test', testEnv(page.preview))
   promote(page.id, rev)
 }
 await patient('the new page to go live', () => live(main))
-run('npx playwright test', { BASE_URL: site })
+run('npx playwright test', testEnv(site))
 console.log(`deploy: ${rev} live at ${site}`)

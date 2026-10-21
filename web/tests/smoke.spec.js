@@ -35,6 +35,16 @@ const where = page => page.evaluate(() => window.__crychic.page())
 test('boots, reports, and logs its budget', async ({ page, request }) => {
   await open(page)
   expect(await where(page)).toBe('/')
+  if (process.env.EXPECTED_COMPONENTS) {
+    const expected = {
+      components: Number(process.env.EXPECTED_COMPONENTS),
+      categories: Number(process.env.EXPECTED_CATEGORIES),
+    }
+    await expect.poll(async () => {
+      await open(page)
+      return page.evaluate(() => window.__crychic.stats())
+    }, { timeout: 30000, intervals: [1000] }).toEqual(expected)
+  }
   const stats = await page.evaluate(() => window.__crychic.stats())
   expect(stats.categories).toBe(38)
   expect(Array.isArray(await page.evaluate(() => window.__crychic.recent()))).toBe(true)
