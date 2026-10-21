@@ -1,8 +1,6 @@
 package layout
 
 import (
-	"time"
-
 	"github.com/ELY-Open-Source/CrychicUI/kit"
 	"github.com/egoist/mygo/ui"
 )
@@ -13,8 +11,7 @@ func Section(c *ui.Context, title string, content func()) ui.Element {
 	return ui.Column(c).Gap(t.Space(2)).Children(func() {
 		kit.Muted(c, title).Bold().FontSize(t.Rem(0.85))
 		line := ui.Box(c).FillWidth().Height(1).Background(t.Border).TransformOrigin(0, 0.5)
-		grow := line.Keyframes("grow", []ui.Keyframe{{Value: 0}, {At: 200 * time.Millisecond, Value: 1, Ease: ui.EaseOut}})
-		line.Scale(grow, 1)
+		line.Scale(grow(line), 1)
 		ui.Column(c).Gap(t.Space(2)).Children(content)
 	})
 }
