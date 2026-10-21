@@ -1,6 +1,7 @@
 package input
 
 import (
+	"image"
 	"slices"
 	"testing"
 	"time"
@@ -27,6 +28,23 @@ func settles(t *testing.T, tt *ui.Tester, what string) {
 	if tt.FramePending() {
 		t.Errorf("%s: animation never settled", what)
 	}
+}
+
+func near(img *image.RGBA, x, y int, want ui.Color) bool {
+	p := img.RGBAAt(x, y)
+	d := func(a, b uint8) bool { return a-b < 4 || b-a < 4 }
+	return d(p.R, want.R) && d(p.G, want.G) && d(p.B, want.B)
+}
+
+func rectChanged(a, b *image.RGBA, x0, y0, x1, y1 int) bool {
+	for y := y0; y < y1; y++ {
+		for x := x0; x < x1; x++ {
+			if a.RGBAAt(x, y) != b.RGBAAt(x, y) {
+				return true
+			}
+		}
+	}
+	return false
 }
 
 func panics(t *testing.T, what string, fn func()) {
