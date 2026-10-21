@@ -2,4 +2,4 @@ package gallery
 
 import "slices"
 
-var entries = slices.Concat(layoutEntries, layoutEntries2)
+var entries = slices.Concat(layoutEntries, layoutEntries2, typographyEntries)
