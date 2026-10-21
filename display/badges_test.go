@@ -140,7 +140,7 @@ func TestAvatarStatus(t *testing.T) {
 	tt.Frame()
 	settles(t, tt, "AvatarStatus color")
 	panics(t, "AvatarStatus status", func() {
-		ui.Render(func(c *ui.Context) { AvatarStatus(c, "Ada", nil, Presence(9)) }, 10, 10, 1)
+		ui.Render(func(c *ui.Context) { AvatarStatus(c, "Ada", nil, PresenceStatus(9)) }, 10, 10, 1)
 	})
 }
 

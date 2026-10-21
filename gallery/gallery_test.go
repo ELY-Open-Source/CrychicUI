@@ -185,7 +185,8 @@ func TestCategories(t *testing.T) {
 }
 
 func TestEveryEntry(t *testing.T) {
-	continuous := map[string]bool{"LoadingDots": true, "ShimmerButton": true, "PulseButton": true}
+	continuous := map[string]bool{"LoadingDots": true, "ShimmerButton": true, "PulseButton": true, "Streak": true}
+	updating := map[string]bool{"LiveClock": true, "CountdownTo": true}
 	for i, e := range Entries() {
 		if i > 0 && e.ID <= Entries()[i-1].ID {
 			t.Errorf("%s: ID %d out of order", e.Name, e.ID)
@@ -200,12 +201,24 @@ func TestEveryEntry(t *testing.T) {
 			a, tt := open(e.Path())
 			tt.SetDark(dark)
 			tt.Advance(3 * time.Second)
-			if !continuous[e.Name] && tt.FramePending() {
-				tt.Advance(time.Second)
-			}
 			pending := tt.FramePending()
-			if a.Snapshot().Page != e.Path() || !tt.HasText(e.Name) || (!continuous[e.Name] && pending) {
-				t.Errorf("%s dark=%v: page %q, pending %v", e.Name, dark, a.Snapshot().Page, pending)
+			if updating[e.Name] {
+				before := strings.Join(tt.Texts(), "\n")
+				tt.Advance(1500 * time.Millisecond)
+				if strings.Join(tt.Texts(), "\n") == before {
+					t.Errorf("%s dark=%v: time text did not update", e.Name, dark)
+				}
+			} else {
+				if !continuous[e.Name] && pending {
+					tt.Advance(time.Second)
+					pending = tt.FramePending()
+				}
+				if !continuous[e.Name] && pending {
+					t.Errorf("%s dark=%v: pending %v", e.Name, dark, pending)
+				}
+			}
+			if a.Snapshot().Page != e.Path() || !tt.HasText(e.Name) {
+				t.Errorf("%s dark=%v: page %q", e.Name, dark, a.Snapshot().Page)
 			}
 			if continuous[e.Name] && !pending {
 				t.Errorf("%s dark=%v: loop stopped", e.Name, dark)

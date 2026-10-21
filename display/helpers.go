@@ -29,6 +29,15 @@ func formatNumber(c *ui.Context, value float64) string {
 	return i18n.FormatNumber(c.Region().FormatLocale(c.Locale()), value, i18n.NumberOptions{})
 }
 
+// formatMoney writes an amount with two decimals.
+func formatMoney(c *ui.Context, value float64) string {
+	if !finite(value) {
+		panic("display: money must be finite")
+	}
+	o := i18n.NumberOptions{MinFractionDigits: 2, MaxFractionDigits: 2}
+	return i18n.FormatNumber(c.Region().FormatLocale(c.Locale()), value, o)
+}
+
 // initials returns up to two uppercase name initials.
 func initials(name string) string {
 	words := strings.Fields(name)

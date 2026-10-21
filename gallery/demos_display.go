@@ -114,7 +114,7 @@ func demoAvatarGroup(c *ui.Context, log func(string)) {
 
 func demoAvatarStatus(c *ui.Context, log func(string)) {
 	root := ui.Column(c).Gap(12)
-	status := ui.Local(root, "status", func() display.Presence { return display.PresenceOffline })
+	status := ui.Local(root, "status", func() display.PresenceStatus { return display.PresenceOffline })
 	root.Children(func() {
 		if ui.Button(c, "Cycle").Clicked() {
 			*status = (*status + 1) % 4

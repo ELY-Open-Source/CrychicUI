@@ -31,6 +31,12 @@ func settles(t *testing.T, tt *ui.Tester, what string) {
 	}
 }
 
+func near(img *image.RGBA, x, y int, want ui.Color) bool {
+	p := img.RGBAAt(x, y)
+	d := func(a, b uint8) bool { return a-b < 4 || b-a < 4 }
+	return d(p.R, want.R) && d(p.G, want.G) && d(p.B, want.B)
+}
+
 func panics(t *testing.T, what string, fn func()) {
 	t.Helper()
 	defer func() {

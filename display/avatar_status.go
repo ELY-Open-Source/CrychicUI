@@ -2,19 +2,19 @@ package display
 
 import "github.com/egoist/mygo/ui"
 
-// Presence is a person's availability.
-type Presence int
+// PresenceStatus is a person's availability.
+type PresenceStatus int
 
 // Presence states.
 const (
-	PresenceOffline Presence = iota
+	PresenceOffline PresenceStatus = iota
 	PresenceOnline
 	PresenceAway
 	PresenceBusy
 )
 
 // AvatarStatus adds an animated presence dot to an avatar.
-func AvatarStatus(c *ui.Context, name string, image *ui.Bitmap, status Presence) ui.Element {
+func AvatarStatus(c *ui.Context, name string, image *ui.Bitmap, status PresenceStatus) ui.Element {
 	if status < PresenceOffline || status > PresenceBusy {
 		panic("display: AvatarStatus status out of range")
 	}
