@@ -190,6 +190,20 @@ func TestMutedColor(t *testing.T) {
 	}
 }
 
+func TestNumeric(t *testing.T) {
+	text := "12"
+	tt := ui.NewTester(func(c *ui.Context) { Numeric(c, text) }, 200, 100)
+	text = "13"
+	tt.Frame()
+	if !tt.FramePending() {
+		t.Error("digit change did not animate")
+	}
+	tt.Advance(time.Second)
+	if !tt.HasText("13") || tt.FramePending() {
+		t.Errorf("texts %q, pending %v", tt.Texts(), tt.FramePending())
+	}
+}
+
 func TestLog(t *testing.T) {
 	var buf bytes.Buffer
 	old := slog.Default()

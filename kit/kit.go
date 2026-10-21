@@ -99,6 +99,11 @@ func Muted(c *ui.Context, s string) ui.Element {
 	return ui.Text(c, s).TextColor(c.Theme().TextMuted)
 }
 
+// Numeric returns text whose digits roll on change.
+func Numeric(c *ui.Context, s string) ui.Element {
+	return ui.Text(c, s).ContentTransition(ui.ContentTransition{Numeric: true})
+}
+
 // Log records a component state change at debug level.
 func Log(component, event string, args ...any) {
 	slog.Debug("crychic: "+component+" "+event, args...)

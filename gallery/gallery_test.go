@@ -199,8 +199,12 @@ func TestEveryEntry(t *testing.T) {
 			a, tt := open(e.Path())
 			tt.SetDark(dark)
 			tt.Advance(3 * time.Second)
-			if a.Snapshot().Page != e.Path() || !tt.HasText(e.Name) || tt.FramePending() {
-				t.Errorf("%s dark=%v: page %q, pending %v", e.Name, dark, a.Snapshot().Page, tt.FramePending())
+			pending := tt.FramePending()
+			if a.Snapshot().Page != e.Path() || !tt.HasText(e.Name) || (e.Name != "LoadingDots" && pending) {
+				t.Errorf("%s dark=%v: page %q, pending %v", e.Name, dark, a.Snapshot().Page, pending)
+			}
+			if e.Name == "LoadingDots" && !pending {
+				t.Errorf("%s dark=%v: loop stopped", e.Name, dark)
 			}
 		}
 	}
