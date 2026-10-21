@@ -185,6 +185,7 @@ func TestCategories(t *testing.T) {
 }
 
 func TestEveryEntry(t *testing.T) {
+	continuous := map[string]bool{"LoadingDots": true, "ShimmerButton": true, "PulseButton": true}
 	for i, e := range Entries() {
 		if i > 0 && e.ID <= Entries()[i-1].ID {
 			t.Errorf("%s: ID %d out of order", e.Name, e.ID)
@@ -199,14 +200,14 @@ func TestEveryEntry(t *testing.T) {
 			a, tt := open(e.Path())
 			tt.SetDark(dark)
 			tt.Advance(3 * time.Second)
-			if e.Name != "LoadingDots" && tt.FramePending() {
+			if !continuous[e.Name] && tt.FramePending() {
 				tt.Advance(time.Second)
 			}
 			pending := tt.FramePending()
-			if a.Snapshot().Page != e.Path() || !tt.HasText(e.Name) || (e.Name != "LoadingDots" && pending) {
+			if a.Snapshot().Page != e.Path() || !tt.HasText(e.Name) || (!continuous[e.Name] && pending) {
 				t.Errorf("%s dark=%v: page %q, pending %v", e.Name, dark, a.Snapshot().Page, pending)
 			}
-			if e.Name == "LoadingDots" && !pending {
+			if continuous[e.Name] && !pending {
 				t.Errorf("%s dark=%v: loop stopped", e.Name, dark)
 			}
 		}

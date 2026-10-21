@@ -31,7 +31,7 @@ func TestTextStyles(t *testing.T) {
 			r := find(t, tt, "Continue")
 			tt.Move(r.X+r.W/2, r.Y+r.H/2)
 			settles(t, tt, tc.name+" hover")
-			before := sound.Recent()
+			before := baseline()
 			if err := tt.Click("Continue"); err != nil {
 				t.Fatal(err)
 			}
@@ -56,7 +56,7 @@ func TestIconButtons(t *testing.T) {
 			r := find(t, tt, "Edit")
 			tt.Move(r.X+r.W/2, r.Y+r.H/2)
 			settles(t, tt, tc.name)
-			taps := sound.Recent()
+			taps := baseline()
 			if err := tt.Click("Edit"); err != nil {
 				t.Fatal(err)
 			}
@@ -76,7 +76,7 @@ func TestFab(t *testing.T) {
 		}
 	}, 300, 200)
 	settles(t, tt, "Fab arrival")
-	pops := sound.Recent()
+	pops := baseline()
 	if err := tt.Click("Add"); err != nil {
 		t.Fatal(err)
 	}

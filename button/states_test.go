@@ -15,7 +15,7 @@ func TestButtonGroup(t *testing.T) {
 			changed++
 		}
 	}, 300, 200)
-	taps := sound.Recent()
+	taps := baseline()
 	if err := tt.Click("B"); err != nil {
 		t.Fatal(err)
 	}
@@ -32,7 +32,7 @@ func TestToggleButton(t *testing.T) {
 			changed++
 		}
 	}, 300, 200)
-	taps := sound.Recent()
+	taps := baseline()
 	if err := tt.Click("Bold"); err != nil {
 		t.Fatal(err)
 	}
@@ -58,7 +58,7 @@ func TestLoadingButton(t *testing.T) {
 			clicks++
 		}
 	}, 300, 200)
-	taps := sound.Recent()
+	taps := baseline()
 	if err := tt.Click("Save"); err != nil {
 		t.Fatal(err)
 	}
@@ -91,7 +91,7 @@ func TestConfirmButton(t *testing.T) {
 			changed++
 		}
 	}, 300, 200)
-	warnings, deletes := sound.Recent(), sound.Recent()
+	warnings, deletes := baseline(), baseline()
 	if err := tt.Click("Delete"); err != nil {
 		t.Fatal(err)
 	}
@@ -121,7 +121,7 @@ func TestHoldButton(t *testing.T) {
 		}
 	}, 300, 200)
 	r := find(t, tt, "Hold")
-	successes := sound.Recent()
+	successes := baseline()
 	tt.Press(r.X+r.W/2, r.Y+r.H/2)
 	tt.Advance(150 * time.Millisecond)
 	if changed != 1 || !appended(successes, sound.Success) {
@@ -163,7 +163,7 @@ func TestHoldButtonReducedMotion(t *testing.T) {
 
 func TestCopyButton(t *testing.T) {
 	tt := ui.NewTester(func(c *ui.Context) { CopyButton(c, "Copy", "copy me") }, 300, 200)
-	pops := sound.Recent()
+	pops := baseline()
 	if err := tt.Click("Copy"); err != nil {
 		t.Fatal(err)
 	}
@@ -180,7 +180,7 @@ func TestShareButton(t *testing.T) {
 			changed++
 		}
 	}, 300, 200)
-	opens := sound.Recent()
+	opens := baseline()
 	if err := tt.Click("Share"); err != nil {
 		t.Fatal(err)
 	}

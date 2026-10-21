@@ -1,6 +1,7 @@
 package button
 
 import (
+	"image"
 	"slices"
 	"testing"
 	"time"
@@ -29,35 +30,57 @@ func settles(t *testing.T, tt *ui.Tester, what string) {
 	}
 }
 
+func near(img *image.RGBA, x, y int, want ui.Color) bool {
+	p := img.RGBAAt(x, y)
+	d := func(a, b uint8) bool { return a-b < 4 || b-a < 4 }
+	return d(p.R, want.R) && d(p.G, want.G) && d(p.B, want.B)
+}
+
+func baseline() []sound.Cue {
+	for range 32 {
+		sound.Play(sound.Swipe)
+	}
+	return sound.Recent()
+}
+
 func appended(before []sound.Cue, want ...sound.Cue) bool {
+	if len(before) != 32 {
+		return false
+	}
+	filler := before[0]
+	for _, cue := range before {
+		if cue != filler {
+			return false
+		}
+	}
+	for _, cue := range want {
+		if cue == filler {
+			return false
+		}
+	}
 	after := sound.Recent()
-	maxDrop := 0
-	if len(before) == 32 {
-		maxDrop = len(before)
+	if slices.Equal(before, after) {
+		return len(want) == 0
 	}
-	for drop := 0; drop <= maxDrop; drop++ {
-		kept := len(before) - drop
-		if kept > len(after) || !slices.Equal(before[drop:], after[:kept]) {
-			continue
-		}
-		added := after[kept:]
-		if len(want) == 0 {
-			return len(added) == 0
-		}
-		matched := 0
-		for _, cue := range added {
-			if matched < len(want) && cue == want[matched] {
-				matched++
-			}
-		}
-		return matched == len(want)
+	start := 0
+	for start < len(after) && after[start] == filler {
+		start++
 	}
-	return false
+	added := after[start:]
+	if len(want) == 0 {
+		return len(added) == 0
+	}
+	matched := 0
+	for _, cue := range added {
+		if matched < len(want) && cue == want[matched] {
+			matched++
+		}
+	}
+	return matched == len(want)
 }
 
 func TestAppendedRequiresNewCue(t *testing.T) {
-	sound.Play(sound.Tap)
-	before := sound.Recent()
+	before := baseline()
 	if appended(before, sound.Tap) {
 		t.Error("unchanged history passed")
 	}
@@ -68,8 +91,7 @@ func TestAppendedRequiresNewCue(t *testing.T) {
 }
 
 func TestAppendedRejectsHistoricalCue(t *testing.T) {
-	sound.Play(sound.Tap)
-	before := sound.Recent()
+	before := baseline()
 	sound.Play(sound.Open)
 	if appended(before, sound.Tap) {
 		t.Error("old Tap counted as new")

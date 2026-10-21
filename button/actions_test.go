@@ -15,7 +15,7 @@ func TestLikeButton(t *testing.T) {
 			changed++
 		}
 	}, 300, 200)
-	pops := sound.Recent()
+	pops := baseline()
 	if err := tt.Click("Like"); err != nil {
 		t.Fatal(err)
 	}
@@ -38,7 +38,7 @@ func TestStarButton(t *testing.T) {
 			changed++
 		}
 	}, 300, 200)
-	taps := sound.Recent()
+	taps := baseline()
 	if err := tt.Click("Star"); err != nil {
 		t.Fatal(err)
 	}
@@ -61,7 +61,7 @@ func TestFollowButton(t *testing.T) {
 	}, 300, 200)
 	tt.Frame()
 	idle := width
-	taps := sound.Recent()
+	taps := baseline()
 	if err := tt.Click("Follow"); err != nil {
 		t.Fatal(err)
 	}
@@ -88,7 +88,7 @@ func TestCounterButton(t *testing.T) {
 			changed++
 		}
 	}, 300, 200)
-	ticks := sound.Recent()
+	ticks := baseline()
 	if err := tt.Click("Notifications"); err != nil {
 		t.Fatal(err)
 	}
@@ -106,7 +106,7 @@ func TestUndoButton(t *testing.T) {
 				changed++
 			}
 		}, 300, 200)
-		closes := sound.Recent()
+		closes := baseline()
 		tt.Advance(200 * time.Millisecond)
 		if changed != 1 || !appended(closes) || tt.FramePending() {
 			t.Errorf("changed %d, close cues %v, pending %v", changed, sound.Recent(), tt.FramePending())
@@ -123,7 +123,7 @@ func TestUndoButton(t *testing.T) {
 				changed++
 			}
 		}, 300, 200)
-		closes := sound.Recent()
+		closes := baseline()
 		if err := tt.Click("Undo"); err != nil {
 			t.Fatal(err)
 		}
@@ -163,7 +163,7 @@ func TestSpeedDial(t *testing.T) {
 			changed++
 		}
 	}, 300, 300)
-	opens, closes, taps := sound.Recent(), sound.Recent(), sound.Recent()
+	opens, closes, taps := baseline(), baseline(), baseline()
 	if err := tt.Click("Actions"); err != nil {
 		t.Fatal(err)
 	}
@@ -216,7 +216,7 @@ func TestSplitButton(t *testing.T) {
 			mainClicks++
 		}
 	}, 300, 200)
-	taps, opens := sound.Recent(), sound.Recent()
+	taps, opens := baseline(), baseline()
 	if err := tt.Click("Publish"); err != nil {
 		t.Fatal(err)
 	}

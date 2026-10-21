@@ -88,6 +88,7 @@ code panel shows the demo function's own source, cut from the embedded `demos*.g
 
 ## Deploy
 
+- Each reviewed item is committed, pushed, then deployed before the next item starts.
 - `npm run deploy` in `web/` (clean tree only): live page beside new files first, then the new page tested on its
   preview URL, promoted, and tested live at https://crychicui.zhangyanghaha0407.workers.dev. The Worker's first
   deploy is `npm run deploy -- --first`.
