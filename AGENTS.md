@@ -54,6 +54,7 @@ health, home, marketing, content, desktop, geo · 6 gallery · 7 cmd/gallery
   options give the default look. Containers take content as a final `func()`, after any options. Several actions:
   named `ui.Element` results, root first; `mygo vet` forbids elements in structs.
 - Value-bound components take `*T` and call `SetChanged` on the returned element when input changes it.
+- Forms that submit return `(root, send)`; `send` stays disabled until the value is valid.
 - Stateful components get their key from the caller (`c.Key`); private state lives in `ui.Local`.
 - Every component moves: pose, color animation, transition, content transition, keyframes, loop or animated drawing.
   Reduce Motion is MyGo's job.
