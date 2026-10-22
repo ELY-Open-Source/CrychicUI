@@ -172,3 +172,21 @@ func TestChips(t *testing.T) {
 		t.Errorf("filter count missing: %q", tt.Texts())
 	}
 }
+
+func TestSegmentsLabelOverThumb(t *testing.T) {
+	view := 0
+	tt := ui.NewTester(func(c *ui.Context) { Segments(c, "View", []string{"Day", "Week", "Month"}, &view) }, 400, 80)
+	click(t, tt, "Week")
+	settles(t, tt, "Segments thumb")
+	r, img, dark := find(t, tt, "Week"), tt.Image(), 0
+	for y := int(r.Y); y < int(r.Y+r.H); y++ {
+		for x := int(r.X); x < int(r.X+r.W); x++ {
+			if p := img.RGBAAt(x, y); int(p.R)+int(p.G)+int(p.B) < 300 {
+				dark++
+			}
+		}
+	}
+	if dark < 10 {
+		t.Errorf("the chosen label is hidden: %d text pixels", dark)
+	}
+}

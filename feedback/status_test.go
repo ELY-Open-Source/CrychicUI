@@ -182,3 +182,37 @@ func TestUnlockToast(t *testing.T) {
 	tt.Frame()
 	cues(t, before, sound.Success)
 }
+
+func TestBatteryBoltOverFill(t *testing.T) {
+	tt := ui.NewTester(func(c *ui.Context) { Battery(c, "Battery", 1, true) }, 200, 100)
+	tt.Advance(2 * time.Second)
+	r, ok := tt.Find("Battery")
+	if !ok {
+		t.Fatal("battery not found")
+	}
+	img, dark := tt.Image(), 0
+	for y := int(r.Y); y < int(r.Y+r.H); y++ {
+		for x := int(r.X); x < int(r.X+r.W); x++ {
+			if p := img.RGBAAt(x, y); int(p.R)+int(p.G)+int(p.B) < 200 {
+				dark++
+			}
+		}
+	}
+	if dark < 30 {
+		t.Errorf("the bolt is hidden under a full fill: %d dark pixels", dark)
+	}
+	accent, spill := ui.LightTheme().Accent, 0
+	for y := 0; y < img.Bounds().Dy(); y++ {
+		if y >= int(r.Y) && y < int(r.Y+r.H) {
+			continue
+		}
+		for x := int(r.X); x < int(r.X+r.W); x++ {
+			if tinted(tt, x, y, accent) {
+				spill++
+			}
+		}
+	}
+	if spill > 0 {
+		t.Errorf("the fill spills past the battery: %d pixels", spill)
+	}
+}

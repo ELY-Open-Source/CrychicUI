@@ -24,12 +24,16 @@ func Battery(c *ui.Context, label string, level float64, charging bool) ui.Eleme
 	}
 	root := ui.Row(c).AlignSelf(ui.Start).Role(ui.RoleMeter).Label(label).Range(0, 1, level)
 	return root.Children(func() {
-		body := ui.Box(c).Size(w, h).Radius(t.Space(1)).Border(line, t.TextMuted).Padding(t.Space(0.5)).Center()
-		body.Children(func() {
-			fill := ui.Box(c).Absolute().Top(t.Space(0.5)).Bottom(t.Space(0.5)).Start(t.Space(0.5)).Radius(t.Space(0.5))
-			fill.Background(fill.AnimateColor("tint", tint, quick)).Width((w - 2*line - t.Space(1)) * fill.AnimateTo("v", v, ui.Smooth))
+		// One cell stacks the bolt over the body.
+		ui.Grid(c).Columns(1).Children(func() {
+			body := ui.Box(c).ColumnStart(1).RowStart(1).Size(w, h).Radius(t.Space(1)).Border(line, t.TextMuted)
+			body.Children(func() {
+				fill := ui.Box(c).Absolute().Top(t.Space(0.5)).Bottom(t.Space(0.5)).Start(t.Space(0.5)).Radius(t.Space(0.5))
+				fill.Background(fill.AnimateColor("tint", tint, quick)).Width((w - 2*line - t.Space(1)) * fill.AnimateTo("v", v, ui.Smooth))
+			})
 			if charging {
-				bolt := ui.Icon(c, icon.Must("zap")).Size(16, 16).TextColor(t.Text)
+				bolt := ui.Icon(c, icon.Must("zap")).ColumnStart(1).RowStart(1).JustifySelf(ui.Center).AlignSelf(ui.Center).
+					Size(16, 16).TextColor(t.Text)
 				bolt.Opacity(0.4 + 0.6*bolt.Loop("pulse", 1200*time.Millisecond, ui.Bounce(ui.EaseInOut)))
 			}
 		})

@@ -25,21 +25,31 @@ func segmentControl(c *ui.Context, component, label string, items []SegmentItem,
 	root.Children(func() {
 		for i, item := range items {
 			c.Key(i)
-			seg := parts.Segment(i).Label(item.Label).Gap(t.Space(1.5)).Padding(t.Space(1), t.Space(3)).Radius(r)
+			seg := parts.Segment(i).Label(item.Label).Radius(r)
 			if iconOnly {
-				seg.Padding(t.Space(1.5)).Tooltip(item.Label)
+				seg.Tooltip(item.Label)
 			}
+			// One cell stacks the thumb under the label.
 			seg.Children(func() {
-				if i == *selected {
-					ui.Box(c).Key("thumb").Absolute().Top(0).Left(0).Right(0).Bottom(0).Radius(r).Background(t.Background).
-						Shadow(0, 1, 2, 0, kit.Shade(0.12)).Transition(ui.ElementTransition{Animation: &ui.Snappy, Match: thumbMatch{id}})
-				}
-				if item.Icon != "" {
-					ui.Icon(c, icon.Must(item.Icon)).Size(16, 16)
-				}
-				if !iconOnly {
-					ui.Text(c, item.Label).SingleLine()
-				}
+				ui.Grid(c).Columns(1).Children(func() {
+					if i == *selected {
+						ui.Box(c).Key("thumb").ColumnStart(1).RowStart(1).Radius(r).Background(t.Background).
+							Shadow(0, 1, 2, 0, kit.Shade(0.12)).Transition(ui.ElementTransition{Animation: &ui.Snappy, Match: thumbMatch{id}})
+					}
+					face := ui.Row(c).Key("face").ColumnStart(1).RowStart(1).Gap(t.Space(1.5)).Padding(t.Space(1), t.Space(3)).
+						AlignItems(ui.Center)
+					if iconOnly {
+						face.Padding(t.Space(1.5))
+					}
+					face.Children(func() {
+						if item.Icon != "" {
+							ui.Icon(c, icon.Must(item.Icon)).Size(16, 16)
+						}
+						if !iconOnly {
+							ui.Text(c, item.Label).SingleLine()
+						}
+					})
+				})
 			})
 		}
 	})
