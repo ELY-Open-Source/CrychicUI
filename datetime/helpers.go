@@ -2,6 +2,7 @@
 package datetime
 
 import (
+	"strconv"
 	"time"
 
 	"github.com/ELY-Open-Source/CrychicUI/button"
@@ -264,6 +265,34 @@ func ring(c *ui.Context, frac float32, col ui.Color, content func()) ui.Element 
 			})
 		}
 	}).Children(content)
+}
+
+// days counts calendar days from a to b.
+func days(a, b time.Time) int {
+	ay, am, ad := a.Date()
+	by, bm, bd := b.In(a.Location()).Date()
+	return int(time.Date(by, bm, bd, 0, 0, 0, 0, time.UTC).Sub(time.Date(ay, am, ad, 0, 0, 0, 0, time.UTC)) / (24 * time.Hour))
+}
+
+// tomorrow is the midnight after t.
+func tomorrow(t time.Time) time.Time {
+	return time.Date(t.Year(), t.Month(), t.Day()+1, 0, 0, 0, 0, t.Location())
+}
+
+// daysIn counts the days of t's month.
+func daysIn(t time.Time) int { return monthOf(t).AddDate(0, 1, -1).Day() }
+
+// numbers writes from through to, counting either way.
+func numbers(from, to int) []string {
+	step := 1
+	if to < from {
+		step = -1
+	}
+	var out []string
+	for n := from; n != to+step; n += step {
+		out = append(out, strconv.Itoa(n))
+	}
+	return out
 }
 
 // twelve reports whether times here use AM and PM.

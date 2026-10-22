@@ -52,6 +52,19 @@ func TestDatetimeDemosLog(t *testing.T) {
 		"RelativeDate":    click("Tomorrow"),
 		"PresetRange":     click("30 days"),
 		"TimeRangeSlider": keys(ui.KeyTab, ui.KeyRight),
+		"Agenda":          click("Standup"),
+		"DatePill":        click("Next day"),
+		"BirthdayPicker":  click("Month", "June"),
+		"DateWheel":       keys(ui.KeyTab, ui.KeyDown),
+		"Recurrence":      click("Increase Interval"),
+		"BusinessHours":   click("Sunday"),
+		"MoonPhase":       click("Next week"),
+		"WeekStrip":       click("Fri, Mar 13, 2026"),
+		"CronField":       func(tt *ui.Tester) error { tt.Key(0, ui.KeyTab); tt.Type("5"); return nil },
+		"DateNav":         click("Next"),
+		"TimeSlots":       click("10:30 AM"),
+		"DurationPicker":  click("Increase Minutes"),
+		"DateBadge":       click("Next day"),
 	}
 	for _, e := range Entries() {
 		act, ok := acts[e.Name]
@@ -68,6 +81,22 @@ func TestDatetimeDemosLog(t *testing.T) {
 		tt.Frame()
 		if len(logs) == 0 {
 			t.Errorf("%s: the action logged nothing", e.Name)
+		}
+	}
+}
+
+func TestTimeAgoDemoAdvances(t *testing.T) {
+	for _, e := range Entries() {
+		if e.Name != "TimeAgo" {
+			continue
+		}
+		tt := ui.NewTester(func(c *ui.Context) { e.Demo(c, func(string) {}) }, 400, 300)
+		if !tt.HasText("just now") {
+			t.Fatalf("texts %q", tt.Texts())
+		}
+		tt.Advance(time.Minute)
+		if !tt.HasText("1 min ago") {
+			t.Errorf("a minute on: %q", tt.Texts())
 		}
 	}
 }
