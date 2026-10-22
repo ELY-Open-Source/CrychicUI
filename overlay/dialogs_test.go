@@ -109,7 +109,7 @@ func TestPromptDialog(t *testing.T) {
 	}
 	tt.Key(0, ui.KeyEscape)
 	tt.Frame()
-	if open || value != "Ada" || changed != 1 {
+	if open || value != "Ada" || changed != 2 {
 		t.Errorf("Escape: open %v, value %q, changed %d", open, value, changed)
 	}
 }

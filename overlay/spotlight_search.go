@@ -41,7 +41,7 @@ func SpotlightSearch(c *ui.Context, label string, groups []ResultGroup, chosen *
 	if dialog(c, open, t.Space(150), func() {
 		field := ui.SearchField(c, query).Label(label).FillWidth().FontSize(t.Rem(1.3))
 		results(c, root, field, *query, len(flat), func(i int) string { return groups[flat[i][0]].Results[flat[i][1]] },
-			func(i int) string { return groups[flat[i][0]].Title }, func(i int) {
+			func(i int) string { return groups[flat[i][0]].Title }, nil, func(i int) {
 				*chosen, *open = flat[i], false
 				root.SetChanged()
 				sound.Play(sound.Select)

@@ -29,7 +29,7 @@ func CommandPalette(c *ui.Context, label string, commands []MenuItem, chosen *in
 	if dialog(c, open, t.Space(120), func() {
 		field := ui.SearchField(c, query).Label(label).FillWidth()
 		results(c, root, field, *query, len(commands), func(i int) string { return commands[i].Label },
-			func(int) string { return "" }, func(i int) {
+			func(int) string { return "" }, nil, func(i int) {
 				*chosen, *open = i, false
 				root.SetChanged()
 				sound.Play(sound.Select)

@@ -101,8 +101,13 @@ func demoPromptDialog(c *ui.Context, log func(string)) {
 	root.Children(func() {
 		launch(c, "Rename", open, log)
 		kit.Muted(c, "Name: "+*name)
+		before := *name
 		if dialog, _ := overlay.PromptDialog(c, "Rename file", name, open, overlay.PromptDialogOptions{}); dialog.Changed() {
-			log(fmt.Sprintf("renamed, %d characters", len(*name)))
+			if *name != before {
+				log(fmt.Sprintf("renamed, %d characters", len(*name)))
+			} else {
+				log("closed")
+			}
 		}
 	})
 }

@@ -3,7 +3,9 @@ package overlay
 
 import (
 	"fmt"
+	"math"
 
+	"github.com/ELY-Open-Source/CrychicUI/feedback"
 	"github.com/ELY-Open-Source/CrychicUI/icon"
 	"github.com/ELY-Open-Source/CrychicUI/kit"
 	"github.com/egoist/mygo/ui"
@@ -75,6 +77,15 @@ func side(c *ui.Context, open *bool, label string, place func(back ui.Element) u
 		})
 	})
 	return closed
+}
+
+// bottom places a side panel on the window's bottom edge.
+func bottom(c *ui.Context) func(back ui.Element) ui.Element {
+	t := c.Theme()
+	return func(back ui.Element) ui.Element {
+		back.Justify(ui.Center).AlignItems(ui.End)
+		return ui.Column(c).FillWidth().MaxWidth(t.Space(120)).Padding(t.Space(5)).Gap(t.Space(3)).Radius(t.Radius * 2)
+	}
 }
 
 // quiet is a ghost button; its caller cues.
@@ -152,4 +163,40 @@ func unit(on bool) float32 {
 		return 1
 	}
 	return 0
+}
+
+// finite reports v is a number and not infinite.
+func finite(v float32) bool {
+	return !math.IsNaN(float64(v)) && !math.IsInf(float64(v), 0)
+}
+
+// dist is the squared distance between two points.
+func dist(a, b ui.Point) float32 {
+	return (a.X-b.X)*(a.X-b.X) + (a.Y-b.Y)*(a.Y-b.Y)
+}
+
+// toned is a feedback tone's color and Lucide icon.
+func toned(t *ui.Theme, tone feedback.Tone) (ui.Color, string) {
+	switch tone {
+	case feedback.ToneInfo:
+		return t.Accent, "info"
+	case feedback.ToneSuccess:
+		return t.Success, "circle-check"
+	case feedback.ToneWarning:
+		return t.Warning, "triangle-alert"
+	case feedback.ToneDanger:
+		return t.Danger, "circle-x"
+	}
+	panic("overlay: unknown tone")
+}
+
+// opening focuses its bound field when open turns true.
+func opening(c *ui.Context, root ui.Element, open bool) *ui.Handle {
+	field := ui.Local(root, "field", func() ui.Handle { return ui.Handle{} })
+	asked := ui.Local(root, "asked", func() bool { return false })
+	if open && !*asked {
+		field.Focus(c)
+	}
+	*asked = open
+	return field
 }

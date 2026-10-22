@@ -46,10 +46,10 @@ func settles(t *testing.T, tt *ui.Tester, what string) {
 	}
 }
 
-// baseline fills Recent with Toggle, which overlay never plays.
+// baseline fills Recent with Notify, which overlay never plays.
 func baseline() []sound.Cue {
 	for range 32 {
-		sound.Play(sound.Toggle)
+		sound.Play(sound.Notify)
 	}
 	return sound.Recent()
 }
@@ -60,7 +60,7 @@ func cues(t *testing.T, before []sound.Cue, want ...sound.Cue) {
 	var got []sound.Cue
 	if len(before) == 32 && !slices.Equal(before, after) {
 		i := 0
-		for i < len(after) && after[i] == sound.Toggle {
+		for i < len(after) && after[i] == sound.Notify {
 			i++
 		}
 		got = after[i:]
