@@ -5,7 +5,9 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/ELY-Open-Source/CrychicUI/icon"
 	"github.com/ELY-Open-Source/CrychicUI/kit"
+	"github.com/ELY-Open-Source/CrychicUI/sound"
 	"github.com/egoist/mygo/ui"
 )
 
@@ -23,6 +25,30 @@ func primary(c *ui.Context, label string) ui.Element {
 		bg = t.AccentHover
 	}
 	return b.Background(b.AnimateColor("bg", bg, ui.Snappy)).Children(func() { ui.Text(c, label).SingleLine() })
+}
+
+// plain is a quiet button; its form plays the cue.
+func plain(c *ui.Context, label string) ui.Element {
+	t := c.Theme()
+	b := kit.Press(ui.ButtonBase(c).Label(label).Padding(t.Space(1.5), t.Space(3)).Radius(t.Radius))
+	bg := t.Surface.Alpha(0)
+	if b.Hovered() {
+		bg = t.Surface
+	}
+	return b.Background(b.AnimateColor("bg", bg, ui.Snappy)).Children(func() { ui.Text(c, label).SingleLine() })
+}
+
+// cross is a remove button; its form plays the cue.
+func cross(c *ui.Context, label string) ui.Element {
+	t := c.Theme()
+	b := kit.Press(ui.ButtonBase(c).Label(label).Size(t.Space(8), t.Space(8)).Shrink(0).Center().Radius(t.Radius))
+	ink := t.TextMuted
+	if b.Hovered() {
+		ink = t.Danger
+	}
+	return b.TextColor(b.AnimateColor("ink", ink, ui.Snappy)).Children(func() {
+		ui.Icon(c, icon.Must("x")).Size(16, 16)
+	})
 }
 
 // def sets an empty copy field to its English default.
@@ -106,4 +132,31 @@ func unit(on bool) float32 {
 		return 1
 	}
 	return 0
+}
+
+// bar is a bottom button row sliding up when shown.
+func bar(c *ui.Context, shown bool, lead func(), back, ahead string) (backButton, aheadButton ui.Element) {
+	t := c.Theme()
+	row := ui.Row(c).FillWidth().Gap(t.Space(2)).AlignItems(ui.Center).Padding(t.Space(3), t.Space(4)).
+		Background(t.Background).Border(1, t.Border).Disabled(!shown)
+	h := row.LayoutBounds().H
+	kit.Settle(c, row, []float32{h}, func() []float32 { return []float32{row.LayoutBounds().H} })
+	row.Translate(0, row.AnimateTo("slide", h*(1-unit(shown)), ui.Snappy))
+	row.Children(func() {
+		ui.Box(c).Grow(1).Children(lead)
+		backButton = plain(c, back)
+		aheadButton = primary(c, ahead)
+	})
+	return backButton, aheadButton
+}
+
+// take keeps the first dropped file and cues Drop.
+func take(root ui.Element, path *string, files []string, name string) {
+	if len(files) == 0 {
+		return
+	}
+	*path = files[0]
+	root.SetChanged()
+	sound.Play(sound.Drop)
+	kit.Log(name, "dropped", "count", len(files))
 }

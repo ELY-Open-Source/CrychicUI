@@ -11,7 +11,8 @@ import (
 func TestFormDemosLogEdits(t *testing.T) {
 	for _, e := range Entries() {
 		switch e.Name {
-		case "FormCard", "InlineForm", "ContactForm", "LoginBox", "NewsletterForm", "ProfileForm", "PaymentForm":
+		case "FormCard", "InlineForm", "ContactForm", "LoginBox", "NewsletterForm", "ProfileForm", "PaymentForm",
+			"BugReport", "TypeToConfirm", "DynamicFields", "ActionBar", "QuestionBlock", "Repeater", "NumberRange":
 		default:
 			continue
 		}
