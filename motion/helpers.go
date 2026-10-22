@@ -11,6 +11,11 @@ import (
 
 var arrive = []ui.Keyframe{{Value: 0}, {At: 200 * time.Millisecond, Value: 1, Ease: ui.EaseOut}}
 
+// replay drops first: a replay starts from the shown value.
+func replay(d time.Duration, ease ui.Easing) []ui.Keyframe {
+	return []ui.Keyframe{{Value: 0}, {At: time.Millisecond, Value: 0}, {At: d, Value: 1, Ease: ease}}
+}
+
 // forever repeats a sequence while built.
 var forever = ui.KeyframeOptions{Repeat: ui.RepeatForever}
 
@@ -35,6 +40,55 @@ func finite(component string, v float64) {
 	if math.IsNaN(v) || math.IsInf(v, 0) {
 		panic("motion: " + component + " needs finite numbers")
 	}
+}
+
+// unique panics unless items are non-empty, distinct texts.
+func unique(component string, items []string) {
+	if len(items) == 0 {
+		panic("motion: " + component + " needs items")
+	}
+	if len(set(items)) != len(items) || set(items)[""] {
+		panic("motion: " + component + " items need distinct text")
+	}
+}
+
+// set holds each item once.
+func set(items []string) map[string]bool {
+	m := make(map[string]bool, len(items))
+	for _, s := range items {
+		m[s] = true
+	}
+	return m
+}
+
+// resting reports e still and unheld; a caught element pauses.
+func resting(e ui.Element) bool {
+	_, _, held := e.Dragged()
+	return !held && !e.Dragging() && !e.Transitioning()
+}
+
+// unit converts on to an animation target.
+func unit(on bool) float32 {
+	if on {
+		return 1
+	}
+	return 0
+}
+
+func abs(v float32) float32 {
+	if v < 0 {
+		return -v
+	}
+	return v
+}
+
+// identity is 0 through n-1 in order.
+func identity(n int) []int {
+	out := make([]int, n)
+	for i := range out {
+		out[i] = i
+	}
+	return out
 }
 
 // positive checks a size knob; zero means fallback.

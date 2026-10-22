@@ -80,10 +80,10 @@ func inked(tt *ui.Tester, r ui.Rect) int {
 	return n
 }
 
-// baseline fills Recent with Tap so later cues show.
+// baseline fills Recent with Error, which motion never plays.
 func baseline() []sound.Cue {
 	for range 32 {
-		sound.Play(sound.Tap)
+		sound.Play(sound.Error)
 	}
 	return sound.Recent()
 }
@@ -94,7 +94,7 @@ func played(before []sound.Cue) []sound.Cue {
 		return nil
 	}
 	i := 0
-	for i < len(after) && after[i] == sound.Tap {
+	for i < len(after) && after[i] == sound.Error {
 		i++
 	}
 	return after[i:]

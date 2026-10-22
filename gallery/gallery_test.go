@@ -190,7 +190,7 @@ func TestEveryEntry(t *testing.T) {
 		"BarsLoader": true, "OrbitLoader": true, "Skeleton": true, "SkeletonText": true, "SkeletonCard": true, "SkeletonList": true,
 		"OfflineState": true, "Maintenance": true, "Attention": true, "Beacon": true, "LiveDot": true, "AnnouncementBar": true,
 		"Typewriter": true, "WaveText": true, "Marquee": true, "VerticalMarquee": true, "Bob": true,
-		"Breathe": true, "Beat": true, "Spinning": true, "Orbit": true}
+		"Breathe": true, "Beat": true, "Spinning": true, "Orbit": true, "Rings": true, "KeyPath": true, "TextShimmer": true}
 	updating := map[string]bool{"LiveClock": true, "CountdownTo": true, "WordRotate": true}
 	for i, e := range Entries() {
 		if i > 0 && e.ID <= Entries()[i-1].ID {
