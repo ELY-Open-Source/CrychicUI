@@ -86,7 +86,7 @@ func PiPBox(c *ui.Context, label string, corner *int, o PiPBoxOptions, content f
 		if to != *corner {
 			land(to)
 		}
-		if *held && resting(box) {
+		if *held && kit.Resting(box) {
 			*held = false
 			for i := range 4 {
 				if *drag == spot(i) && i != *corner {

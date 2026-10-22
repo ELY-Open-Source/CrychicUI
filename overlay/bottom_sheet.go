@@ -78,7 +78,7 @@ func BottomSheet(c *ui.Context, title string, open *bool, snap *int, o BottomShe
 					ui.Text(c, title).Bold().FontSize(t.Rem(1.1))
 					content()
 				})
-				if resting(sheet) && drag.Y != top-hs[*snap] {
+				if kit.Resting(sheet) && drag.Y != top-hs[*snap] {
 					if drag.Y >= top {
 						sound.Play(sound.Swipe)
 						shut()

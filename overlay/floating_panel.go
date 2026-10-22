@@ -51,7 +51,7 @@ func FloatingPanel(c *ui.Context, title string, at *ui.Point, o FloatingPanelOpt
 		if _, _, down := panel.Dragged(); down && !*held {
 			*held, *start = true, *at
 		}
-		if *held && resting(panel) {
+		if *held && kit.Resting(panel) {
 			*held = false
 			if *at != *start {
 				root.SetChanged()

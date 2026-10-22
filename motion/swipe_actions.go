@@ -53,7 +53,7 @@ func SwipeActions(c *ui.Context, actions []string, chosen *int, content func()) 
 		front := ui.Box(c).ColumnStart(1).RowStart(1).Background(t.Background).Draggable(drag, ui.DraggableOptions{Axis: ui.Horizontal,
 			Bounds: &ui.Rect{X: min(open, 0), W: reveal}, Snap: ui.Nearest(ui.Point{}, ui.Point{X: open}), Animation: ui.Snappy})
 		front.Children(content)
-		if at := drag.X == 0; at != *shut && resting(front) {
+		if at := drag.X == 0; at != *shut && kit.Resting(front) {
 			*shut = at
 			sound.Play(sound.Swipe)
 			kit.Log("SwipeActions", "swiped", "open", !at)

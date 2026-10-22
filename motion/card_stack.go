@@ -51,7 +51,7 @@ func CardStack(c *ui.Context, n int, top *int, card func(i int), o CardStackOpti
 				e.Draggable(drag, ui.DraggableOptions{Axis: ui.Horizontal, Snap: fling, Animation: ui.Snappy})
 				x := e.DragOffset().X
 				e.Rotate(12 * x / away).Opacity(1 - min(abs(x)/away, 1))
-				if drag.X != 0 && resting(e) {
+				if drag.X != 0 && kit.Resting(e) {
 					*top++
 					*shown, *drag = *top, ui.Point{}
 					root.SetChanged()

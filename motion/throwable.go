@@ -57,7 +57,7 @@ func Throwable(c *ui.Context, label string, slot *int, o ThrowableOptions) ui.El
 			*drag = points[min(max(at-int(dir), 0), o.Slots-1)]
 		}
 		kit.Press(tile).Children(func() { ui.Text(c, label).Bold() })
-		if at != *slot && resting(tile) {
+		if at != *slot && kit.Resting(tile) {
 			*slot, *synced = at, at
 			root.SetChanged()
 			sound.Play(sound.Drop)

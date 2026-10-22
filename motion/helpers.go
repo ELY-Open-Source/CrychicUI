@@ -61,12 +61,6 @@ func set(items []string) map[string]bool {
 	return m
 }
 
-// resting reports e still and unheld; a caught element pauses.
-func resting(e ui.Element) bool {
-	_, _, held := e.Dragged()
-	return !held && !e.Dragging() && !e.Transitioning()
-}
-
 // unit converts on to an animation target.
 func unit(on bool) float32 {
 	if on {

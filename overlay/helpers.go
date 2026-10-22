@@ -54,12 +54,6 @@ func primary(c *ui.Context, label string, tone, ink ui.Color) ui.Element {
 		Children(func() { ui.Text(c, label).Bold().SingleLine() })
 }
 
-// resting reports e still and unheld after a drag.
-func resting(e ui.Element) bool {
-	_, _, held := e.Dragged()
-	return !held && !e.Dragging() && !e.Transitioning()
-}
-
 // side runs an overlay panel with a backdrop while open.
 func side(c *ui.Context, open *bool, label string, place func(back ui.Element) ui.Element, from ui.Pose, body func()) (closed bool) {
 	if !*open {

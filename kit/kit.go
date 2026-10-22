@@ -91,6 +91,12 @@ func Settle(c *ui.Context, e ui.Element, used []float32, read func() []float32) 
 	})
 }
 
+// Resting reports e let go and still.
+func Resting(e ui.Element) bool {
+	_, _, held := e.Dragged()
+	return !held && !e.Dragging() && !e.Transitioning()
+}
+
 // Slide keys content, sliding in toward the side moved to.
 func Slide(c *ui.Context, key int, content func()) {
 	t := c.Theme()

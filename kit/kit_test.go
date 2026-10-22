@@ -331,3 +331,32 @@ func TestInsideClipsToRoundedBox(t *testing.T) {
 		t.Errorf("center %v, left %v, corner %v, right %v", img.RGBAAt(70, 50), img.RGBAAt(10, 50), img.RGBAAt(20, 20), img.RGBAAt(150, 50))
 	}
 }
+
+func TestRestingAfterRelease(t *testing.T) {
+	var rest []bool
+	drag := ui.Point{}
+	tt := ui.NewTester(func(c *ui.Context) {
+		b := ui.Box(c).Label("Knob").Size(40, 40).Draggable(&drag, ui.DraggableOptions{Snap: func(ui.Point) ui.Point { return ui.Point{} }})
+		rest = append(rest, Resting(b))
+	}, 300, 200)
+	if !rest[len(rest)-1] {
+		t.Fatal("not resting before any drag")
+	}
+	tt.Press(20, 20)
+	for i := 1; i <= 5; i++ {
+		tt.Move(20+float32(i)*10, 20)
+		tt.Advance(16 * time.Millisecond)
+	}
+	if rest[len(rest)-1] {
+		t.Error("resting while held")
+	}
+	tt.Release(70, 20)
+	tt.Frame()
+	if rest[len(rest)-1] {
+		t.Error("resting while springing back")
+	}
+	tt.Advance(2 * time.Second)
+	if !rest[len(rest)-1] {
+		t.Error("not resting after it came back")
+	}
+}
