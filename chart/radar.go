@@ -30,10 +30,7 @@ func Radar(c *ui.Context, label string, spokes []string, series []Series, at *in
 	chosen("Radar", label, at, len(spokes))
 	def(&o.Format, "%g")
 	t := c.Theme()
-	size := o.Size
-	if size == 0 {
-		size = t.Space(56)
-	}
+	size := side("Radar", label, o.Size, t.Space(56))
 	n := len(spokes)
 	step := 2 * math.Pi / float64(n)
 	outer := size/2 - t.Space(8)

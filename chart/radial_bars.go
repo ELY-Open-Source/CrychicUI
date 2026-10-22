@@ -24,10 +24,7 @@ func RadialBars(c *ui.Context, label string, names []string, vs []float64, at *i
 	chosen("RadialBars", label, at, len(names))
 	def(&o.Format, "%g")
 	t := c.Theme()
-	size := o.Size
-	if size == 0 {
-		size = t.Space(56)
-	}
+	size := side("RadialBars", label, o.Size, t.Space(56))
 	n := len(vs)
 	outer := size/2 - t.Space(1)
 	width := outer * 0.75 / float32(n)

@@ -28,23 +28,24 @@ func OHLC(c *ui.Context, label string, candles []Candle, at *int, o OHLCOptions)
 	hover := ui.Local(root, "hover", func() int { return -1 })
 	return root.Children(func() {
 		plot(c, label, mc.Axes{Left: ticks, Bottom: x.Ticks()}, o.Height, func(area ui.Element) {
-			g := float64(grow(area))
-			shown := sprung(area, candles)
+			g := float32(grow(area))
+			shown := sprung(area, y, candles)
 			area.Draw(kit.Inside(0, func(p *ui.Painter, r ui.Rect) {
 				grid(t, ticks)(p, r)
 				for i, k := range shown {
 					ink := t.Success
-					if k.Close < k.Open {
+					if candles[i].Close < candles[i].Open {
 						ink = t.Danger
 					}
 					if *at >= 0 && *at != i {
 						ink = ink.Alpha(0.4)
 					}
-					mid, m := mc.X(r, x.At(i)), (k.Open+k.Close)/2
+					mid, m := mc.X(r, x.At(i)), (k[0]+k[3])/2
 					w := (mc.X(r, x.Band(i).Hi) - mc.X(r, x.Band(i).Lo)) / 2
-					p.Line(mid, mc.Y(r, y.At(m+(k.High-m)*g)), mid, mc.Y(r, y.At(m+(k.Low-m)*g)), 2, ink)
-					p.Line(mid-w, mc.Y(r, y.At(m+(k.Open-m)*g)), mid, mc.Y(r, y.At(m+(k.Open-m)*g)), 2, ink)
-					p.Line(mid, mc.Y(r, y.At(m+(k.Close-m)*g)), mid+w, mc.Y(r, y.At(m+(k.Close-m)*g)), 2, ink)
+					open, shut := mc.Y(r, m+(k[0]-m)*g), mc.Y(r, m+(k[3]-m)*g)
+					p.Line(mid, mc.Y(r, m+(k[1]-m)*g), mid, mc.Y(r, m+(k[2]-m)*g), 2, ink)
+					p.Line(mid-w, open, mid, open, 2, ink)
+					p.Line(mid, shut, mid+w, shut, 2, ink)
 				}
 			}))
 			follow(c, root, area, at, hover, xs, 1, describe, "OHLC")

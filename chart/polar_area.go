@@ -24,10 +24,7 @@ func PolarArea(c *ui.Context, label string, names []string, vs []float64, at *in
 	chosen("PolarArea", label, at, len(names))
 	def(&o.Format, "%g")
 	t := c.Theme()
-	size := o.Size
-	if size == 0 {
-		size = t.Space(56)
-	}
+	size := side("PolarArea", label, o.Size, t.Space(56))
 	n := len(vs)
 	step := 2 * math.Pi / float64(n)
 	outer := size/2 - t.Space(1)

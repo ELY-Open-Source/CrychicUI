@@ -36,12 +36,12 @@ func Candles(c *ui.Context, label string, candles []Candle, at *int, o CandlesOp
 	return root.Children(func() {
 		plot(c, label, mc.Axes{Left: ticks, Bottom: x.Ticks()}, o.Height, func(area ui.Element) {
 			g := float64(grow(area))
-			shown := sprung(area, candles)
+			shown := sprung(area, y, candles)
 			area.Draw(kit.Inside(0, func(p *ui.Painter, r ui.Rect) {
 				grid(t, ticks)(p, r)
 				for i, k := range shown {
-					mid, m := mc.X(r, x.At(i)), (k.Open+k.Close)/2
-					p.Line(mid, mc.Y(r, y.At(m+(k.High-m)*g)), mid, mc.Y(r, y.At(m+(k.Low-m)*g)), 1, t.TextMuted)
+					mid, m, gg := mc.X(r, x.At(i)), (k[0]+k[3])/2, float32(g)
+					p.Line(mid, mc.Y(r, m+(k[1]-m)*gg), mid, mc.Y(r, m+(k[2]-m)*gg), 1, t.TextMuted)
 				}
 			}))
 			for i, k := range candles {

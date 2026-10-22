@@ -1,6 +1,7 @@
 package chart
 
 import (
+	"cmp"
 	"math"
 	"slices"
 
@@ -92,6 +93,28 @@ func squarify(vs []float64) [][2]mc.Span {
 			h -= ch
 		}
 		i = j
+	}
+	return out
+}
+
+// shares splits n whole cells by vs, largest remainders first.
+func shares(vs []float64, n int) []int {
+	sum := 0.0
+	for _, v := range vs {
+		sum += v
+	}
+	out := make([]int, len(vs))
+	rest := make([]int, len(vs))
+	left := n
+	for i, v := range vs {
+		out[i] = int(math.Floor(v / sum * float64(n)))
+		left -= out[i]
+		rest[i] = i
+	}
+	frac := func(i int) float64 { return vs[i]/sum*float64(n) - float64(out[i]) }
+	slices.SortStableFunc(rest, func(a, b int) int { return cmp.Compare(frac(b), frac(a)) })
+	for k := range left {
+		out[rest[k]]++
 	}
 	return out
 }

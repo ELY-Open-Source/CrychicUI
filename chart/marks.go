@@ -26,6 +26,56 @@ func mark(c *ui.Context, root ui.Element, at *int, i int, x, y mc.Span, ink ui.C
 	return b
 }
 
+// dot is a focusable point that tips, springs and picks.
+func dot(c *ui.Context, root ui.Element, at *int, i int, x, y, d float32, ink ui.Color, tip, comp string) ui.Element {
+	t := c.Theme()
+	b := mc.Point(c, x, y, d, d).Radius(999).Focusable().Label(tip).Tooltip(tip).Transition(spring)
+	if *at >= 0 && *at != i {
+		ink = ink.Alpha(0.35)
+	}
+	if b.Hovered() || *at == i {
+		b.Border(2, t.Text.Alpha(0.6))
+	}
+	b.Background(b.AnimateColor("ink", ink, ui.Snappy))
+	if b.Clicked() {
+		pick(root, at, i, comp)
+	}
+	return b
+}
+
+// grouped sets each series' bars side by side per label.
+func grouped(c *ui.Context, comp, label string, labels []string, series []Series, at *int, o LineOptions) ui.Element {
+	vals, names := table(comp, label, labels, series)
+	chosen(comp, label, at, len(labels))
+	def(&o.Format, "%g")
+	t := c.Theme()
+	var all []float64
+	for _, vs := range vals {
+		all = append(all, vs...)
+	}
+	x := mc.NewBand(labels...).Padding(0.25, 0.1)
+	y := mc.NewLinear(extent(all...)).Nice(4)
+	ticks := y.Ticks(4)
+	root := ui.Column(c).FillWidth().Gap(t.Space(2))
+	return root.Children(func() {
+		plot(c, label, mc.Axes{Left: ticks, Bottom: x.Ticks()}, o.Height, func(area ui.Element) {
+			g := float64(grow(area))
+			area.Draw(grid(t, ticks))
+			for i := range labels {
+				band := x.Band(i)
+				w := (band.Hi - band.Lo) / float32(len(vals))
+				for s, vs := range vals {
+					c.Key(fmt.Sprint(i, "/", s))
+					span := mc.Span{Lo: band.Lo + w*float32(s), Hi: band.Lo + w*float32(s+1)}
+					tip := fmt.Sprintf("%s, %s: "+o.Format, labels[i], names[s], vs[i])
+					mark(c, root, at, i, span, y.Span(0, vs[i]*g), tone(t, s), tip, comp)
+				}
+			}
+		})
+		legend(c, names)
+	})
+}
+
 // dots places points, sized by Size when sized.
 func dots(c *ui.Context, label string, points []Point, at *int, o LineOptions, sized bool, comp string) ui.Element {
 	var names []string
@@ -115,12 +165,11 @@ func worded(o CandlesOptions, k Candle) string {
 	return fmt.Sprintf(o.Tip, k.Label, f(k.Open), f(k.High), f(k.Low), f(k.Close))
 }
 
-// sprung eases each candle's four values on e.
-func sprung(e ui.Element, candles []Candle) []Candle {
-	out := make([]Candle, len(candles))
+// sprung eases each candle's open, high, low, close fractions.
+func sprung(e ui.Element, y mc.Linear, candles []Candle) [][]float32 {
+	out := make([][]float32, len(candles))
 	for i, k := range candles {
-		v := springs(e, fmt.Sprint("k", i), []float64{k.Open, k.High, k.Low, k.Close})
-		out[i] = Candle{k.Label, v[0], v[1], v[2], v[3]}
+		out[i] = eased(e, fmt.Sprint("k", i), []float32{y.At(k.Open), y.At(k.High), y.At(k.Low), y.At(k.Close)})
 	}
 	return out
 }

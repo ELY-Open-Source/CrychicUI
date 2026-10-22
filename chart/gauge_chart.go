@@ -34,10 +34,7 @@ func GaugeChart(c *ui.Context, label string, value, lo, hi float64, o GaugeChart
 	}
 	def(&o.Format, "%g")
 	t := c.Theme()
-	size := o.Size
-	if size == 0 {
-		size = t.Space(56)
-	}
+	size := side("GaugeChart", label, o.Size, t.Space(56))
 	inks := []ui.Color{t.Success, t.Warning, t.Danger}
 	tip := fmt.Sprintf("%s: "+o.Format, label, value)
 	root := ui.Column(c).AlignItems(ui.Center).Gap(t.Space(1))

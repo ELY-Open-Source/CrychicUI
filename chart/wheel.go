@@ -13,7 +13,8 @@ import (
 type wheel struct {
 	label, comp string
 	n           int
-	size        float32
+	// size is the width; high the height, size when zero.
+	size, high float32
 	// hit finds the drawn part at x, y, or -1.
 	hit      func(x, y, g float32) int
 	describe func(i int) string
@@ -22,7 +23,10 @@ type wheel struct {
 
 // build lays the wheel in root and returns its box.
 func (w wheel) build(c *ui.Context, root ui.Element, at *int, center func()) ui.Element {
-	box := ui.Box(c).Size(w.size, w.size).Shrink(0).Center().Focusable().Role(ui.RoleGroup).Label(w.label)
+	if w.high == 0 {
+		w.high = w.size
+	}
+	box := ui.Box(c).Size(w.size, w.high).Shrink(0).Center().Focusable().Role(ui.RoleGroup).Label(w.label)
 	hot := ui.Local(box, "hot", func() int { return -1 })
 	under := ui.Local(box, "under", func() int { return -1 })
 	if *hot >= w.n {
@@ -32,7 +36,7 @@ func (w wheel) build(c *ui.Context, root ui.Element, at *int, center func()) ui.
 	pointed := -1
 	x, y, over := box.PointerPosition()
 	if over {
-		pointed = w.hit(x-w.size/2, y-w.size/2, g)
+		pointed = w.hit(x-w.size/2, y-w.high/2, g)
 		// A resting pointer leaves keyboard steps alone.
 		if pointed != *under {
 			*hot, *under = pointed, pointed
@@ -91,9 +95,7 @@ func pies(c *ui.Context, label string, names []string, vs []float64, at *int, si
 	chosen(comp, label, at, len(names))
 	def(&format, "%g")
 	t := c.Theme()
-	if size == 0 {
-		size = t.Space(56)
-	}
+	size = side(comp, label, size, t.Space(56))
 	root := ui.Column(c).Gap(t.Space(3)).AlignItems(ui.Center)
 	root.Children(func() {
 		slices := mc.Pie(springs(root, "v", vs), 0.02)

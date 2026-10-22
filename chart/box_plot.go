@@ -43,18 +43,22 @@ func BoxPlot(c *ui.Context, label string, groups []Group, at *int, o BoxPlotOpti
 	return root.Children(func() {
 		plot(c, label, mc.Axes{Left: ticks, Bottom: x.Ticks()}, o.Height, func(area ui.Element) {
 			g := grow(area)
-			shown := make([][]float64, len(qs))
+			shown := make([][]float32, len(qs))
 			for i, q := range qs {
-				shown[i] = springs(area, fmt.Sprint("q", i), q[:])
+				aim := make([]float32, len(q))
+				for k, v := range q {
+					aim[k] = y.At(v)
+				}
+				shown[i] = eased(area, fmt.Sprint("q", i), aim)
 			}
 			area.Draw(kit.Inside(0, func(p *ui.Painter, r ui.Rect) {
 				grid(t, ticks)(p, r)
 				for i, q := range shown {
 					mid, b := mc.X(r, x.At(i)), x.Band(i)
 					w := (mc.X(r, b.Hi) - mc.X(r, b.Lo)) / 4
-					for _, end := range []float64{q[0], q[4]} {
-						yv := mc.Y(r, y.At(q[2]+(end-q[2])*float64(g)))
-						p.Line(mid, mc.Y(r, y.At(q[2])), mid, yv, 1, t.TextMuted)
+					for _, end := range []float32{q[0], q[4]} {
+						yv := mc.Y(r, q[2]+(end-q[2])*g)
+						p.Line(mid, mc.Y(r, q[2]), mid, yv, 1, t.TextMuted)
 						p.Line(mid-w, yv, mid+w, yv, 1, t.TextMuted)
 					}
 				}

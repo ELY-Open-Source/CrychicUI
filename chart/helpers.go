@@ -35,6 +35,15 @@ func springs(e ui.Element, key string, vs []float64) []float64 {
 	return out
 }
 
+// eased springs plotted fractions as marks' layout springs.
+func eased(e ui.Element, key string, fs []float32) []float32 {
+	out := make([]float32, len(fs))
+	for i, f := range fs {
+		out[i] = e.AnimateTo(fmt.Sprintf("%s.%d", key, i), f, ui.Snappy)
+	}
+	return out
+}
+
 // finite panics on NaN or infinite values.
 func finite(component, label string, vs ...float64) {
 	for _, v := range vs {
@@ -75,6 +84,17 @@ func height(c *ui.Context, h float32) float32 {
 		return c.Theme().Space(56)
 	}
 	return h
+}
+
+// side is a size v, or fallback for zero.
+func side(comp, label string, v, fallback float32) float32 {
+	if v < 0 || math.IsNaN(float64(v)) || math.IsInf(float64(v), 0) {
+		panic(fmt.Sprintf("chart: %s %q sizes must be finite and not negative", comp, label))
+	}
+	if v == 0 {
+		return fallback
+	}
+	return v
 }
 
 // plot is a labeled plot with muted axis labels.
@@ -121,7 +141,7 @@ func legend(c *ui.Context, names []string) {
 			c.Key(i)
 			ui.Row(c).Gap(t.Space(1.5)).AlignItems(ui.Center).Children(func() {
 				ui.Box(c).Size(t.Space(2.5), t.Space(2.5)).Radius(999).Background(tone(t, i))
-				kit.Muted(c, n).FontSize(t.Rem(0.8))
+				kit.Muted(c, n).NoWrap().FontSize(t.Rem(0.8))
 			})
 		}
 	})
@@ -139,4 +159,20 @@ func named(component, label string, names []string) {
 		}
 		seen[n] = true
 	}
+}
+
+// minTime is the earlier of a and b.
+func minTime(a, b time.Time) time.Time {
+	if b.Before(a) {
+		return b
+	}
+	return a
+}
+
+// maxTime is the later of a and b.
+func maxTime(a, b time.Time) time.Time {
+	if b.After(a) {
+		return b
+	}
+	return a
 }

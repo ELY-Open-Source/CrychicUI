@@ -190,7 +190,7 @@ func TestEveryEntry(t *testing.T) {
 		"BarsLoader": true, "OrbitLoader": true, "Skeleton": true, "SkeletonText": true, "SkeletonCard": true, "SkeletonList": true, "LoadingTable": true,
 		"OfflineState": true, "Maintenance": true, "Attention": true, "Beacon": true, "LiveDot": true, "AnnouncementBar": true,
 		"Typewriter": true, "WaveText": true, "Marquee": true, "VerticalMarquee": true, "Bob": true,
-		"Breathe": true, "Beat": true, "Spinning": true, "Orbit": true, "Rings": true, "KeyPath": true, "TextShimmer": true,
+		"Breathe": true, "Beat": true, "Spinning": true, "Orbit": true, "motion/Rings": true, "KeyPath": true, "TextShimmer": true,
 		"GridBackdrop": true, "DotBackdrop": true, "GradientBackdrop": true, "Aurora": true, "Starfield": true, "Particles": true,
 		"Snowfall": true, "Rainfall": true, "Bubbles": true, "Meteors": true, "Sparkles": true, "BorderBeam": true,
 		"ConicBorder": true, "ShineBorder": true, "FlowingText": true, "ShinyText": true, "RetroGrid": true, "RippleBackdrop": true,
@@ -199,6 +199,8 @@ func TestEveryEntry(t *testing.T) {
 		"LightRays": true, "ConicSpin": true, "Plasma": true, "Flicker": true, "Mesh": true, "AnalogClock": true}
 	updating := map[string]bool{"LiveClock": true, "CountdownTo": true, "WordRotate": true, "DigitalClock": true}
 	for i, e := range Entries() {
+		// Repeated names key by category.
+		loops := continuous[e.Name] || continuous[e.Category+"/"+e.Name]
 		if i > 0 && e.ID <= Entries()[i-1].ID {
 			t.Errorf("%s: ID %d out of order", e.Name, e.ID)
 		}
@@ -220,18 +222,18 @@ func TestEveryEntry(t *testing.T) {
 					t.Errorf("%s dark=%v: time text did not update", e.Name, dark)
 				}
 			} else {
-				if !continuous[e.Name] && pending {
+				if !loops && pending {
 					tt.Advance(time.Second)
 					pending = tt.FramePending()
 				}
-				if !continuous[e.Name] && pending {
+				if !loops && pending {
 					t.Errorf("%s dark=%v: pending %v", e.Name, dark, pending)
 				}
 			}
 			if a.Snapshot().Page != e.Path() || !tt.HasText(e.Name) {
 				t.Errorf("%s dark=%v: page %q", e.Name, dark, a.Snapshot().Page)
 			}
-			if continuous[e.Name] && !pending {
+			if loops && !pending {
 				t.Errorf("%s dark=%v: loop stopped", e.Name, dark)
 			}
 		}

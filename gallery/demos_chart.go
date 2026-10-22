@@ -59,7 +59,7 @@ func chartBox(c *ui.Context, log func(string), w float32, build func(shift int, 
 			log(fmt.Sprintf("chose %d", *at))
 		}
 		if button.Outline(c, "Shuffle data").Clicked() {
-			*shift++
+			*shift, *at = *shift+1, -1
 			log(fmt.Sprintf("data %d", *shift))
 		}
 	})

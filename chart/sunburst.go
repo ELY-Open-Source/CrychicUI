@@ -69,10 +69,7 @@ func Sunburst(c *ui.Context, label string, roots []Node, at *int, o SunburstOpti
 	chosen("Sunburst", label, at, len(parts))
 	def(&o.Format, "%g")
 	t := c.Theme()
-	size := o.Size
-	if size == 0 {
-		size = t.Space(56)
-	}
+	size := side("Sunburst", label, o.Size, t.Space(56))
 	hole := size * 0.12
 	width := (size/2 - t.Space(1) - hole) / float32(deepest+1)
 	ring := func(d int) (float32, float32) { return hole + width*float32(d), hole + width*float32(d+1) - 1 }
