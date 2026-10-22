@@ -23,9 +23,10 @@ func FiscalYear(c *ui.Context, label string, start time.Time, o FiscalYearOption
 		o.Quarters = [4]string{"Q1", "Q2", "Q3", "Q4"}
 	}
 	t := c.Theme()
-	now := c.Now()
+	// Bars move once an hour, on the hour.
+	now := c.Now().Truncate(time.Hour)
 	if now.Before(addMonths(start, 12)) {
-		c.After(time.Hour)
+		c.After(now.Add(time.Hour).Sub(c.Now()))
 	}
 	root := ui.Column(c).FillWidth().Gap(t.Space(2))
 	return kit.Arrive(root, ui.Pose{Y: 4, Fade: 1}, 0).Children(func() {

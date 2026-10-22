@@ -16,11 +16,12 @@ func SunArc(c *ui.Context, sunrise, sunset time.Time) ui.Element {
 	}
 	t := c.Theme()
 	loc := locale(c)
-	now := c.Now()
+	// The sun moves once a minute, on the minute.
+	now := c.Now().Truncate(time.Minute)
 	span := sunset.Sub(sunrise)
 	f := float32(min(max(now.Sub(sunrise), 0), span)) / float32(span)
 	if now.Before(sunset) {
-		c.After(time.Minute)
+		c.After(now.Add(time.Minute).Sub(c.Now()))
 	}
 	at := func(x time.Time) string { return i18n.FormatDate(loc, x, i18n.DateOptions{Skeleton: "jm"}) }
 	root := ui.Column(c).AlignSelf(ui.Start).Gap(t.Space(1)).Role(ui.RoleMeter).Label(at(sunrise)+" – "+at(sunset)).

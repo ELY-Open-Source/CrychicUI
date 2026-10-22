@@ -251,6 +251,24 @@ func TestDayProgress(t *testing.T) {
 	}
 }
 
+func TestDayProgressStillBetweenPercents(t *testing.T) {
+	tt := ui.NewTester(func(c *ui.Context) { DayProgress(c, "Today", DayProgressOptions{}) }, 400, 100)
+	settles(t, tt, "DayProgress")
+	now := tt.Now()
+	start := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
+	length := tomorrow(now).Sub(start)
+	next := start.Add((length*time.Duration(now.Sub(start)*100/length+1) + 99) / 100)
+	if next.Sub(now) < 2*time.Second {
+		tt.Advance(next.Sub(now) + time.Second)
+		settles(t, tt, "DayProgress after a percent")
+	}
+	tt.Advance(500 * time.Millisecond)
+	tt.Frame()
+	if tt.FramePending() {
+		t.Error("the bar moved between whole percents")
+	}
+}
+
 func TestFiscalYearFills(t *testing.T) {
 	accent := ui.LightTheme().Accent
 	var start time.Time

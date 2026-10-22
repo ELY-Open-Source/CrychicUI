@@ -35,6 +35,6 @@ func DayProgress(c *ui.Context, label string, o DayProgressOptions) ui.Element {
 			ui.Text(c, label).Bold()
 			kit.Muted(c, text).ContentTransition(ui.ContentTransition{Numeric: true})
 		})
-		feedback.ProgressBar(c, label, float64(now.Sub(start))/float64(length))
+		feedback.ProgressBar(c, label, float64(pct)/100)
 	})
 }
