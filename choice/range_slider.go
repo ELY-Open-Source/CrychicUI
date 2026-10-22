@@ -2,9 +2,6 @@ package choice
 
 import (
 	"fmt"
-	"math"
-	"strconv"
-	"strings"
 
 	"github.com/ELY-Open-Source/CrychicUI/kit"
 	"github.com/ELY-Open-Source/CrychicUI/sound"
@@ -43,31 +40,4 @@ func RangeSlider(c *ui.Context, label string, low, high *float64, lo, hi, step f
 			kit.Log("RangeSlider", "changed", "low", *low, "high", *high)
 		}
 	})
-}
-
-// onStep reports whether MyGo's slider snap keeps v.
-func onStep(v, lo, step float64) bool {
-	s := lo + math.Round((v-lo)/step)*step
-	if d := max(decimals(step), decimals(lo)); d < 15 {
-		r, err := strconv.ParseFloat(strconv.FormatFloat(s, 'f', d, 64), 64)
-		if err != nil {
-			panic(err)
-		}
-		s = r
-	}
-	return s == v
-}
-
-// decimals counts the digits after the point, as MyGo does.
-func decimals(v float64) int {
-	mant, exp, _ := strings.Cut(strconv.FormatFloat(math.Abs(v), 'e', -1, 64), "e")
-	e, err := strconv.Atoi(exp)
-	if err != nil {
-		panic(err)
-	}
-	digits := 0
-	if _, frac, ok := strings.Cut(mant, "."); ok {
-		digits = len(frac)
-	}
-	return max(digits-e, 0)
 }

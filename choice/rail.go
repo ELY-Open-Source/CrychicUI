@@ -2,6 +2,8 @@ package choice
 
 import (
 	"math"
+	"strconv"
+	"strings"
 
 	"github.com/ELY-Open-Source/CrychicUI/kit"
 	"github.com/ELY-Open-Source/CrychicUI/sound"
@@ -75,4 +77,34 @@ func sliderArgs(component, label string, value *float64, lo, hi, step float64) {
 		!(*value >= lo && *value <= hi) || !(step >= 0) || math.IsInf(step, 0) {
 		panic("choice: " + component + " needs a label, finite lo < hi, a value within and a finite step")
 	}
+}
+
+// onStep reports whether MyGo's slider snap keeps v.
+func onStep(v, lo, step float64) bool { return snap(v, lo, step) == v }
+
+// snap rounds v to whole steps, as MyGo does.
+func snap(v, lo, step float64) float64 {
+	s := lo + math.Round((v-lo)/step)*step
+	if d := max(decimals(step), decimals(lo)); d < 15 {
+		r, err := strconv.ParseFloat(strconv.FormatFloat(s, 'f', d, 64), 64)
+		if err != nil {
+			panic(err)
+		}
+		s = r
+	}
+	return s
+}
+
+// decimals counts the digits after the point, as MyGo does.
+func decimals(v float64) int {
+	mant, exp, _ := strings.Cut(strconv.FormatFloat(math.Abs(v), 'e', -1, 64), "e")
+	e, err := strconv.Atoi(exp)
+	if err != nil {
+		panic(err)
+	}
+	digits := 0
+	if _, frac, ok := strings.Cut(mant, "."); ok {
+		digits = len(frac)
+	}
+	return max(digits-e, 0)
 }
