@@ -187,7 +187,7 @@ func TestCategories(t *testing.T) {
 func TestEveryEntry(t *testing.T) {
 	continuous := map[string]bool{"DeadlineBadge": true, "LoadingDots": true, "ShimmerButton": true, "PulseButton": true, "Streak": true,
 		"IndeterminateBar": true, "StripedProgress": true, "Spin": true, "DotsLoader": true, "PulseLoader": true,
-		"BarsLoader": true, "OrbitLoader": true, "Skeleton": true, "SkeletonText": true, "SkeletonCard": true, "SkeletonList": true,
+		"BarsLoader": true, "OrbitLoader": true, "Skeleton": true, "SkeletonText": true, "SkeletonCard": true, "SkeletonList": true, "LoadingTable": true,
 		"OfflineState": true, "Maintenance": true, "Attention": true, "Beacon": true, "LiveDot": true, "AnnouncementBar": true,
 		"Typewriter": true, "WaveText": true, "Marquee": true, "VerticalMarquee": true, "Bob": true,
 		"Breathe": true, "Beat": true, "Spinning": true, "Orbit": true, "Rings": true, "KeyPath": true, "TextShimmer": true,

@@ -378,6 +378,56 @@ func slides(c *ui.Context, row ui.Element, i int) ui.Element {
 	return row.Translate(0, off)
 }
 
+// menu toggles a panel of actions under trigger b.
+func menu(c *ui.Context, root, b ui.Element, component, label string, actions []Action, open *bool, pick func(i int)) {
+	t := c.Theme()
+	if b.Clicked() {
+		*open = !*open
+		root.SetChanged()
+		if *open {
+			sound.Play(sound.Open)
+		}
+		kit.Log(component, "toggled", "open", *open)
+	}
+	if ui.PopoverBase(c, b, open, func(panel ui.Element) {
+		panel.Margin(t.Space(1), 0, 0, 0).Width(t.Space(48)).Padding(t.Space(1)).Radius(t.Radius).Background(t.Background).
+			Border(1, t.Border).Shadow(0, t.Space(2), t.Space(6), 0, kit.Shade(0.16)).TransformOrigin(1, 0).Role(ui.RoleMenu).Label(label)
+		kit.Arrive(panel, ui.Pose{Scale: 0.95, Fade: 1}, 0)
+		ui.Column(c).FillWidth().FocusGroup(ui.Vertical).Children(func() {
+			for i, a := range actions {
+				c.Key(i)
+				item := kit.Press(ui.ButtonBase(c).Label(a.Label).FillWidth().Gap(t.Space(2)).AlignItems(ui.Center).
+					Padding(t.Space(1.5), t.Space(2.5)).Radius(t.Radius))
+				item.Background(item.AnimateColor("bg", t.SurfaceHover.Alpha(unit(item.Hovered())), ui.Snappy)).Children(func() {
+					ui.Icon(c, icon.Must(a.Icon)).Size(16, 16)
+					ui.Text(c, a.Label)
+				})
+				if item.Clicked() {
+					*open = false
+					root.SetChanged()
+					pick(i)
+				}
+			}
+		})
+	}).Dismissed() {
+		root.SetChanged()
+		kit.Log(component, "dismissed")
+	}
+}
+
+// bar is a pill filled to frac; it grows in.
+func bar(c *ui.Context, label string, frac float32, ink ui.Color) ui.Element {
+	t := c.Theme()
+	rad := t.Space(0.75)
+	track := ui.Box(c).Grow(1).Height(t.Space(1.5)).Radius(rad).Background(t.Border).Clip().
+		Role(ui.RoleProgress).Label(label).Range(0, 1, float64(frac))
+	return track.Children(func() {
+		fill := ui.Box(c).Absolute().Start(0).Top(0).Bottom(0).Radius(rad)
+		grow := fill.Keyframes("grow", []ui.Keyframe{{Value: 0}, {At: 600 * time.Millisecond, Value: 1, Ease: ui.EaseOut}})
+		fill.Background(fill.AnimateColor("ink", ink, ui.Snappy)).WidthPercent(100 * grow * fill.AnimateTo("w", frac, ui.Smooth))
+	})
+}
+
 // body builds n rows, scrolling within h if set.
 func body(c *ui.Context, root ui.Element, list *ui.ListState, n int, h float32, row func(i int)) ui.Element {
 	if h < 0 || !finite(h) {
