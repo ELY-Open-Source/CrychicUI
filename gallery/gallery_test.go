@@ -187,7 +187,8 @@ func TestCategories(t *testing.T) {
 func TestEveryEntry(t *testing.T) {
 	continuous := map[string]bool{"LoadingDots": true, "ShimmerButton": true, "PulseButton": true, "Streak": true,
 		"IndeterminateBar": true, "StripedProgress": true, "Spin": true, "DotsLoader": true, "PulseLoader": true,
-		"BarsLoader": true, "OrbitLoader": true, "Skeleton": true, "SkeletonText": true, "SkeletonCard": true, "SkeletonList": true}
+		"BarsLoader": true, "OrbitLoader": true, "Skeleton": true, "SkeletonText": true, "SkeletonCard": true, "SkeletonList": true,
+		"OfflineState": true, "Maintenance": true, "Attention": true, "Beacon": true, "LiveDot": true, "AnnouncementBar": true}
 	updating := map[string]bool{"LiveClock": true, "CountdownTo": true}
 	for i, e := range Entries() {
 		if i > 0 && e.ID <= Entries()[i-1].ID {

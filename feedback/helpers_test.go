@@ -58,6 +58,12 @@ func panics(t *testing.T, what string, fn func()) {
 
 func render(view func(c *ui.Context)) { ui.Render(view, 200, 200, 1) }
 
+// tinted reports whether the frame pixel is exactly k.
+func tinted(tt *ui.Tester, x, y int, k ui.Color) bool {
+	p := tt.Image().RGBAAt(x, y)
+	return p.R == k.R && p.G == k.G && p.B == k.B
+}
+
 // baseline fills Recent with Swipe so later cues show.
 func baseline() []sound.Cue {
 	for range 32 {
