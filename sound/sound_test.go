@@ -36,30 +36,35 @@ func TestCueNames(t *testing.T) {
 		}
 		seen[s] = true
 	}
-	if len(seen) != 15 {
-		t.Errorf("cues = %d, want 15", len(seen))
+	if len(seen) != 17 {
+		t.Errorf("cues = %d, want 17", len(seen))
 	}
 	if got := Cue(99).String(); got != "cue(99)" {
 		t.Errorf("unknown cue name = %q", got)
 	}
 }
 
+// bounded checks a sound's length, peak and clean ends.
+func bounded(t *testing.T, name string, s []float32) {
+	t.Helper()
+	if d := float64(len(s)) / rate; d < 0.005 || d > 0.5 {
+		t.Errorf("%s lasts %.3f s", name, d)
+	}
+	peak := 0.0
+	for _, v := range s {
+		peak = max(peak, math.Abs(float64(v)))
+	}
+	if peak < 0.05 || peak > 1 {
+		t.Errorf("%s peak %.3f", name, peak)
+	}
+	if a, z := math.Abs(float64(s[0])), math.Abs(float64(s[len(s)-1])); a > 0.01 || z > 0.01 {
+		t.Errorf("%s clicks: first %.3f last %.3f", name, a, z)
+	}
+}
+
 func TestSynthBounds(t *testing.T) {
 	for _, c := range Cues() {
-		s := synth(c)
-		if d := float64(len(s)) / rate; d < 0.005 || d > 0.5 {
-			t.Errorf("%v lasts %.3f s", c, d)
-		}
-		peak := 0.0
-		for _, v := range s {
-			peak = max(peak, math.Abs(float64(v)))
-		}
-		if peak < 0.05 || peak > 1 {
-			t.Errorf("%v peak %.3f", c, peak)
-		}
-		if a, z := math.Abs(float64(s[0])), math.Abs(float64(s[len(s)-1])); a > 0.01 || z > 0.01 {
-			t.Errorf("%v clicks: first %.3f last %.3f", c, a, z)
-		}
+		bounded(t, c.String(), render(scores[c]))
 	}
 }
 
@@ -67,7 +72,7 @@ func TestCuesDiffer(t *testing.T) {
 	cues := Cues()
 	for i, a := range cues {
 		for _, b := range cues[i+1:] {
-			if slices.Equal(synth(a), synth(b)) {
+			if slices.Equal(render(scores[a]), render(scores[b])) {
 				t.Errorf("%v and %v sound the same", a, b)
 			}
 		}

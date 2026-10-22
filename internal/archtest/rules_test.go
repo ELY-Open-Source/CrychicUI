@@ -40,6 +40,9 @@ func checkImports(dir string, f *ast.File) []string {
 	var bad []string
 	for _, im := range f.Imports {
 		p, _ := strconv.Unquote(im.Path.Value)
+		if p == "github.com/egoist/mygo/audio" && dir != "sound" {
+			bad = append(bad, fmt.Sprintf("%s imports audio; play through sound", dir))
+		}
 		rel, ok := strings.CutPrefix(p, module+"/")
 		if !ok {
 			continue

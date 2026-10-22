@@ -110,6 +110,8 @@ func TestRulesCatch(t *testing.T) {
 		{"upward", "", "package button\nimport _ \"" + module + "/form\"\n", imports("button"), 1},
 		{"unknown pkg", "", "package x\n", imports("x"), 1},
 		{"downward", "", "package button\nimport _ \"" + module + "/kit\"\n", imports("button"), 0},
+		{"audio outside sound", "", "package media\nimport _ \"github.com/egoist/mygo/audio\"\n", imports("media"), 1},
+		{"audio in sound", "", "package sound\nimport _ \"github.com/egoist/mygo/audio\"\n", imports("sound"), 0},
 		{"long comment", "", "package x\n// one two three four five six seven eight nine ten eleven\n", comments, 1},
 		{"two lines", "", "package x\n// one\n// two\n", comments, 1},
 		{"block", "", "package x\n/* one\ntwo */\n", comments, 1},

@@ -10,7 +10,7 @@ Progress truth: `TASKS.md`. Requirements: `PRD.md` and `docs/prd/catalog-*.md` (
 | --- | --- |
 | Go | 1.27.1 |
 | MyGo | `github.com/egoist/mygo v0.5.5`, pinned; CLI pinned as `go tool mygo` |
-| Sound | `github.com/egoist/mygo/audio`, cues synthesized in `sound` |
+| Sound | `github.com/egoist/mygo/audio`, cues, notes and drums synthesized in `sound`; nothing else opens audio |
 | Icons | Lucide (ISC), `icon/svg` |
 | Web | `cmd/gallery` built for `js/wasm`, shipped in 20 MiB parts (Workers cap files at 25 MiB); MyGo's browser backend draws it with WebGL 2 |
 | Hosting | Cloudflare Workers static assets from `web/dist`; code on GitHub `github.com/ELY-Open-Source/CrychicUI` |

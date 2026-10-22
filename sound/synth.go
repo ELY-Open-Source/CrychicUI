@@ -9,6 +9,7 @@ type wave uint8
 const (
 	sine wave = iota
 	triangle
+	noise
 )
 
 // note is one tone sweeping from f0 to f1 Hz.
@@ -35,13 +36,31 @@ var scores = [cueCount][]note{
 	Send:    {{0, 0.12, 300, 1500, 0.35, triangle}},
 	Delete:  {{0, 0.14, 600, 150, 0.4, triangle}},
 	Swipe:   {{0, 0.07, 1200, 400, 0.25, sine}},
+	Note:    tone(440),
+	Drum:    drumScores[Kick],
 }
 
-// synth renders a cue's notes to mono samples.
-func synth(c Cue) []float32 {
-	score := scores[c]
+var drumScores = [pieceCount][]note{
+	Kick:  {{0, 0.3, 140, 45, 0.9, sine}},
+	Snare: {{0, 0.16, 220, 180, 0.35, triangle}, {0, 0.16, 1000, 1000, 0.45, noise}},
+	Hat:   {{0, 0.06, 1000, 1000, 0.35, noise}},
+	Clap:  {{0, 0.02, 1000, 1000, 0.5, noise}, {0.025, 0.02, 1000, 1000, 0.5, noise}, {0.05, 0.12, 1000, 1000, 0.45, noise}},
+	Tom:   {{0, 0.25, 200, 110, 0.7, sine}},
+}
+
+// tone is a struck note with a soft overtone.
+func tone(hz float64) []note {
+	out := []note{{0, 0.45, hz, hz, 0.3, sine}}
+	if 2*hz < rate/4 {
+		out = append(out, note{0, 0.3, 2 * hz, 2 * hz, 0.08, triangle})
+	}
+	return out
+}
+
+// render turns a score into mono samples.
+func render(score []note) []float32 {
 	if len(score) == 0 {
-		panic("sound: no score for " + c.String())
+		panic("sound: empty score")
 	}
 	end := 0.0
 	for _, n := range score {
@@ -74,8 +93,13 @@ func envelope(t, dur float64) float64 {
 }
 
 func shape(w wave, phase float64) float64 {
-	if w == triangle {
+	switch w {
+	case triangle:
 		return 2 / math.Pi * math.Asin(math.Sin(phase))
+	case noise:
+		// A hash of the phase: fixed, so tests stay stable.
+		v := math.Sin(phase*12.9898) * 43758.5453
+		return 2*(v-math.Floor(v)) - 1
 	}
 	return math.Sin(phase)
 }
