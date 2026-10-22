@@ -45,10 +45,10 @@ func HoldButton(c *ui.Context, label string, o HoldButtonOptions) ui.Element {
 			c.After(o.Duration - elapsed)
 		}
 	}
-	b.Draw(func(painter *ui.Painter, r ui.Rect) {
+	b.Draw(kit.Inside(t.Radius, func(painter *ui.Painter, r ui.Rect) {
 		if p > 0 {
 			painter.Fill(ui.Rect{X: r.X, Y: r.Y, W: r.W * p, H: r.H}, t.Accent.Alpha(0.25), 0)
 		}
-	})
+	}))
 	return b.Children(func() { ui.Text(c, label).SingleLine() })
 }

@@ -57,6 +57,17 @@ func TestSegmentProgressStaggers(t *testing.T) {
 	}
 }
 
+func TestGaugeNeedleAngles(t *testing.T) {
+	tt := ui.NewTester(func(c *ui.Context) { Gauge(c, "Speed", 25, 0, 100, GaugeOptions{}) }, 300, 200)
+	tt.Advance(2 * time.Second)
+	r, th := find(t, tt, "Speed"), ui.LightTheme()
+	cx, cy := r.X+r.W/2, r.Y+th.Space(19)-th.Space(1.5)
+	p := tt.Image().RGBAAt(int(cx-23), int(cy-23))
+	if int(p.R)+int(p.G)+int(p.B) > 3*128 {
+		t.Errorf("no needle up-left of the center at 25%%: %v", p)
+	}
+}
+
 func TestRingAndGauge(t *testing.T) {
 	v := 0.4
 	tt := ui.NewTester(func(c *ui.Context) {

@@ -59,6 +59,17 @@ func TestImageAndColorChoice(t *testing.T) {
 	})
 }
 
+func TestSizeChoiceStrikesCornerToCorner(t *testing.T) {
+	tt := ui.NewTester(func(c *ui.Context) {
+		SizeChoice(c, "Size", []string{"S", "L"}, []string{"L"}, new(string))
+	}, 400, 80)
+	r := find(t, tt, "L")
+	x := int(r.X + 0.15*r.W)
+	if a, b := tt.Image().RGBAAt(x, int(r.Y+0.85*r.H)), tt.Image().RGBAAt(x, int(r.Y+0.5*r.H)); a == b {
+		t.Errorf("no diagonal strike at %d: %v matches the box %v", x, a, b)
+	}
+}
+
 func TestSizeChoice(t *testing.T) {
 	size := ""
 	tt := ui.NewTester(func(c *ui.Context) {

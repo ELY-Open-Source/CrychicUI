@@ -4,6 +4,7 @@ import (
 	"math"
 
 	"github.com/ELY-Open-Source/CrychicUI/icon"
+	"github.com/ELY-Open-Source/CrychicUI/kit"
 	"github.com/ELY-Open-Source/CrychicUI/sound"
 	"github.com/egoist/mygo/ui"
 )
@@ -23,11 +24,11 @@ func progressButton(c *ui.Context, label string, progress float64) ui.Element {
 		sound.Play(sound.Success)
 	}
 	shown := root.AnimateTo("progress", float32(progress), ui.Snappy)
-	root.Draw(func(p *ui.Painter, r ui.Rect) {
+	root.Draw(kit.Inside(t.Radius, func(p *ui.Painter, r ui.Rect) {
 		if shown > 0 {
 			p.Fill(ui.Rect{X: r.X, Y: r.Y, W: r.W * shown, H: r.H}, t.Accent.Alpha(0.2), 0)
 		}
-	})
+	}))
 	return root.Children(func() {
 		if progress >= 1 {
 			ui.Icon(c, icon.Must("check")).Size(16, 16).ContentTransition(ui.ContentTransition{})

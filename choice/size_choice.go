@@ -37,7 +37,10 @@ func SizeChoice(c *ui.Context, label string, sizes, unavailable []string, select
 			b.Background(b.AnimateColor("bg", bg, quick)).Border(1, b.AnimateColor("edge", edge, quick)).
 				TextColor(b.AnimateColor("fg", fg, quick))
 			if out {
-				b.Clip().DrawOver(func(p *ui.Painter, r ui.Rect) { p.Line(r.X, r.Y+r.H, r.X+r.W, r.Y, 1, t.Border) })
+				b.DrawOver(kit.Inside(t.Radius, func(p *ui.Painter, r ui.Rect) {
+					var strike ui.Path
+					p.StrokePath(strike.MoveTo(r.X, r.Y+r.H).LineTo(r.X+r.W, r.Y), 1, t.Border)
+				}))
 			}
 			kit.Press(b).Children(func() { ui.Text(c, s).Bold() })
 			changed = kit.Changed(b, sound.Select) || changed

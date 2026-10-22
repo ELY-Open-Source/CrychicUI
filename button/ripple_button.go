@@ -55,13 +55,13 @@ func RippleButton(c *ui.Context, label string) ui.Element {
 	if *run > 0 {
 		p := root.Keyframes("ripple", []ui.Keyframe{{Value: 0}, {At: 400 * time.Millisecond, Value: 1, Ease: ui.EaseOut}},
 			ui.KeyframeOptions{Run: *run})
-		root.Draw(func(painter *ui.Painter, r ui.Rect) {
+		root.Draw(kit.Inside(t.Radius, func(painter *ui.Painter, r ui.Rect) {
 			if p < 1 {
 				radius := max(r.W, r.H) * p
 				circle := (&ui.Path{}).Circle(r.X+*x, r.Y+*y, radius)
 				painter.FillPath(circle, t.Accent.Alpha(0.25*(1-p)))
 			}
-		})
+		}))
 	}
 	return root.Children(func() { ui.Text(c, label).SingleLine() })
 }

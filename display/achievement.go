@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/ELY-Open-Source/CrychicUI/icon"
+	"github.com/ELY-Open-Source/CrychicUI/kit"
 	"github.com/egoist/mygo/ui"
 )
 
@@ -31,7 +32,7 @@ func Achievement(c *ui.Context, name, iconName string, unlocked bool) ui.Element
 	if *run > 0 {
 		shine := root.Keyframes("shine", []ui.Keyframe{{Value: 0}, {At: 500 * time.Millisecond, Value: 1, Ease: ui.EaseOut}},
 			ui.KeyframeOptions{Run: *run})
-		root.DrawOver(func(p *ui.Painter, r ui.Rect) {
+		root.DrawOver(kit.Inside(999, func(p *ui.Painter, r ui.Rect) {
 			if shine < 1 {
 				w := r.W / 3
 				x := r.X - w + (r.W+2*w)*shine
@@ -42,7 +43,7 @@ func Achievement(c *ui.Context, name, iconName string, unlocked bool) ui.Element
 				}}
 				p.FillGradient(ui.Rect{X: x, Y: r.Y, W: w, H: r.H}, g, 0)
 			}
-		})
+		}))
 	}
 	return root.Children(func() {
 		ui.Icon(c, icon.Must(iconName)).Size(16, 16)

@@ -70,7 +70,7 @@ func SignaturePad(c *ui.Context, o SignaturePadOptions) ui.Element {
 				return false
 			}
 		})
-		pad.Draw(func(p *ui.Painter, r ui.Rect) {
+		pad.Draw(kit.Inside(t.Radius, func(p *ui.Painter, r ui.Rect) {
 			p.Transform(ui.Translation(r.X, r.Y), 0, 0, func() {
 				for _, stroke := range *strokes {
 					age := c.Now().Sub(stroke.at)
@@ -84,7 +84,7 @@ func SignaturePad(c *ui.Context, o SignaturePadOptions) ui.Element {
 					p.StrokePath(*current, t.Space(0.5), t.Text)
 				}
 			})
-		})
+		}))
 		if *completed {
 			*completed = false
 			root.SetChanged()

@@ -30,7 +30,7 @@ func UnlockToast(c *ui.Context, title, text string, open *bool) ui.Element {
 		}
 		kit.Arrive(card, ui.Pose{Scale: 0.9, Fade: 1}, 0).Transition(ui.ElementTransition{Exit: &ui.Motion{Scale: 0.95}})
 		k := card.Keyframes("shine", shine, ui.KeyframeOptions{Delay: 200 * time.Millisecond})
-		card.DrawOver(func(p *ui.Painter, r ui.Rect) {
+		card.DrawOver(kit.Inside(t.Radius+2, func(p *ui.Painter, r ui.Rect) {
 			if k <= 0 || k >= 1 {
 				return
 			}
@@ -38,7 +38,7 @@ func UnlockToast(c *ui.Context, title, text string, open *bool) ui.Element {
 			x := r.X - w + (r.W+w)*k
 			band := ui.LinearGradient{Angle: 90, Stops: []ui.GradientStop{{Color: t.Warning.Alpha(0), At: 0}, {Color: t.Warning.Alpha(0.25), At: 0.5}, {Color: t.Warning.Alpha(0), At: 1}}}
 			p.FillGradient(ui.Rect{X: x, Y: r.Y, W: w, H: r.H}, band, 0)
-		})
+		}))
 		card.Children(func() {
 			ui.Box(c).Size(t.Space(10), t.Space(10)).Shrink(0).Center().Radius(999).Background(t.Warning.Alpha(0.16)).
 				TextColor(t.Warning).Children(func() { ui.Icon(c, icon.Must("trophy")).Size(t.Space(5), t.Space(5)) })

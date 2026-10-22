@@ -274,3 +274,16 @@ func TestSettleRebuildsWhenLayoutMoves(t *testing.T) {
 		t.Errorf("resize: %d builds used %v, want 3 using 50", builds, used)
 	}
 }
+
+func TestInsideClipsToRoundedBox(t *testing.T) {
+	tt := ui.NewTester(func(c *ui.Context) {
+		ui.Box(c).Margin(20, 0, 0, 20).Size(100, 60).Draw(Inside(12, func(p *ui.Painter, r ui.Rect) {
+			p.Fill(ui.Rect{X: r.X - 20, Y: r.Y - 20, W: r.W + 40, H: r.H + 40}, c.Theme().Danger, 0)
+		}))
+	}, 200, 120)
+	th, img := ui.LightTheme(), tt.Image()
+	is := func(x, y int, k ui.Color) bool { p := img.RGBAAt(x, y); return p.R == k.R && p.G == k.G && p.B == k.B }
+	if !is(70, 50, th.Danger) || !is(10, 50, th.Background) || !is(20, 20, th.Background) || !is(150, 50, th.Background) {
+		t.Errorf("center %v, left %v, corner %v, right %v", img.RGBAAt(70, 50), img.RGBAAt(10, 50), img.RGBAAt(20, 20), img.RGBAAt(150, 50))
+	}
+}

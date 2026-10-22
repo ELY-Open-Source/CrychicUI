@@ -66,6 +66,8 @@ health, home, marketing, content, desktop, geo · 6 gallery · 7 cmd/gallery
 - A component deciding from laid-out sizes (`LayoutBounds`, a `ScrollState`'s `Max`) calls `kit.Settle` with the
   values it used; paint rebuilds when layout disagrees. Arrivals on first build use `kit.Arrive`; `Enter` only
   runs inside a shown parent.
+- `Clip` clips children only: `Draw` or `DrawOver` paint that can pass the box goes through `kit.Inside`.
+  `Painter.Line` draws only horizontal and vertical lines; stroke a `ui.Path` for others.
 - Files under 500 lines (lock files exempt). Comments one line, ten words at most, only when needed. No dead
   code, no versioned APIs.
 - A category file holds one exported component, named in snake case (`KPIGrid` in `kpi_grid.go`), or private

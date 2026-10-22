@@ -38,7 +38,8 @@ func Gauge(c *ui.Context, label string, value, lo, hi float64, o GaugeOptions) u
 				}
 			})
 			x, y := polar(cx, cy, rad-w*2, 180+180*float64(at))
-			p.Line(cx, cy, x, y, w, t.Text)
+			var needle ui.Path
+			p.StrokePath(needle.MoveTo(cx, cy).LineTo(x, y), w, t.Text)
 			p.Fill(ui.Rect{X: cx - w*1.5, Y: cy - w*1.5, W: w * 3, H: w * 3}, t.Text, w*1.5)
 		})
 		kit.Numeric(c, fmt.Sprintf(o.Format, value)).Bold().Margin(t.Space(1), 0, 0, 0)

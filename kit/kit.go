@@ -91,6 +91,11 @@ func Settle(c *ui.Context, e ui.Element, used []float32, read func() []float32) 
 	})
 }
 
+// Inside clips fn to its box rounded by radius.
+func Inside(radius float32, fn func(p *ui.Painter, r ui.Rect)) func(p *ui.Painter, r ui.Rect) {
+	return func(p *ui.Painter, r ui.Rect) { p.Clip(r, min(radius, r.W/2, r.H/2), func() { fn(p, r) }) }
+}
+
 // Shade is black at alpha a, for shadows.
 func Shade(a float32) ui.Color { return ui.RGBA(0, 0, 0, a) }
 
