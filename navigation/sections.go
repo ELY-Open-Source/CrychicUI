@@ -67,3 +67,31 @@ func reopened[T comparable](root ui.Element, was, now T, component string) {
 		kit.Log(component, "open", now)
 	}
 }
+
+// popup opens body in an arriving panel under trigger.
+func popup(c *ui.Context, trigger ui.Element, open *bool, body func()) {
+	t := c.Theme()
+	toggled(trigger, open)
+	ui.Popover(c, trigger, open, func() {
+		kit.Arrive(ui.Column(c).Gap(t.Space(0.5)).Padding(t.Space(1)), ui.Pose{Scale: 0.96, Fade: 1}, 0).Children(body)
+	})
+}
+
+// checked is a menu row with a popping check.
+func checked(c *ui.Context, label string, on bool, lead func()) ui.Element {
+	t := c.Theme()
+	return rowBase(c, label).Checked(on).Children(func() {
+		ui.Row(c).FillWidth().Gap(t.Space(2)).AlignItems(ui.Center).Children(func() {
+			if lead != nil {
+				lead()
+			}
+			ui.Text(c, label).Grow(1).SingleLine()
+			mark := ui.Box(c).Size(16, 16).Shrink(0)
+			if on {
+				mark.Children(func() {
+					kit.Arrive(ui.Icon(c, icon.Must("check")).Size(16, 16).TextColor(t.Accent), ui.Pose{Scale: 0.5, Fade: 1}, 0)
+				})
+			}
+		})
+	})
+}

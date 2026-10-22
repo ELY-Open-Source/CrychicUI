@@ -2,7 +2,9 @@
 package navigation
 
 import (
+	"github.com/ELY-Open-Source/CrychicUI/icon"
 	"github.com/ELY-Open-Source/CrychicUI/kit"
+	"github.com/ELY-Open-Source/CrychicUI/sound"
 	"github.com/egoist/mygo/ui"
 )
 
@@ -52,9 +54,26 @@ func def(field *string, english string) {
 	}
 }
 
+// pip is a page dot that widens while on.
+func pip(c *ui.Context, e ui.Element, on bool) ui.Element {
+	t := c.Theme()
+	k := e.AnimateTo("on", unit(on), ui.Snappy)
+	return e.Size(t.Space(2)+k*t.Space(4), t.Space(2)).Radius(999).Background(t.Border.Mix(t.Accent, k))
+}
+
 func unit(on bool) float32 {
 	if on {
 		return 1
 	}
 	return 0
+}
+
+// arrowButton is a small icon button playing cue.
+func arrowButton(c *ui.Context, name, glyph string, off bool, cue sound.Cue) bool {
+	t := c.Theme()
+	b := kit.Press(ui.ButtonBase(c).Label(name).Tooltip(name).Size(t.Space(8), t.Space(8)).Center().Radius(t.Radius)).Disabled(off)
+	b.Background(b.AnimateColor("bg", t.SurfaceHover.Alpha(unit(b.Hovered())), ui.Snappy)).Children(func() {
+		ui.Icon(c, icon.Must(glyph)).Size(16, 16)
+	})
+	return kit.Clicked(b, cue)
 }

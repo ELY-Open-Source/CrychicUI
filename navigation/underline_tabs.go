@@ -17,7 +17,7 @@ func UnderlineTabs(c *ui.Context, label string, names []string, active *int) ui.
 	root.Children(func() {
 		for i, name := range names {
 			c.Key(i)
-			underlined(c, parts.Tab(i), name, i == shown, id)
+			underlined(c, parts.Tab(i), name, i == shown, id, nil)
 		}
 	})
 	if kit.Changed(root, sound.Select) {

@@ -105,6 +105,9 @@ func Slide(c *ui.Context, key int, content func()) {
 		*last = key
 	}
 	shift := *dir * t.Space(8)
+	if c.Direction() == ui.RightToLeft {
+		shift = -shift
+	}
 	box.Children(func() {
 		ui.Column(c).Key(key).Transition(ui.ElementTransition{Enter: &ui.Motion{X: shift}, Exit: &ui.Motion{X: -shift}}).
 			Children(content)

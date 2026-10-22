@@ -303,6 +303,22 @@ func TestSlideMovesTowardTheNewKey(t *testing.T) {
 	}
 }
 
+func TestSlideMirrorsRightToLeft(t *testing.T) {
+	key := 1
+	tt := ui.NewTester(func(c *ui.Context) {
+		Slide(c, key, func() { ui.Text(c, fmt.Sprint("page ", key)) })
+	}, 200, 100)
+	tt.SetDirection(ui.RightToLeft)
+	tt.Advance(time.Second)
+	rest, _ := tt.Find("page 1")
+	key = 2
+	tt.Frame()
+	tt.Advance(40 * time.Millisecond)
+	if in, _ := tt.Find("page 2"); in.X+in.W >= rest.X+rest.W-1 {
+		t.Errorf("right to left: page 2 at %v did not enter from the left, rest %v", in, rest)
+	}
+}
+
 func TestInsideClipsToRoundedBox(t *testing.T) {
 	tt := ui.NewTester(func(c *ui.Context) {
 		ui.Box(c).Margin(20, 0, 0, 20).Size(100, 60).Draw(Inside(12, func(p *ui.Painter, r ui.Rect) {

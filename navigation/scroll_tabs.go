@@ -44,7 +44,7 @@ func ScrollTabs(c *ui.Context, label string, names []string, active *int, o Scro
 			list.Children(func() {
 				for i, name := range names {
 					c.Key(i)
-					all[i] = underlined(c, parts.Tab(i), name, i == shown, id)
+					all[i] = underlined(c, parts.Tab(i), name, i == shown, id, nil)
 				}
 			})
 			if kit.Changed(list, sound.Select) {
