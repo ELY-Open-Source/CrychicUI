@@ -2,6 +2,7 @@ package kit
 
 import (
 	"bytes"
+	"fmt"
 	"image"
 	"log/slog"
 	"strings"
@@ -272,6 +273,33 @@ func TestSettleRebuildsWhenLayoutMoves(t *testing.T) {
 	tt.SetSize(50, 100)
 	if builds != 3 || used != 50 {
 		t.Errorf("resize: %d builds used %v, want 3 using 50", builds, used)
+	}
+}
+
+func TestSlideMovesTowardTheNewKey(t *testing.T) {
+	key := 1
+	tt := ui.NewTester(func(c *ui.Context) {
+		Slide(c, key, func() { ui.Text(c, fmt.Sprint("page ", key)) })
+	}, 200, 100)
+	rest, _ := tt.Find("page 1")
+	key = 2
+	tt.Frame()
+	tt.Advance(40 * time.Millisecond)
+	in, ok := tt.Find("page 2")
+	if !ok || !tt.FramePending() || in.X <= rest.X {
+		t.Errorf("forward: page 2 at %v (ok %v), rest %v", in, ok, rest)
+	}
+	tt.Advance(2 * time.Second)
+	key = 1
+	tt.Frame()
+	tt.Advance(40 * time.Millisecond)
+	// Find clips, so entering from the left narrows.
+	if back, _ := tt.Find("page 1"); back.W >= rest.W {
+		t.Errorf("back: page 1 at %v, rest %v", back, rest)
+	}
+	tt.Advance(2 * time.Second)
+	if tt.FramePending() || tt.HasText("page 2") {
+		t.Error("slide did not settle on page 1")
 	}
 }
 

@@ -66,7 +66,7 @@ func DateNav(c *ui.Context, day *time.Time, o DateNavOptions) ui.Element {
 			move(step(-1), "previous")
 		}
 		ui.Box(c).MinWidth(t.Space(52)).Center().Children(func() {
-			slide(c, index, func() { ui.Text(c, title).Bold().SingleLine() })
+			kit.Slide(c, index, func() { ui.Text(c, title).Bold().SingleLine() })
 		})
 		if button.IconButton(c, o.Next, "chevron-right").Clicked() {
 			move(step(1), "next")

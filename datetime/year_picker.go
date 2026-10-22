@@ -41,7 +41,7 @@ func YearPicker(c *ui.Context, date *time.Time, o YearPickerOptions) ui.Element 
 		for i := range labels {
 			labels[i] = year(*decade - 1 + i)
 		}
-		slide(c, *decade, func() {
+		kit.Slide(c, *decade, func() {
 			tiles(c, labels, 3, func(i int, label string) {
 				y := *decade - 1 + i
 				if tile(c, label, date.Year() == y, i == 0 || i == 11).Clicked() {

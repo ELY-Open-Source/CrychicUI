@@ -36,7 +36,7 @@ func MonthPicker(c *ui.Context, date *time.Time, o MonthPickerOptions) ui.Elemen
 			(*year)++
 		}
 		names := i18n.Months(loc, i18n.Abbreviated, true)
-		slide(c, *year, func() {
+		kit.Slide(c, *year, func() {
 			tiles(c, names[:], 3, func(i int, name string) {
 				mo := time.Month(i + 1)
 				if tile(c, name, date.Year() == *year && date.Month() == mo, false).Clicked() {

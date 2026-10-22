@@ -91,6 +91,26 @@ func Settle(c *ui.Context, e ui.Element, used []float32, read func() []float32) 
 	})
 }
 
+// Slide keys content, sliding in toward the side moved to.
+func Slide(c *ui.Context, key int, content func()) {
+	t := c.Theme()
+	box := ui.Box(c).Clip()
+	last := ui.Local(box, "key", func() int { return key })
+	dir := ui.Local(box, "dir", func() float32 { return 1 })
+	if key != *last {
+		*dir = 1
+		if key < *last {
+			*dir = -1
+		}
+		*last = key
+	}
+	shift := *dir * t.Space(8)
+	box.Children(func() {
+		ui.Column(c).Key(key).Transition(ui.ElementTransition{Enter: &ui.Motion{X: shift}, Exit: &ui.Motion{X: -shift}}).
+			Children(content)
+	})
+}
+
 // Inside clips fn to its box rounded by radius.
 func Inside(radius float32, fn func(p *ui.Painter, r ui.Rect)) func(p *ui.Painter, r ui.Rect) {
 	return func(p *ui.Painter, r ui.Rect) { p.Clip(r, min(radius, r.W/2, r.H/2), func() { fn(p, r) }) }

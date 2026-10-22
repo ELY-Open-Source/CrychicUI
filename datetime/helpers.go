@@ -80,7 +80,7 @@ func grid(c *ui.Context, m time.Time, cursor *time.Time, compact bool, style fun
 		})
 		start := m.AddDate(0, 0, -((int(m.Weekday()) - int(first) + 7) % 7))
 		today := c.Now()
-		slide(c, monthIndex(m), func() { weeks(c, start, m, w, h, cursor, focused, today, style, &picked, &hovered) })
+		kit.Slide(c, monthIndex(m), func() { weeks(c, start, m, w, h, cursor, focused, today, style, &picked, &hovered) })
 	})
 	return picked, hovered
 }
@@ -149,26 +149,6 @@ func head(c *ui.Context, title, prev, next string) (back, ahead ui.Element) {
 		ahead = button.IconButton(c, next, "chevron-right")
 	})
 	return back, ahead
-}
-
-// slide keys content, sliding in toward the side moved to.
-func slide(c *ui.Context, key int, content func()) {
-	t := c.Theme()
-	box := ui.Box(c).Clip()
-	last := ui.Local(box, "key", func() int { return key })
-	dir := ui.Local(box, "dir", func() float32 { return 1 })
-	if key != *last {
-		*dir = 1
-		if key < *last {
-			*dir = -1
-		}
-		*last = key
-	}
-	shift := *dir * t.Space(8)
-	box.Children(func() {
-		ui.Column(c).Key(key).Transition(ui.ElementTransition{Enter: &ui.Motion{X: shift}, Exit: &ui.Motion{X: -shift}}).
-			Children(content)
-	})
 }
 
 // monthIndex numbers months so later months sort higher.

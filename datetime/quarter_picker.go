@@ -40,7 +40,7 @@ func QuarterPicker(c *ui.Context, date *time.Time, o QuarterPickerOptions) ui.El
 		for i := range labels {
 			labels[i] = fmt.Sprintf(o.Format, i+1)
 		}
-		slide(c, *year, func() {
+		kit.Slide(c, *year, func() {
 			tiles(c, labels, 4, func(q int, label string) {
 				chosen := date.Year() == *year && (int(date.Month())-1)/3 == q
 				if tile(c, label, chosen, false).Clicked() {
