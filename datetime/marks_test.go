@@ -214,6 +214,7 @@ func TestSunArcSun(t *testing.T) {
 			SunArc(c, rise, set)
 		}
 	}, 400, 200)
+	onMinute(tt)
 	rise, set = tt.Now().Add(-time.Hour), tt.Now().Add(time.Hour)
 	tt.Frame()
 	r := find(t, tt, name)
@@ -253,15 +254,14 @@ func TestDayProgress(t *testing.T) {
 
 func TestDayProgressStillBetweenPercents(t *testing.T) {
 	tt := ui.NewTester(func(c *ui.Context) { DayProgress(c, "Today", DayProgressOptions{}) }, 400, 100)
-	settles(t, tt, "DayProgress")
 	now := tt.Now()
 	start := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
 	length := tomorrow(now).Sub(start)
 	next := start.Add((length*time.Duration(now.Sub(start)*100/length+1) + 99) / 100)
-	if next.Sub(now) < 2*time.Second {
+	if next.Sub(now) < 3*time.Second {
 		tt.Advance(next.Sub(now) + time.Second)
-		settles(t, tt, "DayProgress after a percent")
 	}
+	settles(t, tt, "DayProgress")
 	tt.Advance(500 * time.Millisecond)
 	tt.Frame()
 	if tt.FramePending() {

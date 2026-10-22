@@ -54,6 +54,12 @@ func settles(t *testing.T, tt *ui.Tester, what string) {
 	}
 }
 
+// onMinute steps tt just past the next whole minute.
+func onMinute(tt *ui.Tester) {
+	n := tt.Now()
+	tt.Advance(time.Minute - time.Duration(n.Second())*time.Second - time.Duration(n.Nanosecond()) + 10*time.Millisecond)
+}
+
 // baseline fills Recent with Swipe, which datetime never plays.
 func baseline() []sound.Cue {
 	for range 32 {

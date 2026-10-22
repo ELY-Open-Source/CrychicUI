@@ -64,6 +64,7 @@ func TestWorldClock(t *testing.T) {
 		ahead = time.FixedZone("ahead", here+3*3600)
 		WorldClock(c, []Zone{{"Home", c.Now().Location()}, {"East", ahead}}, WorldClockOptions{})
 	}, 400, 200)
+	onMinute(tt)
 	settles(t, tt, "WorldClock")
 	find(t, tt, "Same time")
 	find(t, tt, "3 h ahead")
