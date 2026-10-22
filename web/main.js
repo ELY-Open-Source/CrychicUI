@@ -1,4 +1,5 @@
-// Streams the wasm, runs Go, shows crashes.
+// Fetches the wasm parts, runs Go, shows crashes.
+const parts = __PARTS__
 const stderr = []
 
 function crash (msg) {
@@ -17,24 +18,27 @@ async function load () {
     return write(fd, buf)
   }
   const t0 = performance.now()
-  const res = await fetch('__WASM__')
-  if (!res.ok) throw new Error(`${res.url}: HTTP ${res.status}`)
   const total = Number('__SIZE__')
-  const reader = res.body.getReader()
-  const parts = []
+  const chunks = []
   let got = 0
-  for (;;) {
-    const { done, value } = await reader.read()
-    if (done) break
-    parts.push(value)
-    got += value.length
-    const pct = Math.min(100, Math.floor(got / total * 100))
-    document.getElementById('fill').style.width = pct + '%'
-    document.getElementById('loading').setAttribute('aria-valuenow', pct)
+  for (const url of parts) {
+    const res = await fetch(url)
+    if (!res.ok) throw new Error(`${res.url}: HTTP ${res.status}`)
+    const reader = res.body.getReader()
+    for (;;) {
+      const { done, value } = await reader.read()
+      if (done) break
+      chunks.push(value)
+      got += value.length
+      const pct = Math.min(100, Math.floor(got / total * 100))
+      document.getElementById('fill').style.width = pct + '%'
+      document.getElementById('loading').setAttribute('aria-valuenow', pct)
+    }
   }
+  if (got !== total) throw new Error(`wasm: got ${got} bytes, want ${total}`)
   const bytes = new Uint8Array(got)
   let off = 0
-  for (const p of parts) {
+  for (const p of chunks) {
     bytes.set(p, off)
     off += p.length
   }
@@ -52,7 +56,7 @@ async function load () {
   })
   const first = Math.round(performance.now() - t0)
   document.getElementById('loading').remove()
-  window.__crychicBoot = { wasm: '__WASM__', bytes: got, first }
+  window.__crychicBoot = { wasm: parts, bytes: got, first }
   console.info(`crychic: wasm ${(got / 1e6).toFixed(1)} MB, first frame ${first} ms`)
 }
 

@@ -1,7 +1,7 @@
 // Builds web/dist; files under a/ are named by content.
 import { execFileSync } from 'node:child_process'
 import { createHash } from 'node:crypto'
-import { copyFileSync, mkdirSync, readFileSync, renameSync, rmSync, statSync, writeFileSync } from 'node:fs'
+import { copyFileSync, mkdirSync, readFileSync, renameSync, rmSync, writeFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
@@ -24,13 +24,23 @@ function name (base, file, ext) {
   return to
 }
 
-const size = statSync(join(dist, 'app.wasm')).size
-const wasm = name('app', 'app.wasm', 'wasm')
+// Workers serve files up to 25 MiB, so the wasm ships in parts.
+const PART = 20 * 1024 * 1024
+const bytes = readFileSync(join(dist, 'app.wasm'))
+const parts = []
+for (let off = 0; off < bytes.length; off += PART) {
+  const part = bytes.subarray(off, off + PART)
+  const to = `a/app.${createHash('sha256').update(part).digest('hex').slice(0, 12)}.wasm`
+  writeFileSync(join(dist, to), part)
+  parts.push(to)
+}
+rmSync(join(dist, 'app.wasm'))
+const size = bytes.length
 const exec = name('wasm_exec', 'wasm_exec.js', 'js')
 writeFileSync(join(dist, 'main.js'),
-  readFileSync(join(web, 'main.js'), 'utf8').replaceAll('__WASM__', wasm).replaceAll('__SIZE__', String(size)))
+  readFileSync(join(web, 'main.js'), 'utf8').replaceAll('__PARTS__', JSON.stringify(parts)).replaceAll('__SIZE__', String(size)))
 const main = name('main', 'main.js', 'js')
 writeFileSync(join(dist, 'index.html'),
   readFileSync(join(web, 'index.html'), 'utf8').replace('__EXEC__', exec).replace('__MAIN__', main))
 copyFileSync(join(web, '_headers'), join(dist, '_headers'))
-console.log(`web/dist built: ${main} ${wasm} (${size} bytes)`)
+console.log(`web/dist built: ${main} ${parts.join(' ')} (${size} bytes)`)

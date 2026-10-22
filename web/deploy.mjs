@@ -70,9 +70,9 @@ if (first) {
   const oldMain = mainOf(old)
   if (!oldMain) fail('the live page names no main script')
   for (const f of old.matchAll(/src="(a\/[^"]+)"/g)) writeFileSync(join(web, 'dist', f[1]), await get(`${site}/${f[1]}`))
-  const wasm = readFileSync(join(web, 'dist', oldMain), 'utf8').match(/fetch\('(a\/app\.[0-9a-f]+\.wasm)'\)/)?.[1]
+  const wasm = readFileSync(join(web, 'dist', oldMain), 'utf8').match(/a\/app\.[0-9a-f]+\.wasm/g)
   if (!wasm) fail('the live main script names no wasm')
-  writeFileSync(join(web, 'dist', wasm), await get(`${site}/${wasm}`))
+  for (const w of wasm) writeFileSync(join(web, 'dist', w), await get(`${site}/${w}`))
   const stage = mkdtempSync(join(tmpdir(), 'crychic-'))
   mkdirSync(join(stage, 'a'))
   writeFileSync(join(stage, 'index.html'), old)

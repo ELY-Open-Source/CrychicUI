@@ -50,7 +50,7 @@ test('boots, reports, and logs its budget', async ({ page, request }) => {
   expect(Array.isArray(await page.evaluate(() => window.__crychic.recent()))).toBe(true)
   expect(await page.locator('#mygo canvas').count()).toBeGreaterThan(0)
   const boot = await page.evaluate(() => window.__crychicBoot)
-  const wasm = await (await request.get('/' + boot.wasm)).body()
+  const wasm = Buffer.concat(await Promise.all(boot.wasm.map(async w => (await request.get('/' + w)).body())))
   const br = brotliCompressSync(wasm).length
   console.log(`budget: wasm ${(wasm.length / 1e6).toFixed(1)} MB, brotli ${(br / 1e6).toFixed(1)} MB, ` +
     `first frame ${boot.first} ms, ${stats.components} components`)
