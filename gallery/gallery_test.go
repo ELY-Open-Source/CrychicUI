@@ -193,7 +193,10 @@ func TestEveryEntry(t *testing.T) {
 		"Breathe": true, "Beat": true, "Spinning": true, "Orbit": true, "Rings": true, "KeyPath": true, "TextShimmer": true,
 		"GridBackdrop": true, "DotBackdrop": true, "GradientBackdrop": true, "Aurora": true, "Starfield": true, "Particles": true,
 		"Snowfall": true, "Rainfall": true, "Bubbles": true, "Meteors": true, "Sparkles": true, "BorderBeam": true,
-		"ConicBorder": true, "ShineBorder": true, "FlowingText": true, "ShinyText": true, "RetroGrid": true, "RippleBackdrop": true}
+		"ConicBorder": true, "ShineBorder": true, "FlowingText": true, "ShinyText": true, "RetroGrid": true, "RippleBackdrop": true,
+		"Waves": true, "Blob": true, "OrbitRings": true, "DotGlobe": true, "Beam": true, "ShimmerSurface": true, "Grain": true,
+		"Vignette": true, "Frosted": true, "Scanlines": true, "Halftone": true, "Pattern": true, "MatrixRain": true, "Caret": true,
+		"LightRays": true, "ConicSpin": true, "Plasma": true, "Flicker": true, "Mesh": true}
 	updating := map[string]bool{"LiveClock": true, "CountdownTo": true, "WordRotate": true}
 	for i, e := range Entries() {
 		if i > 0 && e.ID <= Entries()[i-1].ID {

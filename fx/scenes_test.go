@@ -33,31 +33,36 @@ func TestScenesMove(t *testing.T) {
 		{"ShinyText", func(c *ui.Context) ui.Element { return ShinyText(c, "Shiny") }},
 	}
 	for _, s := range scenes {
-		t.Run(s.name, func(t *testing.T) {
-			text := s.name == "FlowingText" || s.name == "ShinyText"
-			tt := ui.NewTester(func(c *ui.Context) {
-				ui.Column(c).Padding(20).Children(func() {
-					if e := s.view(c); !text {
-						e.Label("scene")
-					}
-				})
-			}, 300, 220)
-			box := "scene"
-			if text {
-				box = strings.TrimSuffix(s.name, "Text")
-			} else {
-				find(t, tt, "Hi")
-			}
-			moves(t, tt, s.name)
-			r := find(t, tt, box)
-			// One pixel more holds the antialiased edge.
-			r = ui.Rect{X: r.X - 1, Y: r.Y - 1, W: r.W + 2, H: r.H + 2}
-			if out := ink(tt, ui.Rect{W: 300, H: 220}) - ink(tt, r); out != 0 {
-				t.Errorf("%s paints %d pixels outside its box", s.name, out)
-			}
-			holds(t, tt, s.name)
-		})
+		text := s.name == "FlowingText" || s.name == "ShinyText"
+		box := "scene"
+		if text {
+			box = strings.TrimSuffix(s.name, "Text")
+		}
+		t.Run(s.name, func(t *testing.T) { checkScene(t, s.name, box, s.view) })
 	}
+}
+
+// checkScene checks the loop, the box and reduced motion.
+func checkScene(t *testing.T, name, box string, view func(c *ui.Context) ui.Element) {
+	t.Helper()
+	tt := ui.NewTester(func(c *ui.Context) {
+		ui.Column(c).Padding(20).Children(func() {
+			if e := view(c); box == "scene" {
+				e.Label("scene")
+			}
+		})
+	}, 300, 220)
+	if box == "scene" {
+		find(t, tt, "Hi")
+	}
+	moves(t, tt, name)
+	r := find(t, tt, box)
+	// One pixel more holds the antialiased edge.
+	r = ui.Rect{X: r.X - 1, Y: r.Y - 1, W: r.W + 2, H: r.H + 2}
+	if out := ink(tt, ui.Rect{W: 300, H: 220}) - ink(tt, r); out != 0 {
+		t.Errorf("%s paints %d pixels outside its box", name, out)
+	}
+	holds(t, tt, name)
 }
 
 func TestGridBackdropDrawsHairlines(t *testing.T) {

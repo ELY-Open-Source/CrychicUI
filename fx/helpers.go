@@ -3,8 +3,11 @@ package fx
 
 import (
 	"math"
+	"slices"
 	"time"
 
+	"github.com/ELY-Open-Source/CrychicUI/kit"
+	"github.com/ELY-Open-Source/CrychicUI/sound"
 	"github.com/egoist/mygo/ui"
 	"github.com/egoist/mygo/ui/shader"
 )
@@ -92,6 +95,32 @@ func burst(e ui.Element, run uint64, d time.Duration) float32 {
 	}
 	return e.Keyframes("crychic.burst", []ui.Keyframe{{Value: 0}, {At: time.Millisecond, Value: 0},
 		{At: d, Value: 1, Ease: ui.Linear}}, ui.KeyframeOptions{Run: run})
+}
+
+// tap is a click's place in its box, and when.
+type tap struct {
+	x, y float32
+	at   time.Time
+}
+
+// taps cues each click on root, kept for life.
+func taps(c *ui.Context, root ui.Element, name string, cue sound.Cue, life time.Duration) []tap {
+	list := ui.Local(root, "crychic.taps", func() []tap { return nil })
+	now := c.Now()
+	if root.Clicked() {
+		x, y, _ := root.PointerPosition()
+		*list = append(*list, tap{x: x, y: y, at: now})
+		sound.Play(cue)
+		kit.Log(name, "tap", "count", len(*list))
+	}
+	*list = slices.DeleteFunc(*list, func(t tap) bool { return now.Sub(t.at) >= life })
+	if c.Preferences().ReduceMotion {
+		*list = nil
+	}
+	if len(*list) > 0 {
+		c.AnimationFrame()
+	}
+	return slices.Clone(*list)
 }
 
 // paint fills A to B; Flow waves stops by Shift.
