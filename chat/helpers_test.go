@@ -121,3 +121,15 @@ func count(tt *ui.Tester, s string) int {
 	}
 	return n
 }
+
+// hasInk scans r for a pixel near c.
+func hasInk(tt *ui.Tester, r ui.Rect, c color.RGBA) bool {
+	for y := int(r.Y); y < int(r.Y+r.H); y += 2 {
+		for x := int(r.X); x < int(r.X+r.W); x += 2 {
+			if at(tt, float32(x), float32(y), c) {
+				return true
+			}
+		}
+	}
+	return false
+}

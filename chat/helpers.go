@@ -19,6 +19,9 @@ type Message struct {
 	At           time.Time
 }
 
+// sprintf writes a formatted string.
+func sprintf(format string, args ...any) string { return fmt.Sprintf(format, args...) }
+
 // def fills an empty string with its default.
 func def(s *string, d string) {
 	if *s == "" {
