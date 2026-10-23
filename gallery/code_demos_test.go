@@ -48,9 +48,50 @@ func TestCodeDemosLog(t *testing.T) {
 			tt.Key(0, ui.KeyEnter)
 			return nil
 		}, "2 watches"},
-		"CallStack": {press("http.serve"), "selected 1"},
-		"Problems":  {press("missing return"), "selected missing return"},
-		"Outline":   {press("Serve"), "selected Serve"},
+		"CallStack":    {press("http.serve"), "selected 1"},
+		"Problems":     {press("missing return"), "selected missing return"},
+		"Outline":      {press("Serve"), "selected Serve"},
+		"Breadcrumb":   {press("gallery"), "at gallery"},
+		"SymbolSearch": {press("runServer"), "selected 0"},
+		"RegexTester": {func(tt *ui.Tester) error {
+			if err := tt.Click("Pattern"); err != nil {
+				return err
+			}
+			tt.Key(0, ui.KeyHome)
+			tt.TypeKey(0, ui.KeyX, "x")
+			return nil
+		}, "edited"},
+		"JSONFormat": {press("Format"), "action on"},
+		"Base64Tool": {press("Decode"), "encode false"},
+		"HashTool": {func(tt *ui.Tester) error {
+			if err := tt.Click("SHA-256"); err != nil {
+				return err
+			}
+			tt.Type("x")
+			return nil
+		}, "edited"},
+		"UnixTime": {func(tt *ui.Tester) error {
+			if err := tt.Click("Unix seconds"); err != nil {
+				return err
+			}
+			tt.Key(ui.Ctrl, ui.KeyA)
+			tt.Type("1704067200")
+			return nil
+		}, "epoch 1704067200"},
+		"Commit":       {press("Copy hash"), "copied hash"},
+		"BranchPicker": {press("dev"), "selected dev"},
+		"Console":      {press("Error 1"), "filter 3"},
+		"REPL": {func(tt *ui.Tester) error {
+			if err := tt.Click("1 + 2 * 3"); err != nil {
+				return err
+			}
+			tt.Type("2+2")
+			tt.Key(0, ui.KeyEnter)
+			return nil
+		}, "2 lines"},
+		"PackageCard": {press("Copy install"), "copied install"},
+		"Env":         {press("Show values"), "values shown"},
+		"Playground":  {press("Run"), "ran 32 runes"},
 		"Minimap": {func(tt *ui.Tester) error {
 			r, ok := tt.Find("Editor map")
 			if !ok {
@@ -61,7 +102,7 @@ func TestCodeDemosLog(t *testing.T) {
 		}, "at "},
 	}
 	// Quiet demos only show; they have no events.
-	quiet := map[string]bool{"LineHighlight": true, "Annotated": true}
+	quiet := map[string]bool{"LineHighlight": true, "Annotated": true, "PullRequest": true, "Checks": true, "Blame": true, "CommitGraph": true, "Language": true, "KeyTable": true}
 	seen := 0
 	for _, e := range Entries() {
 		if e.Category != "code" {

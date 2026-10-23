@@ -5,7 +5,9 @@ import (
 	"fmt"
 	"math"
 	"strings"
+	"time"
 
+	"github.com/ELY-Open-Source/CrychicUI/button"
 	"github.com/ELY-Open-Source/CrychicUI/icon"
 	"github.com/ELY-Open-Source/CrychicUI/kit"
 	"github.com/ELY-Open-Source/CrychicUI/sound"
@@ -141,6 +143,18 @@ func frames(component string, list []StackFrame) {
 	}
 }
 
+var (
+	iconChevron     = icon.Must("chevron-right")
+	iconPR          = icon.Must("git-pull-request")
+	iconCheck       = icon.Must("check")
+	iconX           = icon.Must("x")
+	iconClock       = icon.Must("clock-3")
+	iconSpin        = icon.Must("rotate-cw")
+	iconCheckCircle = icon.Must("circle-check")
+	iconXCircle     = icon.Must("circle-x")
+	iconPackage     = icon.Must("package")
+)
+
 // kindBadge is the letter chip of a symbol kind.
 func kindBadge(c *ui.Context, kind SymbolKind) ui.Element {
 	t := c.Theme()
@@ -151,6 +165,55 @@ func kindBadge(c *ui.Context, kind SymbolKind) ui.Element {
 	return badge.Children(func() {
 		ui.Text(c, letters[kind]).Font("monospace").FontSize(t.Rem(0.75)).Bold()
 	})
+}
+
+// avatarChip is a small initials circle.
+func avatarChip(c *ui.Context, name string) ui.Element {
+	t := c.Theme()
+	initials := ""
+	for _, r := range name {
+		initials += string(r)
+		if len(initials) == 2 {
+			break
+		}
+	}
+	e := ui.Box(c).Size(t.Space(8), t.Space(8)).Radius(999).Background(t.SurfaceHover).Center().Label(name)
+	return e.Children(func() {
+		ui.Text(c, initials).FontSize(t.Rem(0.7)).Bold().TextColor(t.TextMuted)
+	})
+}
+
+// copyButton copies text; it plays Pop.
+func copyButton(c *ui.Context, name, text string) ui.Element {
+	return button.CopyButton(c, name, text)
+}
+
+func age(d time.Duration) string {
+	switch {
+	case d < time.Minute:
+		return "now"
+	case d < time.Hour:
+		return fmt.Sprintf("%dm", int(d.Minutes()))
+	case d < 24*time.Hour:
+		return fmt.Sprintf("%dh", int(d.Hours()))
+	case d < 30*24*time.Hour:
+		return fmt.Sprintf("%dd", int(d.Hours()/24))
+	default:
+		return fmt.Sprintf("%dmo", int(d.Hours()/(24*30)))
+	}
+}
+
+// compact formats a count like 1.2k.
+
+func compact(n int) string {
+	switch {
+	case n < 1000:
+		return fmt.Sprintf("%d", n)
+	case n < 1000000:
+		return fmt.Sprintf("%.1fk", float64(n)/1000)
+	default:
+		return fmt.Sprintf("%.1fM", float64(n)/1000000)
+	}
 }
 
 // watchEditor reports buffer changes of an editor state.
@@ -173,3 +236,18 @@ type editorWatch struct {
 	state   *editor.State
 	version uint64
 }
+
+func inversePair(t *ui.Theme) (ui.Color, ui.Color) {
+	bg, fg := t.Inverse, t.InverseText
+	if bg.A == 0 {
+		bg = t.Text
+	}
+	if fg.A == 0 {
+		fg = t.Background
+	}
+	return bg, fg
+}
+
+// t40 is the default panel height.
+
+func t40(c *ui.Context) float32 { return c.Theme().Space(40) }
