@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	"github.com/ELY-Open-Source/CrychicUI/kit"
-	"github.com/ELY-Open-Source/CrychicUI/sound"
 	"github.com/egoist/mygo/ui"
 	"github.com/egoist/mygo/ui/editor"
 )
@@ -27,24 +26,8 @@ func CodeEditor(c *ui.Context, st *editor.State, o CodeEditorOptions) ui.Element
 	root := ui.Column(c).FillWidth().Height(o.Height).Radius(t.Radius).Border(1, t.Border).Clip().Role(ui.RoleGroup)
 	root.Children(func() {
 		view := editor.View(c, st).Grow(1).FillWidth()
+		watchEditor(root, st, "CodeEditor")
 		kit.Arrive(view, ui.Pose{Fade: 1}, 0)
-		version := ui.Local(view, "version", func() uint64 { return st.Buffer.Version() })
-		typed := ui.Local(view, "typed", func() int { return 0 })
-		view.HandleInput(func(ev ui.InputEvent) bool {
-			*typed = 2
-			return false
-		})
-		if st.Buffer.Version() != *version {
-			*version = st.Buffer.Version()
-			if *typed > 0 {
-				*typed = 0
-				root.SetChanged()
-				sound.Play(sound.Tick)
-				kit.Log("CodeEditor", "edited")
-			}
-		} else if *typed > 0 {
-			*typed--
-		}
 		ui.Box(c).FillWidth().Height(1).Background(t.Border)
 		ui.Row(c).FillWidth().Gap(t.Space(3)).AlignItems(ui.Center).Padding(t.Space(1), t.Space(2)).Background(t.Surface).Children(func() {
 			lang := "Plain text"

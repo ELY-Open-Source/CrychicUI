@@ -372,3 +372,55 @@ func TestMinimap(t *testing.T) {
 		render(func(c *ui.Context) { Minimap(c, "x", 200, 20, &n, MinimapOptions{}) })
 	})
 }
+
+func TestMinimapSlowDrag(t *testing.T) {
+	at := 0
+	tt := ui.NewTester(padded(func(c *ui.Context) {
+		Minimap(c, "Slow map", 10, 2, &at, MinimapOptions{Height: 160})
+	}), 300, 300)
+	settles(t, tt, "slow map")
+	r := find(t, tt, "Slow map")
+	x, y := r.X+r.W/2, r.Y+r.H/2
+	tt.Press(x, y)
+	tt.Frame()
+	for i := 1; i <= 64; i++ {
+		tt.Move(x, y+float32(i))
+		tt.Frame()
+	}
+	tt.Release(x, y+64)
+	tt.Frame()
+	if at != 8 {
+		t.Errorf("at %d after slow drag, want 8", at)
+	}
+}
+
+func TestMinimapUnscrollable(t *testing.T) {
+	at, changed := 0, 0
+	tt := ui.NewTester(padded(func(c *ui.Context) {
+		if Minimap(c, "Whole file", 2, 2, &at, MinimapOptions{}).Changed() {
+			changed++
+		}
+	}), 300, 300)
+	settles(t, tt, "whole file")
+	before := baseline()
+	click(t, tt, "Whole file")
+	if at != 0 || changed != 0 {
+		t.Errorf("at %d changed %d without scroll range", at, changed)
+	}
+	cues(t, before)
+}
+
+func TestMinimapPressMotion(t *testing.T) {
+	at := 0
+	tt := ui.NewTester(padded(func(c *ui.Context) {
+		Minimap(c, "Motion map", 20, 2, &at, MinimapOptions{})
+	}), 300, 300)
+	settles(t, tt, "motion map")
+	r := find(t, tt, "Motion map")
+	tt.Press(r.X+r.W/2, r.Y+r.H/2)
+	if !tt.FramePending() {
+		t.Error("press has no motion")
+	}
+	tt.Release(r.X+r.W/2, r.Y+r.H/2)
+	settles(t, tt, "motion map")
+}

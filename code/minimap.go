@@ -21,10 +21,11 @@ func Minimap(c *ui.Context, label string, lines, visible int, at *int, o Minimap
 	}
 	t := c.Theme()
 	size("Minimap", &o.Height, t.Space(40))
-	root := ui.ButtonBase(c).Label(label).Width(t.Space(18)).Height(o.Height).Radius(t.Radius).Clip().
-		Background(t.Surface).Role(ui.RoleSlider).Range(0, float64(lines), float64(*at))
+	root := kit.Press(ui.ButtonBase(c).Label(label).Width(t.Space(18)).Height(o.Height).Radius(t.Radius).Clip().
+		Background(t.Surface).Role(ui.RoleSlider).Range(0, float64(lines), float64(*at)))
 	height := ui.Local(root, "height", func() float32 { return o.Height })
 	pressY := ui.Local(root, "pressY", func() float32 { return -1 })
+	dragOffset := ui.Local(root, "dragOffset", func() float32 { return 0 })
 	kit.Settle(c, root, []float32{*height}, func() []float32 { return []float32{root.LayoutBounds().H} })
 	if got := root.LayoutBounds().H; got > 0 {
 		*height = got
@@ -50,15 +51,22 @@ func Minimap(c *ui.Context, label string, lines, visible int, at *int, o Minimap
 		return false
 	})
 	if *pressY >= 0 {
-		*at = clampAt(int(*pressY / *height * float32(lines))-visible/2, lines, visible)
-		*pressY = -1
-		root.SetChanged()
-	}
-	if _, dy, held := root.Dragged(); held {
-		if moved := clampAt(*at+int(dy*float32(lines) / *height), lines, visible); moved != *at {
+		if moved := clampAt(int(*pressY / *height * float32(lines))-visible/2, lines, visible); moved != *at {
 			*at = moved
 			root.SetChanged()
 		}
+		*pressY = -1
+	}
+	if _, dy, held := root.Dragged(); held {
+		*dragOffset += dy * float32(lines) / *height
+		steps := int(*dragOffset)
+		*dragOffset -= float32(steps)
+		if moved := clampAt(*at+steps, lines, visible); moved != *at {
+			*at = moved
+			root.SetChanged()
+		}
+	} else {
+		*dragOffset = 0
 	}
 	released(root, "Minimap", float64(*at))
 	move := func(to int, event string) {

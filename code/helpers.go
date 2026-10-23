@@ -140,3 +140,36 @@ func frames(component string, list []StackFrame) {
 		}
 	}
 }
+
+// kindBadge is the letter chip of a symbol kind.
+func kindBadge(c *ui.Context, kind SymbolKind) ui.Element {
+	t := c.Theme()
+	letters := [4]string{"f", "T", "v", "c"}
+	inks := [4]ui.Color{t.Accent, t.Success, t.Warning, t.TextMuted}
+	badge := ui.Box(c).Size(t.Space(4.5), t.Space(4.5)).Shrink(0).Center().Radius(t.Radius).
+		Background(inks[kind].Alpha(0.15)).TextColor(inks[kind])
+	return badge.Children(func() {
+		ui.Text(c, letters[kind]).Font("monospace").FontSize(t.Rem(0.75)).Bold()
+	})
+}
+
+// watchEditor reports buffer changes of an editor state.
+func watchEditor(root ui.Element, st *editor.State, component string) {
+	w := ui.Local(root, "watch", func() *editorWatch { return &editorWatch{} })
+	if (*w).state != st {
+		(*w).state = st
+		(*w).version = st.Buffer.Version()
+		return
+	}
+	if version := st.Buffer.Version(); version != (*w).version {
+		(*w).version = version
+		root.SetChanged()
+		sound.Play(sound.Tick)
+		kit.Log(component, "edited")
+	}
+}
+
+type editorWatch struct {
+	state   *editor.State
+	version uint64
+}

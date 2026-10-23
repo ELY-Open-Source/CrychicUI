@@ -38,8 +38,6 @@ func Outline(c *ui.Context, label string, symbols []Symbol, selected *int) ui.El
 		}
 	}
 	t := c.Theme()
-	letters := [4]string{"f", "T", "v", "c"}
-	inks := [4]ui.Color{t.Accent, t.Success, t.Warning, t.TextMuted}
 	root := ui.Column(c).FillWidth().Gap(t.Space(0.5)).FocusGroup(ui.Vertical).Role(ui.RoleList).Label(label)
 	return root.Children(func() {
 		for i, s := range symbols {
@@ -52,8 +50,7 @@ func Outline(c *ui.Context, label string, symbols []Symbol, selected *int) ui.El
 				bg = t.Accent.Alpha(0.1)
 			}
 			b.Background(b.AnimateColor(fmt.Sprint("bg.", i), bg, ui.Snappy)).Children(func() {
-				badge := ui.Box(c).Size(t.Space(4.5), t.Space(4.5)).Shrink(0).Center().Radius(t.Radius).Background(inks[s.Kind].Alpha(0.15)).TextColor(inks[s.Kind])
-				badge.Children(func() { ui.Text(c, letters[s.Kind]).Font("monospace").FontSize(t.Rem(0.75)).Bold() })
+				kindBadge(c, s.Kind)
 				ui.Text(c, s.Name).Font("monospace").FontSize(t.Rem(0.85)).Grow(1).SingleLine()
 				kit.Muted(c, fmt.Sprintf(":%d", s.Line)).Font("monospace").FontSize(t.Rem(0.8))
 			})

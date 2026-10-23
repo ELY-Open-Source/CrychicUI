@@ -57,11 +57,109 @@ func TestCodeEditor(t *testing.T) {
 	recent := baseline()
 	buf.Edit(editor.Edit{Start: 0, End: 0, Text: "// external\n"})
 	tt.Frame()
-	if changed != 0 {
-		t.Errorf("a focused programmatic edit reported %d changes", changed)
+	if changed != 1 {
+		t.Errorf("a programmatic edit reported %d changes", changed)
 	}
-	cues(t, recent)
+	cues(t, recent, sound.Tick)
+
+	changed = 0
+	recent = baseline()
+	tt.KeyDown(ui.KeyRight)
+	buf.Edit(editor.Edit{Start: 0, End: 0, Text: "z"})
+	tt.Frame()
+	tt.KeyUp(ui.KeyRight)
+	if changed != 1 {
+		t.Errorf("navigation then programmatic reported %d changes", changed)
+	}
+	cues(t, recent, sound.Tick)
+
+	calls := 0
+	per := ui.NewTester(padded(func(c *ui.Context) {
+		st.OnInput = func(ev ui.InputEvent) bool {
+			calls++
+			return false
+		}
+		CodeEditor(c, st, CodeEditorOptions{})
+	}), 500, 400)
+	per.Frame()
+	per.Key(0, ui.KeyTab)
+	per.TypeKey(0, ui.KeyX, "x")
+	per.Frame()
+	if calls == 0 {
+		t.Fatalf("caller hook lost: calls %d", calls)
+	}
+	cur := st
+	swap := ui.NewTester(padded(func(c *ui.Context) {
+		CodeEditor(c, cur, CodeEditorOptions{})
+	}), 500, 400)
+	swap.Frame()
+	cur = &editor.State{Buffer: editor.NewBuffer("new")}
+	swap.Key(0, ui.KeyTab)
+	swap.TypeKey(0, ui.KeyX, "q")
+	swap.Frame()
+	if !swap.HasText("Ln 1, Col 2") {
+		t.Fatalf("replacement state texts %q", swap.Texts())
+	}
 	panics(t, "nil state", func() { render(func(c *ui.Context) { CodeEditor(c, nil, CodeEditorOptions{}) }) })
+}
+
+func TestCodeEditorCompositionAndMenu(t *testing.T) {
+	st := &editor.State{Buffer: editor.NewBuffer("")}
+	changed := 0
+	tt := ui.NewTester(padded(func(c *ui.Context) {
+		if CodeEditor(c, st, CodeEditorOptions{}).Changed() {
+			changed++
+		}
+	}), 500, 400)
+	tt.Frame()
+	tt.Key(0, ui.KeyTab)
+	before := baseline()
+	tt.Compose("に", 1)
+	tt.Frame()
+	tt.Type("に")
+	tt.Frame()
+	if changed == 0 || st.Buffer.String() != "に" {
+		t.Fatalf("composition changed %d text %q", changed, st.Buffer.String())
+	}
+	if recent := sound.Recent(); recent[len(recent)-1] != sound.Tick {
+		t.Errorf("composition cues %v", recent)
+	}
+
+	changed = 0
+	before = baseline()
+	tt.SetClipboard("menu")
+	if err := tt.RightClick("Code editor"); err != nil {
+		t.Fatal(err)
+	}
+	if err := tt.ChooseMenuItem("Paste"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Frame()
+	if changed == 0 || st.Buffer.String() != "にmenu" {
+		t.Errorf("menu paste changed %d text %q", changed, st.Buffer.String())
+	}
+	cues(t, before, sound.Tick)
+}
+
+func TestCodeEditorStateCallbacks(t *testing.T) {
+	a := &editor.State{Buffer: editor.NewBuffer("a")}
+	b := &editor.State{Buffer: editor.NewBuffer("b")}
+	aCalls, bCalls := 0, 0
+	a.OnInput = func(ui.InputEvent) bool { aCalls++; return false }
+	b.OnInput = func(ui.InputEvent) bool { bCalls++; return false }
+	cur := a
+	tt := ui.NewTester(padded(func(c *ui.Context) { CodeEditor(c, cur, CodeEditorOptions{}) }), 500, 400)
+	tt.Frame()
+	cur = b
+	tt.Frame()
+	cur = a
+	tt.Frame()
+	tt.Key(0, ui.KeyTab)
+	tt.TypeKey(0, ui.KeyX, "x")
+	tt.Frame()
+	if aCalls == 0 || bCalls != 0 {
+		t.Errorf("callbacks A %d B %d", aCalls, bCalls)
+	}
 }
 
 func TestDiffView(t *testing.T) {
