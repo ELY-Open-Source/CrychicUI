@@ -4,9 +4,11 @@ package agent
 import (
 	"fmt"
 	"math"
+	"time"
 
 	"github.com/ELY-Open-Source/CrychicUI/icon"
 	"github.com/ELY-Open-Source/CrychicUI/kit"
+	"github.com/ELY-Open-Source/CrychicUI/sound"
 	"github.com/egoist/mygo/ui"
 )
 
@@ -53,6 +55,15 @@ func tag(c *ui.Context, text string) ui.Element {
 	return kit.Muted(c, text).FontSize(t.Rem(0.75)).Padding(t.Space(0.5), t.Space(1.5)).Radius(999).Background(t.Surface)
 }
 
+// clock writes d as m:ss, or h:mm:ss past an hour.
+func clock(d time.Duration) string {
+	s := int64(d / time.Second)
+	if s >= 3600 {
+		return fmt.Sprintf("%d:%02d:%02d", s/3600, s/60%60, s%60)
+	}
+	return fmt.Sprintf("%d:%02d", s/60, s%60)
+}
+
 // ends gives back and forth glyphs and keys.
 func ends(c *ui.Context) (back, forth string) {
 	back, forth = "chevron-left", "chevron-right"
@@ -60,4 +71,31 @@ func ends(c *ui.Context) (back, forth string) {
 		back, forth = forth, back
 	}
 	return back, forth
+}
+
+// released plays Tick after a drag or key move.
+func released(s ui.Element, component string, value float64) {
+	moved := ui.Local(s, "moved", func() bool { return false })
+	*moved = *moved || s.Changed()
+	if _, _, held := s.Dragged(); *moved && !held {
+		*moved = false
+		sound.Play(sound.Tick)
+		kit.Log(component, "changed", "value", value)
+	}
+}
+
+// prefixLines returns s through the end of its nth line.
+func prefixLines(s string, n int) string {
+	if n <= 0 {
+		return ""
+	}
+	for i := 0; i < len(s); i++ {
+		if s[i] == '\n' {
+			n--
+			if n == 0 {
+				return s[:i+1]
+			}
+		}
+	}
+	return s
 }
