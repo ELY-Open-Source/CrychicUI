@@ -7,6 +7,7 @@ import (
 
 	"github.com/ELY-Open-Source/CrychicUI/kit"
 	"github.com/ELY-Open-Source/CrychicUI/typography"
+	"github.com/egoist/mygo/i18n"
 	"github.com/egoist/mygo/ui"
 )
 
@@ -58,6 +59,14 @@ func signedMoney(c *ui.Context, value float64, currency string) ui.Element {
 		panic("shop: money needs a currency and finite value")
 	}
 	return typography.Money(c, value, currency)
+}
+
+func moneyText(c *ui.Context, value float64, currency string) string {
+	if currency == "" || value < 0 || !finite(value) {
+		panic("shop: money needs a currency and nonnegative value")
+	}
+	o := i18n.NumberOptions{MinFractionDigits: 2, MaxFractionDigits: 2}
+	return currency + " " + i18n.FormatNumber(c.Region().FormatLocale(c.Locale()), value, o)
 }
 
 func addButton(c *ui.Context, label string) ui.Element {
