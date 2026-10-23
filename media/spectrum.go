@@ -2,7 +2,6 @@ package media
 
 import (
 	"fmt"
-	"math"
 
 	"github.com/ELY-Open-Source/CrychicUI/kit"
 	"github.com/egoist/mygo/ui"
@@ -27,23 +26,7 @@ func Spectrum(c *ui.Context, label string, playing bool, o SpectrumOptions) ui.E
 	t := c.Theme()
 	size("Spectrum", label, &o.Height, t.Space(20))
 	box := ui.Box(c).FillWidth().Height(o.Height).Role(ui.RoleImage).Label(label)
-	live := playing && !c.Preferences().ReduceMotion
-	sec := float64(c.Now().UnixMilli()%600000) / 1000
-	hs := make([]float32, o.Bars)
-	for i := range hs {
-		f := float64(i) / float64(o.Bars)
-		aim := 0.06
-		switch {
-		case live:
-			aim = (0.15 + 0.85*math.Abs(math.Sin(sec*(2.1+1.7*f)+float64(i)*0.9))) * (1 - 0.55*f)
-		case playing:
-			aim = 0.6 * (1 - 0.55*f)
-		}
-		hs[i] = box.AnimateTo(fmt.Sprint("bar.", i), float32(aim), ui.Snappy)
-	}
-	if live {
-		c.AnimationFrame()
-	}
+	hs := bands(c, box, o.Bars, playing)
 	return box.Draw(kit.Inside(0, func(p *ui.Painter, r ui.Rect) {
 		w := r.W / float32(len(hs))
 		for i, h := range hs {

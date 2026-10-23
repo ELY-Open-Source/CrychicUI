@@ -41,7 +41,6 @@ func AudioPlayer(c *ui.Context, label string, clip Clip, pos *time.Duration, pla
 	root := ui.Row(c).FillWidth().Gap(t.Space(3)).AlignItems(ui.Center).Padding(t.Space(3)).Radius(t.Radius).
 		Border(1, t.Border).Label(label)
 	now := c.Now()
-	last := ui.Local(root, "last", func() time.Time { return time.Time{} })
 	beat := ui.Local(root, "beat", func() int { return -1 })
 	sing := func() {
 		if i := min(int(*pos/clip.Beat), len(clip.Notes)-1); i != *beat {
@@ -53,22 +52,8 @@ func AudioPlayer(c *ui.Context, label string, clip Clip, pos *time.Duration, pla
 	}
 	// track follows *playing whichever control changed it.
 	track := func() {
-		switch {
-		case !*playing:
-			*last = time.Time{}
-		case last.IsZero():
-			if *pos >= total {
-				*pos = 0
-			}
-			*last, *beat = now, -1
-		default:
-			*pos = min(total, *pos+now.Sub(*last))
-			*last = now
-			if *pos >= total {
-				*playing, *last = false, time.Time{}
-				root.SetChanged()
-				kit.Log("AudioPlayer", "ended")
-			}
+		if advance(root, now, pos, total, playing, "AudioPlayer") {
+			*beat = -1
 		}
 	}
 	track()

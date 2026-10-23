@@ -26,6 +26,8 @@ func unit(b bool) float32 {
 	return 0
 }
 
+func abs(v float32) float32 { return max(v, -v) }
+
 // clock writes d as m:ss, or h:mm:ss past an hour.
 func clock(d time.Duration) string {
 	s := int64(d / time.Second)
@@ -166,6 +168,66 @@ func look(c *ui.Context, image *ui.Bitmap, f Filter) ui.Element {
 			ui.Box(c).ColumnStart(1).RowStart(1).Fill().Background(tint)
 		}
 	})
+}
+
+// advance runs pos while *playing; true when play restarts.
+func advance(root ui.Element, now time.Time, pos *time.Duration, total time.Duration, playing *bool, component string) bool {
+	last := ui.Local(root, "last", func() time.Time { return time.Time{} })
+	switch {
+	case !*playing:
+		*last = time.Time{}
+	case last.IsZero():
+		if *pos >= total {
+			*pos = 0
+		}
+		*last = now
+		return true
+	default:
+		*pos = min(total, *pos+now.Sub(*last))
+		*last = now
+		if *pos >= total {
+			*playing, *last = false, time.Time{}
+			root.SetChanged()
+			kit.Log(component, "ended")
+		}
+	}
+	return false
+}
+
+// spin gives e's turn, coasting to rest when stopped.
+func spin(c *ui.Context, e ui.Element, playing bool, rps float32) float32 {
+	now := c.Now()
+	turn := ui.Local(e, "turn", func() float64 { return 0 })
+	last := ui.Local(e, "spun", func() time.Time { return now })
+	speed := e.AnimateTo("speed", rps*unit(playing && !c.Preferences().ReduceMotion), ui.Smooth)
+	*turn = math.Mod(*turn+float64(speed)*now.Sub(*last).Seconds(), 1)
+	*last = now
+	if speed != 0 {
+		c.AnimationFrame()
+	}
+	return float32(*turn)
+}
+
+// bands gives n sprung bar heights from 0 to 1.
+func bands(c *ui.Context, e ui.Element, n int, playing bool) []float32 {
+	live := playing && !c.Preferences().ReduceMotion
+	sec := float64(c.Now().UnixMilli()%600000) / 1000
+	hs := make([]float32, n)
+	for i := range hs {
+		f := float64(i) / float64(n)
+		aim := 0.06
+		switch {
+		case live:
+			aim = (0.15 + 0.85*math.Abs(math.Sin(sec*(2.1+1.7*f)+float64(i)*0.9))) * (1 - 0.55*f)
+		case playing:
+			aim = 0.6 * (1 - 0.55*f)
+		}
+		hs[i] = e.AnimateTo(fmt.Sprint("bar.", i), float32(aim), ui.Snappy)
+	}
+	if live {
+		c.AnimationFrame()
+	}
+	return hs
 }
 
 // white reports whether MIDI note m is a white key.

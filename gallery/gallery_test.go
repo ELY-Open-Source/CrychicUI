@@ -196,7 +196,7 @@ func TestEveryEntry(t *testing.T) {
 		"ConicBorder": true, "ShineBorder": true, "FlowingText": true, "ShinyText": true, "RetroGrid": true, "RippleBackdrop": true,
 		"Waves": true, "Blob": true, "OrbitRings": true, "DotGlobe": true, "Beam": true, "ShimmerSurface": true, "Grain": true,
 		"Vignette": true, "Frosted": true, "Scanlines": true, "Halftone": true, "Pattern": true, "MatrixRain": true, "Caret": true,
-		"LightRays": true, "ConicSpin": true, "Plasma": true, "Flicker": true, "Mesh": true, "AnalogClock": true, "Slideshow": true}
+		"LightRays": true, "ConicSpin": true, "Plasma": true, "Flicker": true, "Mesh": true, "AnalogClock": true, "Slideshow": true, "Stories": true}
 	updating := map[string]bool{"LiveClock": true, "CountdownTo": true, "WordRotate": true, "DigitalClock": true}
 	for i, e := range Entries() {
 		// Repeated names key by category.
