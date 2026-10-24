@@ -103,7 +103,7 @@ func TestWidgetFrame(t *testing.T) {
 
 func TestWidgetGrid(t *testing.T) {
 	titles := []string{"Alpha", "Beta"}
-	tt := ui.NewTester(padded(func(c *ui.Context) { WidgetGrid(c, &titles) }), 500, 300)
+	tt := ui.NewTester(padded(func(c *ui.Context) { WidgetGrid(c, &titles, WidgetGridOptions{}) }), 500, 300)
 	settles(t, tt)
 	a, _ := tt.Find("Alpha")
 	b, _ := tt.Find("Beta")
@@ -120,7 +120,7 @@ func TestWidgetGrid(t *testing.T) {
 
 func TestWidgetGridUpward(t *testing.T) {
 	titles := []string{"Alpha", "Beta"}
-	tt := ui.NewTester(padded(func(c *ui.Context) { WidgetGrid(c, &titles) }), 500, 300)
+	tt := ui.NewTester(padded(func(c *ui.Context) { WidgetGrid(c, &titles, WidgetGridOptions{}) }), 500, 300)
 	settles(t, tt)
 	a, _ := tt.Find("Alpha")
 	b, _ := tt.Find("Beta")
@@ -138,9 +138,9 @@ func TestWidgetGridIsolation(t *testing.T) {
 	bTitles := []string{"Gamma", "Alpha"}
 	tt := ui.NewTester(padded(func(c *ui.Context) {
 		c.Key("grid-a")
-		WidgetGrid(c, &aTitles)
+		WidgetGrid(c, &aTitles, WidgetGridOptions{})
 		c.Key("grid-b")
-		WidgetGrid(c, &bTitles)
+		WidgetGrid(c, &bTitles, WidgetGridOptions{})
 	}), 500, 450)
 	settles(t, tt)
 	a, _ := tt.Find("Alpha")
@@ -171,7 +171,7 @@ func TestReportExport(t *testing.T) {
 
 func TestInsights(t *testing.T) {
 	cards := []Insight{{Title: "Growth", Body: "Revenue rose"}}
-	tt := ui.NewTester(padded(func(c *ui.Context) { Insights(c, cards) }), 500, 180)
+	tt := ui.NewTester(padded(func(c *ui.Context) { Insights(c, cards, InsightsOptions{}) }), 500, 180)
 	settles(t, tt)
 	if !tt.HasText("Growth") || !tt.HasText("Revenue rose") {
 		t.Errorf("texts %q", tt.Texts())
@@ -180,7 +180,7 @@ func TestInsights(t *testing.T) {
 
 func TestAnomaly(t *testing.T) {
 	points := []Point{{Label: "A", Value: 1}, {Label: "B", Value: 3}}
-	tt := ui.NewTester(padded(func(c *ui.Context) { Anomaly(c, points, []int{1}) }), 500, 250)
+	tt := ui.NewTester(padded(func(c *ui.Context) { Anomaly(c, points, []int{1}, AnomalyOptions{}) }), 500, 250)
 	tt.Frame()
 	if !tt.FramePending() {
 		t.Error("anomaly point does not pulse")
@@ -189,11 +189,24 @@ func TestAnomaly(t *testing.T) {
 
 func TestAnomalyPosition(t *testing.T) {
 	points := []Point{{Label: "A", Value: 1}, {Label: "B", Value: 3}}
-	tt := ui.NewTester(padded(func(c *ui.Context) { Anomaly(c, points, []int{1}) }), 500, 250)
-	tt.Frame()
+	tt := ui.NewTester(padded(func(c *ui.Context) { Anomaly(c, points, []int{1}, AnomalyOptions{}) }), 500, 400)
+	tt.Advance(2 * time.Second)
+	head, row := rectOf(t, tt, "1 flagged"), rectOf(t, tt, "B")
 	ink := ui.LightTheme().Danger
-	if got := tt.Image().RGBAAt(488, 12); got.R != ink.R || got.G != ink.G || got.B != ink.B {
-		t.Errorf("flag is not at last point: %v", got)
+	img := tt.Image()
+	red := func(x0, x1 int) int {
+		n := 0
+		for y := int(head.Y + head.H); y < int(row.Y); y++ {
+			for x := x0; x < x1; x++ {
+				if got := img.RGBAAt(x, y); got.R == ink.R && got.G == ink.G && got.B == ink.B {
+					n++
+				}
+			}
+		}
+		return n
+	}
+	if right, left := red(int(head.X+head.W)-40, int(head.X+head.W)), red(10, 60); right == 0 || left != 0 {
+		t.Errorf("flag should sit at the last point: right %d, left %d", right, left)
 	}
 }
 
@@ -205,7 +218,7 @@ func TestAnomalyOffscreenValidation(t *testing.T) {
 	}()
 	ui.NewTester(func(c *ui.Context) {
 		ui.Box(c).Height(1000)
-		Anomaly(c, []Point{{Label: "A", Value: 1}, {Label: "B", Value: 2}}, []int{-1})
+		Anomaly(c, []Point{{Label: "A", Value: 1}, {Label: "B", Value: 2}}, []int{-1}, AnomalyOptions{})
 	}, 500, 100)
 }
 
@@ -221,7 +234,7 @@ func TestScorecard(t *testing.T) {
 func TestHealthRing(t *testing.T) {
 	tt := ui.NewTester(padded(func(c *ui.Context) { HealthRing(c, 90, HealthRingOptions{}) }), 500, 220)
 	settles(t, tt)
-	if !tt.HasText("Health") || !tt.HasText("90%") {
+	if !tt.HasText("Health") || !exact(tt, "90") || !tt.HasText("Healthy") {
 		t.Errorf("texts %q", tt.Texts())
 	}
 }
@@ -245,24 +258,30 @@ func TestQueue(t *testing.T) {
 func TestErrorRate(t *testing.T) {
 	tt := ui.NewTester(padded(func(c *ui.Context) { ErrorRate(c, 3, 2, ErrorRateOptions{}) }), 500, 180)
 	settles(t, tt)
-	if !tt.HasText("Errors per minute") || !tt.HasText("Limit 2") {
+	if !tt.HasText("errors per minute") || !tt.HasText("Limit 2") || !tt.HasText("Over limit") {
 		t.Errorf("texts %q", tt.Texts())
 	}
 }
 
 func TestErrorRateLimitLine(t *testing.T) {
-	tt := ui.NewTester(padded(func(c *ui.Context) { ErrorRate(c, 3, 2, ErrorRateOptions{}) }), 500, 180)
-	settles(t, tt)
-	r, ok := tt.Find("Limit 2")
-	if !ok {
-		t.Fatal("limit label missing")
-	}
-	ink := ui.LightTheme().Text
-	for y := int(r.Y + r.H); y < int(r.Y+r.H+20); y++ {
-		t.Logf("pixel %d %v", y, tt.Image().RGBAAt(330, y))
-	}
-	if got := tt.Image().RGBAAt(330, int(r.Y+r.H+12)); got.R != ink.R || got.G != ink.G || got.B != ink.B {
-		t.Errorf("limit marker missing: %v", got)
+	for _, limit := range []float64{2, 1e9} {
+		tt := ui.NewTester(padded(func(c *ui.Context) { ErrorRate(c, 3, limit, ErrorRateOptions{}) }), 500, 300)
+		settles(t, tt)
+		r := rectOf(t, tt, "3.0")
+		ink, img, n := ui.LightTheme().Text, tt.Image(), 0
+		for y := int(r.Y + r.H + 8); y < int(r.Y+r.H+100); y++ {
+			for x := int(r.X); x < int(r.X)+20; x++ {
+				if got := img.RGBAAt(x, y); got.R == ink.R && got.G == ink.G && got.B == ink.B {
+					n++
+				}
+			}
+		}
+		if limit == 2 && n == 0 {
+			t.Error("limit line missing")
+		}
+		if limit == 1e9 && n == 0 {
+			t.Error("a far limit should still draw at the top of the chart")
+		}
 	}
 }
 
@@ -276,7 +295,7 @@ func TestLatency(t *testing.T) {
 
 func TestSignups(t *testing.T) {
 	days := []SignupDay{{Label: "Mon", Count: 10}}
-	tt := ui.NewTester(padded(func(c *ui.Context) { Signups(c, days) }), 500, 180)
+	tt := ui.NewTester(padded(func(c *ui.Context) { Signups(c, days, SignupsOptions{}) }), 500, 180)
 	settles(t, tt)
 	if !tt.HasText("Mon") || !tt.HasText("10") {
 		t.Errorf("texts %q", tt.Texts())
@@ -308,7 +327,7 @@ func TestNPSWidgetRounding(t *testing.T) {
 }
 
 func TestWelcomeBanner(t *testing.T) {
-	tt := ui.NewTester(padded(func(c *ui.Context) { WelcomeBanner(c, "Good morning", "3 tasks today") }), 500, 220)
+	tt := ui.NewTester(padded(func(c *ui.Context) { WelcomeBanner(c, "Good morning", "3 tasks today", WelcomeBannerOptions{}) }), 500, 220)
 	settles(t, tt)
 	if !tt.HasText("Good morning") || !tt.HasText("3 tasks today") {
 		t.Errorf("texts %q", tt.Texts())

@@ -21,13 +21,13 @@ func TestDashboard2DemosLog(t *testing.T) {
 			return tt.ChooseMenuItem("Refresh")
 		}, "refreshed"},
 		"WidgetGrid": {func(tt *ui.Tester) error {
-			a, _ := tt.Find("Alpha")
-			b, _ := tt.Find("Beta")
+			a, _ := tt.Find("Revenue")
+			b, _ := tt.Find("Active users")
 			tt.Press(a.X+a.W/2, a.Y+a.H/2)
 			tt.Move(b.X+b.W/2, b.Y+b.H/2)
 			tt.Release(b.X+b.W/2, b.Y+b.H/2)
 			return nil
-		}, "[Beta Alpha]"},
+		}, "[Active users Revenue Churn Top pages]"},
 		"ReportExport": {func(tt *ui.Tester) error {
 			return tt.Click("CSV")
 		}, "format CSV"},

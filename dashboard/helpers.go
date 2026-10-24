@@ -127,6 +127,12 @@ func deltaChip(c *ui.Context, text string) ui.Element {
 	case falling(text):
 		ink, glyph = t.Danger, "trending-down"
 	}
+	return tone(c, text, ink, glyph)
+}
+
+// tone is a tinted pill with an icon and number.
+func tone(c *ui.Context, text string, ink ui.Color, glyph string) ui.Element {
+	t := c.Theme()
 	pill := ui.Row(c).Shrink(0).Gap(t.Space(1)).AlignItems(ui.Center).Padding(t.Space(0.5), t.Space(2)).Radius(999)
 	pill.Background(pill.AnimateColor("bg", ink.Alpha(0.12), ui.Snappy)).TextColor(pill.AnimateColor("ink", ink, ui.Snappy))
 	return pill.Children(func() {
@@ -147,6 +153,11 @@ func palette(t *ui.Theme, i int) ui.Color {
 // number formats an int or float with the locale's grouping.
 func number(c *ui.Context, v any) string {
 	return i18n.FormatNumber(c.Region().FormatLocale(c.Locale()), v, i18n.NumberOptions{Integer: true})
+}
+
+// moneyText writes an amount as typography.Money shows it.
+func moneyText(c *ui.Context, v float64, currency string) string {
+	return currency + " " + i18n.FormatNumber(c.Region().FormatLocale(c.Locale()), v, i18n.NumberOptions{MinFractionDigits: 2, MaxFractionDigits: 2})
 }
 
 // tile is a rounded square holding a tinted icon.
