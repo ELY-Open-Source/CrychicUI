@@ -17,7 +17,9 @@ func TestFinanceDemosLog(t *testing.T) {
 		want string
 	}{
 		"Balance":     {press("Hide balance"), "hidden true"},
-		"Watchlist":   {press("MYGO"), "selected 0"},
+		"Watchlist":   {press("TSLA"), "selected 1"},
+		"Ticker":      {press("Next tick"), "price 227.30"},
+		"PriceAlert":  {press("Simulate a rally"), "triggered"},
 		"OrderTicket": {press("Increase"), "quantity 2"},
 		"Converter": {func(tt *ui.Tester) error {
 			if err := tt.Click("USD"); err != nil {
@@ -25,13 +27,13 @@ func TestFinanceDemosLog(t *testing.T) {
 			}
 			tt.Type("2")
 			return nil
-		}, "edited"},
+		}, "amount "},
 		"PaymentRequest": {press("Pay"), "paid"},
-		"Bills":          {press("Pay"), "paid 0"},
+		"Bills":          {press("Pay Rent"), "1 paid"},
 	}
 	quiet := map[string]bool{"AccountCard": true, "Transactions": true, "TransactionRow": true, "Spending": true,
-		"Budget": true, "Holdings": true, "Ticker": true, "TickerTape": true, "OrderBook": true, "Depth": true,
-		"PriceAlert": true, "Invoice": true, "Subscriptions": true, "NetWorth": true}
+		"Budget": true, "Holdings": true, "TickerTape": true, "OrderBook": true, "Depth": true,
+		"Invoice": true, "Subscriptions": true, "NetWorth": true}
 	seen := 0
 	for _, e := range Entries() {
 		if e.Category != "finance" || e.ID >= 1036 {

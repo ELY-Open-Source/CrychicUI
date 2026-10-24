@@ -38,7 +38,7 @@ func TestOrderTicketOverflow(t *testing.T) {
 
 func TestOrderBook(t *testing.T) {
 	tt := ui.NewTester(padded(func(c *ui.Context) {
-		OrderBook(c, testLevels(), testLevels(), "USD", OrderBookOptions{})
+		OrderBook(c, testLevels(), testAsks(), "USD", OrderBookOptions{})
 	}), 500, 300)
 	settles(t, tt)
 	if !tt.HasText("Bids") || !tt.HasText("USD 99.00") {
@@ -49,7 +49,7 @@ func TestOrderBook(t *testing.T) {
 func TestOrderBookFlashLifetime(t *testing.T) {
 	rows := testLevels()
 	tt := ui.NewTester(padded(func(c *ui.Context) {
-		OrderBook(c, rows, testLevels(), "USD", OrderBookOptions{})
+		OrderBook(c, rows, testAsks(), "USD", OrderBookOptions{})
 	}), 500, 300)
 	settles(t, tt)
 	settles(t, tt)
@@ -69,7 +69,7 @@ func TestOrderBookFlashLifetime(t *testing.T) {
 }
 
 func TestDepth(t *testing.T) {
-	tt := ui.NewTester(padded(func(c *ui.Context) { Depth(c, testLevels(), testLevels(), "USD", DepthOptions{}) }), 500, 300)
+	tt := ui.NewTester(padded(func(c *ui.Context) { Depth(c, testLevels(), testAsks(), "USD", DepthOptions{}) }), 500, 300)
 	settles(t, tt)
 	if !tt.HasText("Bids") || !tt.HasText("Asks") {
 		t.Errorf("texts %q", tt.Texts())
@@ -143,21 +143,21 @@ func TestPaymentRequest(t *testing.T) {
 }
 
 func TestBills(t *testing.T) {
-	paid := -1
+	paid := []bool{false}
 	bills := []Bill{{Name: "Electricity", Due: "Friday", Amount: 80}}
 	tt := ui.NewTester(padded(func(c *ui.Context) { Bills(c, bills, &paid, "USD", BillsOptions{}) }), 500, 180)
 	settles(t, tt)
 	before := baseline()
 	click(t, tt, "Pay")
-	if paid != 0 {
-		t.Errorf("paid %d", paid)
+	if !paid[0] || !tt.HasText("Paid") {
+		t.Errorf("paid %v texts %q", paid, tt.Texts())
 	}
 	cues(t, before, sound.Success)
 }
 
 func TestSubscriptions(t *testing.T) {
 	rows := []Subscription{{Name: "Music", Next: "Nov 1", Amount: 10}}
-	tt := ui.NewTester(padded(func(c *ui.Context) { Subscriptions(c, rows, "USD") }), 500, 180)
+	tt := ui.NewTester(padded(func(c *ui.Context) { Subscriptions(c, rows, "USD", SubscriptionsOptions{}) }), 500, 180)
 	settles(t, tt)
 	if !tt.HasText("Music") || !tt.HasText("Nov 1") {
 		t.Errorf("texts %q", tt.Texts())

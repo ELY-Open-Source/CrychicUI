@@ -40,7 +40,7 @@ func TestAccountCard(t *testing.T) {
 
 func TestTransactions(t *testing.T) {
 	tt := ui.NewTester(padded(func(c *ui.Context) {
-		Transactions(c, []Transaction{testTransaction()}, "USD")
+		Transactions(c, []Transaction{testTransaction()}, "USD", TransactionsOptions{})
 	}), 500, 180)
 	settles(t, tt)
 	if !tt.HasText("Bookstore") || !tt.HasText("USD -24.00") {
@@ -58,7 +58,7 @@ func TestTransactionRow(t *testing.T) {
 
 func TestSpending(t *testing.T) {
 	rows := []Spend{{Category: "Food", Amount: 30}, {Category: "Books", Amount: 10}}
-	tt := ui.NewTester(padded(func(c *ui.Context) { Spending(c, rows, "USD") }), 500, 250)
+	tt := ui.NewTester(padded(func(c *ui.Context) { Spending(c, rows, "USD", SpendingOptions{}) }), 500, 250)
 	settles(t, tt)
 	if !tt.HasText("Food") || !tt.HasText("USD 30.00") {
 		t.Errorf("texts %q", tt.Texts())
@@ -67,7 +67,7 @@ func TestSpending(t *testing.T) {
 
 func TestSpendingZero(t *testing.T) {
 	rows := []Spend{{Category: "Food", Amount: 0}, {Category: "Books", Amount: 0}}
-	tt := ui.NewTester(padded(func(c *ui.Context) { Spending(c, rows, "USD") }), 500, 250)
+	tt := ui.NewTester(padded(func(c *ui.Context) { Spending(c, rows, "USD", SpendingOptions{}) }), 500, 250)
 	settles(t, tt)
 	if !tt.HasText("USD 0.00") {
 		t.Errorf("texts %q", tt.Texts())
@@ -77,7 +77,7 @@ func TestSpendingZero(t *testing.T) {
 func TestDerivedOverflow(t *testing.T) {
 	panics(t, func() {
 		ui.Render(func(c *ui.Context) {
-			Spending(c, []Spend{{Category: "A", Amount: 1e308}, {Category: "B", Amount: 1e308}}, "USD")
+			Spending(c, []Spend{{Category: "A", Amount: 1e308}, {Category: "B", Amount: 1e308}}, "USD", SpendingOptions{})
 		}, 500, 300, 1)
 	})
 	panics(t, func() {
@@ -103,7 +103,7 @@ func TestBudget(t *testing.T) {
 
 func TestHoldings(t *testing.T) {
 	positions := []Holding{{Symbol: "MYGO", Shares: 2, Price: 50, Change: 1.5}}
-	tt := ui.NewTester(padded(func(c *ui.Context) { Holdings(c, positions, "USD") }), 500, 180)
+	tt := ui.NewTester(padded(func(c *ui.Context) { Holdings(c, positions, "USD", HoldingsOptions{}) }), 500, 180)
 	settles(t, tt)
 	if !tt.HasText("MYGO") || !tt.HasText("USD 100.00") || !tt.HasText("+1.50%") {
 		t.Errorf("texts %q", tt.Texts())
@@ -112,7 +112,7 @@ func TestHoldings(t *testing.T) {
 
 func TestTicker(t *testing.T) {
 	price := 100.0
-	tt := ui.NewTester(padded(func(c *ui.Context) { Ticker(c, "MYGO", price, 1.5, "USD") }), 500, 180)
+	tt := ui.NewTester(padded(func(c *ui.Context) { Ticker(c, "MYGO", price, 1.5, "USD", TickerOptions{}) }), 500, 180)
 	settles(t, tt)
 	price = 110
 	tt.Frame()
@@ -162,7 +162,7 @@ func TestTickerTapeWrap(t *testing.T) {
 func TestWatchlist(t *testing.T) {
 	selected := -1
 	items := []WatchItem{{Symbol: "MYGO", Price: 100, Change: 1.5, Points: []float64{1, 2, 1.5}}}
-	tt := ui.NewTester(padded(func(c *ui.Context) { Watchlist(c, items, "USD", &selected) }), 500, 180)
+	tt := ui.NewTester(padded(func(c *ui.Context) { Watchlist(c, items, "USD", &selected, WatchlistOptions{}) }), 500, 180)
 	settles(t, tt)
 	before := baseline()
 	click(t, tt, "MYGO")

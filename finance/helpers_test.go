@@ -60,6 +60,10 @@ func testLevels() []BookLevel {
 	return []BookLevel{{Price: 99, Amount: 2}, {Price: 98, Amount: 4}}
 }
 
+func testAsks() []BookLevel {
+	return []BookLevel{{Price: 101, Amount: 3}, {Price: 102, Amount: 1}}
+}
+
 func panics(t *testing.T, fn func()) {
 	t.Helper()
 	defer func() {
