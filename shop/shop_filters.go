@@ -5,7 +5,6 @@ import (
 	"slices"
 
 	"github.com/ELY-Open-Source/CrychicUI/choice"
-	"github.com/ELY-Open-Source/CrychicUI/icon"
 	"github.com/ELY-Open-Source/CrychicUI/kit"
 	"github.com/ELY-Open-Source/CrychicUI/sound"
 	"github.com/egoist/mygo/ui"
@@ -74,11 +73,7 @@ func ShopFilters(c *ui.Context, low, high *float64, brands []string, chosen *[]b
 						Padding(t.Space(1), t.Space(1.5)).Radius(t.Radius).Checked(on))
 					b.Background(b.AnimateColor("bg", t.SurfaceHover.Alpha(unit(b.Hovered())), ui.Snappy))
 					b.Children(func() {
-						box := ui.Box(c).Size(t.Space(4.5), t.Space(4.5)).Shrink(0).Center().Radius(t.Space(1)).TextColor(t.AccentText)
-						box.Background(box.AnimateColor("fill", t.Accent.Alpha(unit(on)), ui.Snappy))
-						box.Border(1, box.AnimateColor("line", t.Border.Mix(t.Accent, unit(on)), ui.Snappy))
-						s := max(0, box.AnimateTo("check", unit(on), ui.Bouncy))
-						box.Children(func() { ui.Icon(c, icon.Must("check")).Size(12, 12).Scale(s, s) })
+						checkbox(c, on)
 						ui.Text(c, brand).FontSize(t.Rem(0.85)).Grow(1).MinWidth(0).SingleLine()
 					})
 					if b.Clicked() {
@@ -98,13 +93,7 @@ func ShopFilters(c *ui.Context, low, high *float64, brands []string, chosen *[]b
 					Padding(t.Space(1), t.Space(1.5)).Radius(t.Radius).Checked(on))
 				b.Background(b.AnimateColor("bg", t.SurfaceHover.Alpha(unit(b.Hovered())).Mix(t.Accent.Alpha(0.1), unit(on)), ui.Snappy))
 				b.Children(func() {
-					ring := ui.Box(c).Size(t.Space(4.5), t.Space(4.5)).Shrink(0).Center().Radius(999)
-					ring.Border(1, ring.AnimateColor("line", t.Border.Mix(t.Accent, unit(on)), ui.Snappy))
-					ring.Children(func() {
-						dot := ui.Box(c).Size(t.Space(2.5), t.Space(2.5)).Radius(999).Background(t.Accent)
-						s := max(0, dot.AnimateTo("dot", unit(on), ui.Bouncy))
-						dot.Scale(s, s)
-					})
+					radio(c, on)
 					stars(c, float64(n), t.Space(3.5))
 					kit.Muted(c, o.Up).FontSize(t.Rem(0.8)).Shrink(0)
 				})

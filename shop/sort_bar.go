@@ -53,26 +53,28 @@ func SortBar(c *ui.Context, count int, sort *string, choices []string, o SortBar
 			panel.Margin(t.Space(1), 0, 0, 0).MinWidth(t.Space(44)).Padding(t.Space(1)).Gap(t.Space(0.5)).Radius(t.Radius).
 				Background(t.Background).Border(1, t.Border).Shadow(0, 8, 24, 0, kit.Shade(0.16)).TransformOrigin(0.5, 0)
 			kit.Arrive(panel, ui.Pose{Scale: 0.95, Fade: 1}, 0)
-			for i, ch := range choices {
-				c.Key(ch)
-				on := ch == *sort
-				item := kit.Press(ui.ButtonBase(c).Label(ch).FillWidth().Row().Gap(t.Space(2)).AlignItems(ui.Center).
-					Padding(t.Space(1.5), t.Space(2)).Radius(t.Radius).Checked(on))
-				item.Background(item.AnimateColor("bg", t.SurfaceHover.Alpha(unit(item.Hovered())), ui.Snappy))
-				item.Children(func() {
-					ui.Text(c, ch).FontSize(t.Rem(0.85)).Grow(1).MinWidth(0).SingleLine()
-					ui.Icon(c, icon.Must("check")).Size(14, 14).TextColor(t.Accent).Opacity(unit(on))
-				})
-				if item.Clicked() {
-					*open = false
-					if !on {
-						*sort = ch
-						root.SetChanged()
-						sound.Play(sound.Select)
-						kit.Log("SortBar", "selected", "index", i)
+			ui.Scroll(c).FillWidth().MaxHeight(t.Space(72)).Gap(t.Space(0.5)).Children(func() {
+				for i, ch := range choices {
+					c.Key(ch)
+					on := ch == *sort
+					item := kit.Press(ui.ButtonBase(c).Label(ch).FillWidth().Row().Gap(t.Space(2)).AlignItems(ui.Center).
+						Padding(t.Space(1.5), t.Space(2)).Radius(t.Radius).Checked(on))
+					item.Background(item.AnimateColor("bg", t.SurfaceHover.Alpha(unit(item.Hovered())), ui.Snappy))
+					item.Children(func() {
+						ui.Text(c, ch).FontSize(t.Rem(0.85)).Grow(1).MinWidth(0).SingleLine()
+						ui.Icon(c, icon.Must("check")).Size(14, 14).TextColor(t.Accent).Opacity(unit(on))
+					})
+					if item.Clicked() {
+						*open = false
+						if !on {
+							*sort = ch
+							root.SetChanged()
+							sound.Play(sound.Select)
+							kit.Log("SortBar", "selected", "index", i)
+						}
 					}
 				}
-			}
+			})
 		})
 	})
 	return root

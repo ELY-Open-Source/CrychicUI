@@ -12,7 +12,7 @@ func TestReturns(t *testing.T) {
 	selected := -1
 	reason := ""
 	tt := ui.NewTester(padded(func(c *ui.Context) {
-		Returns(c, []Product{testProduct()}, []string{"Damaged", "Wrong size"}, &selected, &reason, ReturnsOptions{})
+		Returns(c, []Product{testProduct()}, "USD", []string{"Damaged", "Wrong size"}, &selected, &reason, ReturnsOptions{})
 	}), 500, 300)
 	settles(t, tt)
 	before := baseline()

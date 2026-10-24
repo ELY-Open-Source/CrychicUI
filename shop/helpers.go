@@ -136,6 +136,38 @@ func moneyText(c *ui.Context, value float64, currency string) string {
 
 func addButton(c *ui.Context, label string) ui.Element {
 	t := c.Theme()
-	return kit.Press(ui.ButtonBase(c).Label(label).Padding(t.Space(1.5), t.Space(3)).Radius(t.Radius).
-		Background(t.Accent).TextColor(t.AccentText))
+	b := kit.Press(ui.ButtonBase(c).Label(label).Padding(t.Space(1.5), t.Space(3)).Radius(t.Radius).TextColor(t.AccentText))
+	return b.Background(b.AnimateColor("bg", t.Accent.Mix(t.AccentHover, unit(b.Hovered())), ui.Snappy))
+}
+
+// radio is a ring whose dot pops in when on.
+func radio(c *ui.Context, on bool) ui.Element {
+	t := c.Theme()
+	ring := ui.Box(c).Size(t.Space(4.5), t.Space(4.5)).Shrink(0).Center().Radius(999)
+	ring.Border(1, ring.AnimateColor("line", t.Border.Mix(t.Accent, unit(on)), ui.Snappy))
+	return ring.Children(func() {
+		dot := ui.Box(c).Size(t.Space(2.5), t.Space(2.5)).Radius(999).Background(t.Accent)
+		s := max(0, dot.AnimateTo("dot", unit(on), ui.Bouncy))
+		dot.Scale(s, s)
+	})
+}
+
+// thumb is a square product image or a package tile.
+func thumb(c *ui.Context, img *ui.Bitmap, side float32) ui.Element {
+	t := c.Theme()
+	if img == nil {
+		return ui.Box(c).Size(side, side).Shrink(0).Center().Radius(t.Radius).Background(t.Surface).TextColor(t.TextMuted).
+			Children(func() { ui.Icon(c, icon.Must("package")).Size(16, 16) })
+	}
+	return ui.Image(c, img).Size(side, side).Shrink(0).Fit(ui.Cover).Radius(t.Radius)
+}
+
+// checkbox is a square that fills and pops a check.
+func checkbox(c *ui.Context, on bool) ui.Element {
+	t := c.Theme()
+	box := ui.Box(c).Size(t.Space(4.5), t.Space(4.5)).Shrink(0).Center().Radius(t.Space(1)).TextColor(t.AccentText)
+	box.Background(box.AnimateColor("fill", t.Accent.Alpha(unit(on)), ui.Snappy))
+	box.Border(1, box.AnimateColor("line", t.Border.Mix(t.Accent, unit(on)), ui.Snappy))
+	s := max(0, box.AnimateTo("check", unit(on), ui.Bouncy))
+	return box.Children(func() { ui.Icon(c, icon.Must("check")).Size(12, 12).Scale(s, s) })
 }

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"image/color"
 	"math"
+	"strings"
 	"testing"
 	"time"
 
@@ -45,7 +46,7 @@ func TestOrderCardCopy(t *testing.T) {
 
 func TestTracking(t *testing.T) {
 	events := []TrackEvent{{Label: "Shipped", Location: "Shanghai", Time: time.Now(), Done: true}}
-	tt := ui.NewTester(padded(func(c *ui.Context) { Tracking(c, events) }), 500, 200)
+	tt := ui.NewTester(padded(func(c *ui.Context) { Tracking(c, events, TrackingOptions{}) }), 500, 200)
 	settles(t, tt)
 	if !tt.HasText("Shanghai") || !tt.HasText("Shipped") {
 		t.Errorf("texts %q", tt.Texts())
@@ -55,7 +56,7 @@ func TestTracking(t *testing.T) {
 func TestDelivery(t *testing.T) {
 	selected := 0
 	choices := []DeliveryOption{{Name: "Standard", Date: "Friday", Price: 5}, {Name: "Express", Date: "Tomorrow", Price: 12}}
-	tt := ui.NewTester(padded(func(c *ui.Context) { Delivery(c, "Delivery", choices, "USD", &selected) }), 500, 250)
+	tt := ui.NewTester(padded(func(c *ui.Context) { Delivery(c, "Delivery", choices, "USD", &selected, DeliveryOptions{}) }), 500, 250)
 	settles(t, tt)
 	before := baseline()
 	click(t, tt, "Express")
@@ -78,15 +79,15 @@ func TestFreeShipping(t *testing.T) {
 }
 
 func TestUpsell(t *testing.T) {
-	added := -1
+	added := []bool{false}
 	tt := ui.NewTester(padded(func(c *ui.Context) {
 		Upsell(c, "Related", []Product{testProduct()}, "USD", &added, UpsellOptions{})
-	}), 500, 180)
+	}), 260, 500)
 	settles(t, tt)
 	before := baseline()
-	click(t, tt, "Add")
-	if added != 0 {
-		t.Errorf("added %d", added)
+	click(t, tt, "Add Desk lamp")
+	if !added[0] || !tt.HasText("Added Desk lamp") {
+		t.Errorf("added %v texts %q", added, tt.Texts())
 	}
 	cues(t, before, sound.Pop)
 }
@@ -103,9 +104,9 @@ func TestFlashSale(t *testing.T) {
 	ends := time.Now().Add(90 * time.Minute)
 	tt := ui.NewTester(padded(func(c *ui.Context) { FlashSale(c, "Flash sale", ends, FlashSaleOptions{}) }), 500, 180)
 	settles(t, tt)
-	before := tt.Texts()
+	before := strings.Join(tt.Texts(), " ")
 	tt.Advance(1500 * time.Millisecond)
-	if !tt.HasText("Flash sale") || len(tt.Texts()) == len(before) && tt.Texts()[1] == before[1] {
+	if !tt.HasText("Flash sale") || strings.Join(tt.Texts(), " ") == before {
 		t.Errorf("countdown did not update: %q", tt.Texts())
 	}
 }
@@ -121,7 +122,7 @@ func TestFlashSaleDeadline(t *testing.T) {
 }
 
 func TestGiftCard(t *testing.T) {
-	tt := ui.NewTester(padded(func(c *ui.Context) { GiftCard(c, 50, "USD", "For you") }), 400, 220)
+	tt := ui.NewTester(padded(func(c *ui.Context) { GiftCard(c, 50, "USD", "For you", GiftCardOptions{}) }), 400, 220)
 	settles(t, tt)
 	if !tt.HasText("USD 50.00") || !tt.HasText("For you") {
 		t.Errorf("texts %q", tt.Texts())
@@ -139,14 +140,24 @@ func TestLoyalty(t *testing.T) {
 func TestLoyaltyOverflow(t *testing.T) {
 	tt := ui.NewTester(padded(func(c *ui.Context) { Loyalty(c, math.MaxInt, "Gold", 1, LoyaltyOptions{}) }), 500, 180)
 	settles(t, tt)
-	r, ok := tt.Find(fmt.Sprint(math.MaxInt))
-	if !ok {
+	if _, ok := tt.Find(fmt.Sprint(math.MaxInt)); !ok {
 		t.Fatal("points missing")
 	}
-	accent := ui.LightTheme().Accent
-	want := color.RGBA{accent.R, accent.G, accent.B, 255}
-	if got := tt.Image().RGBAAt(int(r.X+2), int(r.Y+r.H+10)); got != want {
-		t.Errorf("progress got %v want %v", got, want)
+	// The widest bar ink run must span nearly the card.
+	warn := ui.LightTheme().Warning
+	want := color.RGBA{warn.R, warn.G, warn.B, 255}
+	img, widest := tt.Image(), 0
+	for y := range img.Bounds().Dy() {
+		n := 0
+		for x := range img.Bounds().Dx() {
+			if img.RGBAAt(x, y) == want {
+				n++
+			}
+		}
+		widest = max(widest, n)
+	}
+	if widest < 400 {
+		t.Errorf("progress bar spans %d px, want nearly full", widest)
 	}
 }
 
