@@ -10,7 +10,7 @@ import (
 
 func TestCashFlow(t *testing.T) {
 	months := []FlowMonth{{Label: "Jan", In: 100, Out: 40}}
-	tt := ui.NewTester(padded(func(c *ui.Context) { CashFlow(c, months, "USD") }), 500, 220)
+	tt := ui.NewTester(padded(func(c *ui.Context) { CashFlow(c, months, "USD", CashFlowOptions{}) }), 500, 220)
 	settles(t, tt)
 	if !tt.HasText("Jan") || !tt.HasText("USD 100.00") || !tt.HasText("USD 40.00") {
 		t.Errorf("texts %q", tt.Texts())
@@ -19,7 +19,7 @@ func TestCashFlow(t *testing.T) {
 
 func TestDividends(t *testing.T) {
 	payments := []Dividend{{Symbol: "MYGO", Date: "Nov 1", Amount: 5}}
-	tt := ui.NewTester(padded(func(c *ui.Context) { Dividends(c, payments, "USD") }), 500, 180)
+	tt := ui.NewTester(padded(func(c *ui.Context) { Dividends(c, payments, "USD", DividendsOptions{}) }), 500, 180)
 	settles(t, tt)
 	if !tt.HasText("MYGO") || !tt.HasText("Nov 1") {
 		t.Errorf("texts %q", tt.Texts())
@@ -46,7 +46,7 @@ func TestRiskMeterMotion(t *testing.T) {
 }
 
 func TestExchangeRate(t *testing.T) {
-	tt := ui.NewTester(padded(func(c *ui.Context) { ExchangeRate(c, "USD/EUR", 0.85, 1.2) }), 500, 180)
+	tt := ui.NewTester(padded(func(c *ui.Context) { ExchangeRate(c, "USD/EUR", 0.85, 1.2, ExchangeRateOptions{}) }), 500, 180)
 	settles(t, tt)
 	if !tt.HasText("USD/EUR") || !tt.HasText("0.8500") || !tt.HasText("+1.20%") {
 		t.Errorf("texts %q", tt.Texts())
@@ -56,7 +56,7 @@ func TestExchangeRate(t *testing.T) {
 func TestPayees(t *testing.T) {
 	query, selected := "", -1
 	tt := ui.NewTester(padded(func(c *ui.Context) {
-		Payees(c, []string{"Ana", "Kai"}, &query, &selected, PayeesOptions{})
+		Payees(c, []Payee{{Name: "Ana"}, {Name: "Kai"}}, &query, &selected, PayeesOptions{})
 	}), 500, 250)
 	settles(t, tt)
 	before := baseline()
@@ -70,13 +70,13 @@ func TestPayees(t *testing.T) {
 func TestCategorize(t *testing.T) {
 	selected := -1
 	tt := ui.NewTester(padded(func(c *ui.Context) {
-		Categorize(c, testTransaction(), []string{"Books", "Food"}, &selected)
+		Categorize(c, testTransaction(), []string{"Books", "Food"}, &selected, "USD", CategorizeOptions{})
 	}), 500, 220)
 	settles(t, tt)
 	before := baseline()
-	click(t, tt, "Books")
-	if selected != 0 {
-		t.Errorf("selected %d", selected)
+	click(t, tt, "Food")
+	if selected != 1 || !tt.HasText("Food") {
+		t.Errorf("selected %d texts %q", selected, tt.Texts())
 	}
 	cues(t, before, sound.Select)
 }

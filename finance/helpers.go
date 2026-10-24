@@ -128,3 +128,54 @@ func inversePair(t *ui.Theme) (ui.Color, ui.Color) {
 	}
 	return fill, text
 }
+
+// fact is a small labeled value tile.
+func fact(c *ui.Context, label, value string) {
+	t := c.Theme()
+	ui.Column(c).Grow(1).Basis(0).MinWidth(0).Gap(t.Space(0.5)).Padding(t.Space(2)).Radius(t.Radius).Background(t.Surface).
+		Children(func() {
+			kit.Muted(c, label).FontSize(t.Rem(0.7)).FillWidth().SingleLine()
+			kit.Numeric(c, value).Bold().FontSize(t.Rem(0.85)).FillWidth().SingleLine().
+				ContentTransition(ui.ContentTransition{Numeric: true})
+		})
+}
+
+// split is a stacked bar over a money legend.
+func split(c *ui.Context, values []float64, names []string, currency string) {
+	t := c.Theme()
+	total := 0.0
+	for _, v := range values {
+		total += v
+	}
+	if total <= 0 || !finite(total) {
+		panic("finance: split needs a positive finite total")
+	}
+	ui.Column(c).FillWidth().Gap(t.Space(2)).Children(func() {
+		bar := ui.Box(c).FillWidth().Height(t.Space(2.5))
+		shares := make([]float32, len(values))
+		for i, v := range values {
+			shares[i] = bar.AnimateTo(fmt.Sprint("s", i), float32(v/total), ui.Smooth)
+		}
+		bar.Draw(kit.Inside(0, func(p *ui.Painter, r ui.Rect) {
+			x := r.X
+			for i, s := range shares {
+				w := r.W * s
+				if w > 0 {
+					p.Fill(ui.Rect{X: x, Y: r.Y, W: max(0, w-t.Space(0.5)), H: r.H}, palette(t, i), 999)
+				}
+				x += w
+			}
+		}))
+		ui.Row(c).FillWidth().Gap(t.Space(3)).Children(func() {
+			for i, v := range values {
+				c.Key(i)
+				ui.Row(c).Grow(1).Basis(0).MinWidth(0).Gap(t.Space(1.5)).AlignItems(ui.Center).Children(func() {
+					ui.Box(c).Size(t.Space(2), t.Space(2)).Shrink(0).Radius(999).Background(palette(t, i))
+					kit.Muted(c, names[i]).FontSize(t.Rem(0.75)).Shrink(0)
+					money(c, v, currency).Bold().FontSize(t.Rem(0.75)).Grow(1).MinWidth(0).TextAlign(ui.End).SingleLine().
+						ContentTransition(ui.ContentTransition{Numeric: true})
+				})
+			}
+		})
+	})
+}

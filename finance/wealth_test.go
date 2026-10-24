@@ -22,7 +22,7 @@ func TestWallet(t *testing.T) {
 	tt := ui.NewTester(padded(func(c *ui.Context) { Wallet(c, coins, "USD", &sent, WalletOptions{}) }), 500, 180)
 	settles(t, tt)
 	before := baseline()
-	click(t, tt, "Send")
+	click(t, tt, "Send BTC")
 	if sent != 0 {
 		t.Errorf("sent %d", sent)
 	}
@@ -117,7 +117,7 @@ func TestTransfer(t *testing.T) {
 func TestCardControls(t *testing.T) {
 	frozen, online, limit := false, true, 1000.0
 	tt := ui.NewTester(padded(func(c *ui.Context) {
-		CardControls(c, &frozen, &online, &limit, CardControlsOptions{})
+		CardControls(c, &frozen, &online, &limit, "USD", CardControlsOptions{})
 	}), 500, 300)
 	settles(t, tt)
 	before := baseline()

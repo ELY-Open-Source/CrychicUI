@@ -16,22 +16,24 @@ func TestFinance2DemosLog(t *testing.T) {
 		do   func(tt *ui.Tester) error
 		want string
 	}{
-		"Wallet":    {press("Send"), "sent 0"},
-		"SplitBill": {press("Increase"), "people 3"},
+		"Wallet":    {press("Send BTC"), "sent 0"},
+		"SplitBill": {press("Increase"), "people 5"},
 		"Transfer": {func(tt *ui.Tester) error {
 			if err := tt.Click("Amount"); err != nil {
 				return err
 			}
 			tt.Type("2")
 			return nil
-		}, "4 runes"},
+		}, "7 runes"},
 		"CardControls": {press("Freeze card"), "frozen true"},
-		"Payees":       {press("Kai"), "selected 1"},
-		"Categorize":   {press("Books"), "selected 0"},
+		"Payees":       {press("Kai Nakamura"), "selected 1"},
+		"RiskMeter":    {press("Raise risk"), "level 4"},
+		"PnL":          {press("Next day"), "pnl -412.35"},
+		"Categorize":   {press("Dining"), "selected 1"},
 	}
 	quiet := map[string]bool{"Allocation": true, "LoanCalc": true, "Mortgage": true, "TaxSummary": true,
-		"SavingsGoal": true, "Statement": true, "CashFlow": true, "Dividends": true, "RiskMeter": true,
-		"ExchangeRate": true, "Receipts": true, "CreditScore": true, "MarketStatus": true, "PnL": true}
+		"SavingsGoal": true, "Statement": true, "CashFlow": true, "Dividends": true,
+		"ExchangeRate": true, "Receipts": true, "CreditScore": true, "MarketStatus": true}
 	seen := 0
 	for _, e := range Entries() {
 		if e.Category != "finance" || e.ID < 1036 {
