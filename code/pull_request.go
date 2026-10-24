@@ -107,7 +107,7 @@ func PullRequest(c *ui.Context, pr PR, o PullRequestOptions) ui.Element {
 					branchChip(c, pr.Base)
 				})
 			})
-			chip(c, name, ink).ContentTransition(ui.ContentTransition{})
+			kit.Chip(c, name, ink)
 		})
 		ui.Row(c).FillWidth().Gap(t.Space(3)).AlignItems(ui.Center).Padding(t.Space(2), t.Space(3)).Background(t.Surface).
 			BorderWidth(1, 0, 0, 0).BorderColor(t.Border).Children(func() {

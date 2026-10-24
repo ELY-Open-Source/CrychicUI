@@ -37,12 +37,12 @@ func JSONFormat(c *ui.Context, label string, text *string, o JSONFormatOptions) 
 	root = kit.Card(c).FillWidth().Role(ui.RoleGroup).Label(label)
 	bad := ui.Local(root, "bad", func() string { return "" })
 	root.Children(func() {
-		panelHead(c, "braces", label, func() {
+		kit.CardHead(c, "braces", label, func() {
 			typography.Bytes(c, int64(len(*text))).FontSize(t.Rem(0.75)).TextColor(t.TextMuted)
 			if json.Valid([]byte(*text)) {
-				chip(c, o.Valid, t.Success)
+				kit.Chip(c, o.Valid, t.Success)
 			} else {
-				chip(c, o.Invalid, t.Danger)
+				kit.Chip(c, o.Invalid, t.Danger)
 			}
 		})
 		ui.Column(c).FillWidth().Gap(t.Space(2)).Padding(t.Space(3)).Children(func() {

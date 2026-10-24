@@ -28,7 +28,7 @@ func TestFiles2DemosLog(t *testing.T) {
 			return tt.ChooseMenuItem("Open")
 		}, "opened 2"},
 		"QuotaWarning": {press("Upgrade"), "upgraded"},
-		"Starred":      {press("Unstar notes.md"), "false"},
+		"Starred":      {press("Unstar Q3 board report.pdf"), "false"},
 		"Conflict":     {press("Keep both"), "choice 3"},
 		"SelectBar":    {press("Delete"), "action 2"},
 		"FileTags":     {press("urgent"), "true true false"},
@@ -39,7 +39,7 @@ func TestFiles2DemosLog(t *testing.T) {
 			return tt.ChooseMenuItem("New folder")
 		}, "action 2"},
 		"FileTypeFilter": {press("Code 8"), "selected 1"},
-		"Thumbs":         {press("main.go"), "selected 1"},
+		"Thumbs":         {press("billing.go"), "selected 5"},
 	}
 	quiet := map[string]bool{"Storage": true, "SyncRow": true, "Compress": true}
 	seen := 0

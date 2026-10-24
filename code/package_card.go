@@ -42,7 +42,7 @@ func PackageCard(c *ui.Context, p Package, o PackageCardOptions) (root, copy ui.
 			ui.Column(c).Grow(1).MinWidth(0).Gap(t.Space(1)).Children(func() {
 				ui.Row(c).FillWidth().Gap(t.Space(2)).AlignItems(ui.Center).Children(func() {
 					ui.Text(c, p.Name).Font("monospace").FontSize(t.Rem(0.9)).Bold().Grow(1).MinWidth(0).SingleLine()
-					chip(c, p.Version, t.Accent)
+					kit.Chip(c, p.Version, t.Accent)
 				})
 				if p.Description != "" {
 					kit.Muted(c, p.Description).FontSize(t.Rem(0.85)).Wrap()

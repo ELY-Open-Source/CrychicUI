@@ -26,7 +26,7 @@ func HashTool(c *ui.Context, label string, text *string, o HashToolOptions) (roo
 	var digest string
 	root = kit.Card(c).FillWidth().Role(ui.RoleGroup).Label(label)
 	root.Children(func() {
-		panelHead(c, "fingerprint", label, func() {
+		kit.CardHead(c, "fingerprint", label, func() {
 			typography.Bytes(c, int64(len(*text))).FontSize(t.Rem(0.75)).TextColor(t.TextMuted)
 		})
 		ui.Column(c).FillWidth().Gap(t.Space(3)).Padding(t.Space(3)).Children(func() {

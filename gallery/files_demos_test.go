@@ -18,16 +18,16 @@ func TestFilesDemosLog(t *testing.T) {
 		want string
 	}{
 		"FileList":   {press("Size"), "sort 1"},
-		"FileGrid":   {press("main.go"), "selected 1"},
-		"UploadList": {press("Cancel report.pdf"), "1 uploads left"},
+		"FileGrid":   {press("billing.go"), "selected billing.go"},
+		"UploadList": {press("Cancel office-floorplan.png"), "2 uploads left"},
 		"FileCard": {func(tt *ui.Tester) error {
 			if err := tt.Click("File actions"); err != nil {
 				return err
 			}
 			return tt.ChooseMenuItem("Rename")
-		}, "action 2"},
-		"FolderCard": {press("Documents"), "opened Documents"},
-		"PathBar":    {press("projects"), "at projects"},
+		}, "action 2 on Q3 board report.pdf"},
+		"FolderCard": {press("Receipts"), "opened Receipts"},
+		"PathBar":    {press("Finance"), "at Finance"},
 		"NewFolder": {func(tt *ui.Tester) error {
 			if err := tt.Click("Folder name"); err != nil {
 				return err
@@ -47,16 +47,17 @@ func TestFilesDemosLog(t *testing.T) {
 			return nil
 		}, "renamed 8 runes"},
 		"MoveDialog": {func(tt *ui.Tester) error {
-			if err := tt.Click("work/docs"); err != nil {
+			if err := tt.Click("Acme/Finance/Reports"); err != nil {
 				return err
 			}
+			tt.Advance(time.Second)
 			return tt.Click("Move")
-		}, "moved to 1"},
+		}, "moved to Acme/Finance/Reports"},
 		"ShareDialog": {press("Copy link"), "copied link"},
 		"Permissions": {press("Editor"), "role 1"},
-		"Trash":       {press("Restore"), "restored 0"},
-		"Versions":    {press("Restore"), "restored v1"},
-		"RecentFiles": {press("main.go"), "opened main.go"},
+		"Trash":       {press("Restore old-pricing.xlsx"), "restored old-pricing.xlsx"},
+		"Versions":    {press("Restore v3"), "restored v3"},
+		"RecentFiles": {press("billing.go"), "opened billing.go"},
 	}
 	quiet := map[string]bool{"FileIcon": true, "Dropzone": true, "FilePreview": true, "Properties": true}
 	seen := 0

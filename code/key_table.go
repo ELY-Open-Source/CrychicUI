@@ -38,7 +38,7 @@ func KeyTable(c *ui.Context, label string, groups []KeyGroup) ui.Element {
 	t := c.Theme()
 	root := kit.Card(c).FillWidth().Role(ui.RoleGroup).Label(label)
 	root.Children(func() {
-		panelHead(c, "keyboard", label, nil)
+		kit.CardHead(c, "keyboard", label, nil)
 		ui.Column(c).FillWidth().Gap(t.Space(3)).Padding(t.Space(2), t.Space(3), t.Space(3), t.Space(3)).Children(func() {
 			for gi, g := range groups {
 				c.Key(g.Name)

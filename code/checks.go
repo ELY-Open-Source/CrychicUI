@@ -31,14 +31,14 @@ func Checks(c *ui.Context, label string, checks []Check, o ChecksOptions) ui.Ele
 	t := c.Theme()
 	root := kit.Card(c).FillWidth().Role(ui.RoleList).Label(label)
 	root.Children(func() {
-		panelHead(c, "shield-check", label, func() { checkTally(c, checks, o.Passing) })
+		kit.CardHead(c, "shield-check", label, func() { checkTally(c, checks, o.Passing) })
 		ui.Column(c).FillWidth().Padding(t.Space(1)).Children(func() {
 			for i, k := range checks {
 				c.Key(k.Name)
 				row := ui.Row(c).FillWidth().Gap(t.Space(2.5)).AlignItems(ui.Center).Padding(t.Space(1.5), t.Space(2)).Radius(t.Radius).
 					Role(ui.RoleListItem).Label(k.Name)
 				row.Background(row.AnimateColor("bg", t.Danger.Alpha(0.06*unit(k.State == CheckFail)), ui.Snappy))
-				stagger(c, root, row, i).Children(func() {
+				kit.Stagger(c, root, row, i).Children(func() {
 					switch k.State {
 					case CheckPending:
 						e := ui.Icon(c, iconSpin).Size(16, 16).TextColor(t.Warning)

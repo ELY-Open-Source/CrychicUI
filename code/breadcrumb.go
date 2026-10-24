@@ -44,7 +44,7 @@ func Breadcrumb(c *ui.Context, label string, parts []string, at *int) ui.Element
 				}
 				on := i == *at
 				b := kit.Press(ui.ButtonBase(c).Label(part).Tooltip(part).Padding(t.Space(0.75), t.Space(1.5)).Radius(t.Radius).Checked(on))
-				stagger(c, root, b, i)
+				kit.Stagger(c, root, b, i)
 				b.Background(b.AnimateColor("bg", t.SurfaceHover.Alpha(unit(b.Hovered())).Mix(t.Background, unit(on)), ui.Snappy))
 				b.TextColor(b.AnimateColor("ink", t.TextMuted.Mix(t.Text, unit(on || b.Hovered())), ui.Snappy))
 				b.Children(func() {

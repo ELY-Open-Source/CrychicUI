@@ -41,7 +41,7 @@ func Env(c *ui.Context, label string, vars []EnvVar, shown *bool, o EnvOptions) 
 	root := kit.Card(c).FillWidth().Role(ui.RoleGroup).Label(label)
 	var toggle ui.Element
 	root.Children(func() {
-		panelHead(c, "key-round", label, func() {
+		kit.CardHead(c, "key-round", label, func() {
 			name, glyph := o.Show, "eye"
 			if *shown {
 				name, glyph = o.Hide, "eye-off"
@@ -57,7 +57,7 @@ func Env(c *ui.Context, label string, vars []EnvVar, shown *bool, o EnvOptions) 
 				c.Key(v.Key)
 				row := ui.Row(c).FillWidth().Gap(t.Space(2)).AlignItems(ui.Center).Padding(t.Space(1.25), t.Space(3)).
 					BorderWidth(0, 0, 1, 0).BorderColor(t.Border.Alpha(unit(i < len(vars)-1)))
-				stagger(c, root, row, i).Children(func() {
+				kit.Stagger(c, root, row, i).Children(func() {
 					ui.Text(c, v.Key).Font("monospace").FontSize(t.Rem(0.8)).Bold().Shrink(0)
 					kit.Muted(c, "=").Font("monospace").FontSize(t.Rem(0.8)).Shrink(0)
 					value, ink := v.Value, t.Text

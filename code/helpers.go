@@ -146,26 +146,6 @@ func codeBody(c *ui.Context, lang, code string, numbers bool, mark func(i int, r
 	})
 }
 
-// panelHead is a card's title row: icon, title, then trailing.
-func panelHead(c *ui.Context, glyph, title string, trailing func()) {
-	t := c.Theme()
-	ui.Row(c).FillWidth().Gap(t.Space(2)).AlignItems(ui.Center).Padding(t.Space(2.5), t.Space(3)).
-		BorderWidth(0, 0, 1, 0).BorderColor(t.Border).Children(func() {
-		ui.Icon(c, icon.Must(glyph)).Size(14, 14).Shrink(0).TextColor(t.TextMuted)
-		ui.Text(c, title).FontSize(t.Rem(0.8)).Bold().Grow(1).MinWidth(0).SingleLine()
-		if trailing != nil {
-			trailing()
-		}
-	})
-}
-
-// chip is a small tinted pill of text.
-func chip(c *ui.Context, text string, ink ui.Color) ui.Element {
-	t := c.Theme()
-	return ui.Text(c, text).FontSize(t.Rem(0.7)).Bold().TextColor(ink).Shrink(0).
-		Padding(t.Space(0.25), t.Space(2)).Radius(999).Background(ink.Alpha(0.12))
-}
-
 // pair is a two-way switch; the caller plays cues.
 func pair(c *ui.Context, left, right, leftGlyph, rightGlyph string, onLeft bool) (l, r ui.Element) {
 	t := c.Theme()
@@ -265,18 +245,6 @@ func ident(seen map[string]int, s string) string {
 
 // rowExit fades a row out; stagger brings rows in.
 var rowExit = ui.ElementTransition{Duration: 160 * time.Millisecond, Exit: &ui.Motion{}}
-
-// stagger arrives a row, staggered while its list is young.
-func stagger(c *ui.Context, list, row ui.Element, i int) ui.Element {
-	born := ui.Local(list, "crychic.born", func() time.Time { return c.Now() })
-	delay := ui.Local(row, "crychic.delay", func() time.Duration {
-		if c.Now().Sub(*born) < time.Second {
-			return time.Duration(min(i, 8)) * 40 * time.Millisecond
-		}
-		return 0
-	})
-	return kit.Arrive(row, ui.Pose{Y: c.Theme().Space(1), Fade: 1}, *delay)
-}
 
 // codeHeader is a file bar: glyph, title, language and actions.
 func codeHeader(c *ui.Context, title, lang string, actions func()) {

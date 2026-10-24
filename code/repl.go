@@ -48,7 +48,7 @@ func REPL(c *ui.Context, label string, history *[]REPLLine, draft *string, o REP
 			for i, l := range *history {
 				c.Key(i)
 				entry := ui.Column(c).FillWidth().Gap(t.Space(0.5)).Padding(t.Space(0.5), t.Space(3))
-				stagger(c, root, entry, i).Children(func() {
+				kit.Stagger(c, root, entry, i).Children(func() {
 					ui.Text(c, "> "+l.In).Font("monospace").FontSize(t.Rem(0.8)).TextColor(fg.Alpha(0.7)).Wrap()
 					out := ui.Text(c, "= "+l.Out).Font("monospace").FontSize(t.Rem(0.8)).Bold().Wrap()
 					if l.Err {

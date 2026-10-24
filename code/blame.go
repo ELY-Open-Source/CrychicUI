@@ -63,7 +63,7 @@ func Blame(c *ui.Context, label string, lines []BlameLine, o BlameOptions) ui.El
 			if first && i > 0 {
 				row.BorderWidth(1, 0, 0, 0).BorderColor(t.Border)
 			}
-			stagger(c, root, row, i).Children(func() {
+			kit.Stagger(c, root, row, i).Children(func() {
 				ui.Box(c).Width(3).FillHeight().Shrink(0).Background(t.Accent.Alpha(0.15 + 0.85*heat))
 				ui.Row(c).Width(t.Space(36)).Shrink(0).Gap(t.Space(1.5)).AlignItems(ui.Center).Padding(t.Space(0.75), 0).Children(func() {
 					if !first {

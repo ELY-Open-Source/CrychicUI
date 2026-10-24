@@ -54,7 +54,7 @@ func Console(c *ui.Context, label string, entries []LogEntry, filter *int, o Con
 	inks := [logLevelCount]ui.Color{t.TextMuted, t.Warning, t.Danger}
 	root := kit.Card(c).FillWidth().Role(ui.RoleGroup).Label(label)
 	root.Children(func() {
-		panelHead(c, "square-terminal", label, func() {
+		kit.CardHead(c, "square-terminal", label, func() {
 			for lv := LogLevel(0); lv < logLevelCount; lv++ {
 				c.Key(lv)
 				on := *filter&(1<<lv) != 0
@@ -86,7 +86,7 @@ func Console(c *ui.Context, label string, entries []LogEntry, filter *int, o Con
 				c.Key(i)
 				row := ui.Row(c).FillWidth().Gap(t.Space(2)).AlignItems(ui.Center).Padding(t.Space(1), t.Space(3)).
 					Background(inks[e.Level].Alpha(0.07 * unit(e.Level != LevelLog))).Transition(rowExit)
-				stagger(c, root, row, shown).Children(func() {
+				kit.Stagger(c, root, row, shown).Children(func() {
 					ui.Icon(c, icon.Must(glyphs[e.Level])).Size(14, 14).TextColor(inks[e.Level]).Shrink(0)
 					txt := ui.Text(c, e.Text).Font("monospace").FontSize(t.Rem(0.8)).Grow(1).MinWidth(0).Wrap()
 					if e.Level == LevelError {

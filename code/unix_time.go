@@ -57,7 +57,7 @@ func UnixTime(c *ui.Context, label string, epoch *int64, o UnixTimeOptions) (roo
 		kit.Log("UnixTime", event)
 	}
 	root.Children(func() {
-		panelHead(c, "clock", label, func() { now = action(c, o.Now, "timer", false) })
+		kit.CardHead(c, "clock", label, func() { now = action(c, o.Now, "timer", false) })
 		ui.Column(c).FillWidth().Gap(t.Space(2)).Padding(t.Space(3)).Children(func() {
 			ui.Row(c).FillWidth().Gap(t.Space(3)).Children(func() {
 				ui.Column(c).Grow(1).MinWidth(0).Children(func() {

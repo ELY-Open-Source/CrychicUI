@@ -83,7 +83,7 @@ func outlineSection(c *ui.Context, root ui.Element, kind SymbolKind, name string
 		on := i == *selected
 		b := kit.Press(ui.ButtonBase(c).Label(s.Name).FillWidth().AlignItems(ui.Stretch).Padding(t.Space(1), t.Space(2)).
 			Radius(t.Radius).Checked(on))
-		stagger(c, root, b, k)
+		kit.Stagger(c, root, b, k)
 		k++
 		b.Background(b.AnimateColor("bg", t.SurfaceHover.Alpha(unit(b.Hovered())).Mix(t.Accent.Alpha(0.12), unit(on)), ui.Snappy))
 		b.Children(func() {

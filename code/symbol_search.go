@@ -56,7 +56,7 @@ func SymbolSearch(c *ui.Context, label string, symbols []Symbol, query *string, 
 				on := i == *chosen
 				b := kit.Press(ui.ButtonBase(c).Label(s.Name).FillWidth().AlignItems(ui.Stretch).Padding(t.Space(1.25), t.Space(2)).
 					Radius(t.Radius).Checked(on))
-				stagger(c, root, b, hits)
+				kit.Stagger(c, root, b, hits)
 				hits++
 				b.Background(b.AnimateColor("bg", t.SurfaceHover.Alpha(unit(b.Hovered())).Mix(t.Accent.Alpha(0.12), unit(on)), ui.Snappy))
 				b.Children(func() {

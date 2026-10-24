@@ -59,7 +59,7 @@ func BranchPicker(c *ui.Context, label string, branches []Branch, current *int, 
 				on := i == *current
 				row := kit.Press(ui.ButtonBase(c).Label(b.Name).FillWidth().AlignItems(ui.Stretch).Padding(t.Space(1.25), t.Space(2)).
 					Radius(t.Radius).Checked(on))
-				stagger(c, root, row, hits)
+				kit.Stagger(c, root, row, hits)
 				hits++
 				row.Background(row.AnimateColor("bg", t.SurfaceHover.Alpha(unit(row.Hovered())).Mix(t.Accent.Alpha(0.12), unit(on)), ui.Snappy))
 				row.Children(func() {
@@ -77,7 +77,7 @@ func BranchPicker(c *ui.Context, label string, branches []Branch, current *int, 
 							kit.Numeric(c, "↓"+strconv.Itoa(b.Behind)).FontSize(t.Rem(0.7)).TextColor(t.Warning).Shrink(0)
 						}
 						if on {
-							chip(c, o.Current, t.Accent)
+							kit.Chip(c, o.Current, t.Accent)
 						}
 					})
 				})

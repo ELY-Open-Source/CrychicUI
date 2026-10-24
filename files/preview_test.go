@@ -28,7 +28,7 @@ func TestFilePreview(t *testing.T) {
 		FilePreview(c, "Info", item, "", nil, FilePreviewOptions{})
 	}), 500, 350)
 	settles(t, info)
-	if !info.HasText("archive.zip") || !info.HasText("Type") {
+	if !info.HasText("archive.zip") || !info.HasText("ZIP file") {
 		t.Errorf("texts %q", info.Texts())
 	}
 	item.Dir = true
@@ -37,7 +37,7 @@ func TestFilePreview(t *testing.T) {
 		FilePreview(c, "Folder", item, "", nil, FilePreviewOptions{})
 	}), 500, 350)
 	settles(t, folder)
-	if !folder.HasText("photos.png") || !folder.HasText("Type: folder") {
+	if !folder.HasText("photos.png") || !folder.HasText("Folder") {
 		t.Errorf("folder preview %q", folder.Texts())
 	}
 	panics(t, func() {

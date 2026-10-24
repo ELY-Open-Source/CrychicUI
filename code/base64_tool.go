@@ -51,7 +51,7 @@ func Base64Tool(c *ui.Context, label string, text *string, encode *bool, o Base6
 	root = kit.Card(c).FillWidth().Role(ui.RoleGroup).Label(label)
 	var enc, dec ui.Element
 	root.Children(func() {
-		panelHead(c, "binary", label, func() { enc, dec = pair(c, o.Encode, o.Decode, "lock", "lock-open", *encode) })
+		kit.CardHead(c, "binary", label, func() { enc, dec = pair(c, o.Encode, o.Decode, "lock", "lock-open", *encode) })
 		ui.Column(c).FillWidth().Gap(t.Space(2)).Padding(t.Space(3)).Children(func() {
 			captioned(c, from, func() {
 				if ui.TextArea(c, text).Label(from).Font("monospace").Lines(2, 5).FillWidth().Changed() {

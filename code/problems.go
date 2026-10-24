@@ -108,7 +108,7 @@ func problemRow(c *ui.Context, root ui.Element, i, k int, p Problem, selected *i
 	}
 	b := kit.Press(ui.ButtonBase(c).Label(p.Message).FillWidth().AlignItems(ui.Stretch).Padding(t.Space(1.25), t.Space(2), t.Space(1.25), t.Space(6)).
 		Radius(t.Radius).Checked(on))
-	stagger(c, root, b, k)
+	kit.Stagger(c, root, b, k)
 	b.Background(b.AnimateColor("bg", t.SurfaceHover.Alpha(unit(b.Hovered())).Mix(t.Accent.Alpha(0.12), unit(on)), ui.Snappy))
 	b.Children(func() {
 		ui.Row(c).FillWidth().Gap(t.Space(2)).AlignItems(ui.Center).Children(func() {

@@ -53,7 +53,7 @@ func StackTrace(c *ui.Context, message string, list []StackFrame, open *bool, o 
 				}
 				c.Key(i)
 				row := ui.Row(c).FillWidth().Gap(t.Space(2)).AlignItems(ui.Center).Padding(t.Space(1), t.Space(3)).Transition(frameFold)
-				stagger(c, root, row, i).Children(func() { frameRow(c, f) })
+				kit.Stagger(c, root, row, i).Children(func() { frameRow(c, f) })
 			}
 		})
 		if hidden > 0 {

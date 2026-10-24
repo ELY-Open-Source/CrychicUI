@@ -20,6 +20,8 @@ type FileItem struct {
 	Size     int64
 	Modified time.Time
 	Dir      bool
+	// Path is the folder holding it, when shown.
+	Path string
 }
 
 func def(s *string, d string) {
@@ -61,8 +63,10 @@ func validFile(component string, f FileItem) {
 
 func glyph(name string) string {
 	switch strings.ToLower(filepath.Ext(name)) {
-	case ".txt", ".md", ".json", ".log":
+	case ".txt", ".md", ".json", ".log", ".pdf", ".doc", ".docx":
 		return "file-text"
+	case ".csv", ".xlsx", ".numbers":
+		return "file-spreadsheet"
 	case ".go", ".js", ".ts", ".css", ".html":
 		return "file-code"
 	case ".png", ".jpg", ".jpeg", ".gif", ".svg", ".webp":
@@ -83,6 +87,54 @@ func itemGlyph(f FileItem) string {
 		return "folder"
 	}
 	return glyph(f.Name)
+}
+
+// kindInk is the theme color of a file's kind.
+func kindInk(t *ui.Theme, f FileItem) ui.Color {
+	switch itemGlyph(f) {
+	case "folder", "file-archive":
+		return t.Warning
+	case "file-code":
+		return t.Accent
+	case "image", "file-spreadsheet":
+		return t.Success
+	case "file-audio", "file-video":
+		return t.Danger
+	}
+	if strings.EqualFold(filepath.Ext(f.Name), ".pdf") {
+		return t.Danger
+	}
+	return t.TextMuted
+}
+
+// fileTile is a tinted square holding a file's icon.
+func fileTile(c *ui.Context, f FileItem, side float32) ui.Element {
+	t := c.Theme()
+	ink := kindInk(t, f)
+	tile := ui.Box(c).Size(side, side).Shrink(0).Center().Radius(t.Radius).Background(ink.Alpha(0.14)).TextColor(ink)
+	return tile.Children(func() {
+		ui.Icon(c, icon.Must(itemGlyph(f))).Size(side/2, side/2).ContentTransition(ui.ContentTransition{})
+	})
+}
+
+// shortDate is the default date format of file rows.
+func shortDate(t time.Time) string { return t.Format("Jan 2, 2006") }
+
+// rowExit fades a row out; kit.Stagger brings rows in.
+var rowExit = ui.ElementTransition{Duration: 160 * time.Millisecond, Exit: &ui.Motion{}}
+
+// fileKey is a file's identity: its folder and name.
+func fileKey(f FileItem) string { return fmt.Sprintf("%q %q", f.Path, f.Name) }
+
+// unique panics when two files share a folder and name.
+func unique(component, label string, list []FileItem) {
+	seen := map[string]bool{}
+	for _, f := range list {
+		if seen[fileKey(f)] {
+			panic(fmt.Sprintf("files: %s %q has two files named %q in %q", component, label, f.Name, f.Path))
+		}
+		seen[fileKey(f)] = true
+	}
 }
 
 func fileIcon(c *ui.Context, name string) ui.Element {

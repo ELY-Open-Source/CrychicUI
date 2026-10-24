@@ -78,11 +78,11 @@ func CommitGraph(c *ui.Context, label string, commits []GraphCommit) ui.Element 
 			c.Key(k.Hash)
 			item := ui.Row(c).FillWidth().Height(h).Gap(t.Space(2)).AlignItems(ui.Center).
 				Padding(0, t.Space(3), 0, t.Space(3)+float32(lanes)*lane).Role(ui.RoleListItem).Label(k.Message)
-			stagger(c, root, item, i).Children(func() {
+			kit.Stagger(c, root, item, i).Children(func() {
 				ui.Text(c, short(k.Hash)).Font("monospace").FontSize(t.Rem(0.75)).TextColor(t.TextMuted).Shrink(0)
 				for _, ref := range k.Refs {
 					c.Key("ref." + ref)
-					chip(c, ref, inks[k.Lane%len(inks)])
+					kit.Chip(c, ref, inks[k.Lane%len(inks)])
 				}
 				ui.Text(c, k.Message).FontSize(t.Rem(0.85)).Grow(1).MinWidth(0).SingleLine()
 				if k.Author != "" {

@@ -125,7 +125,7 @@ func demoQuotaWarning(c *ui.Context, log func(string)) {
 
 func demoStarred(c *ui.Context, log func(string)) {
 	root := ui.Column(c)
-	starred := ui.Local(root, "starred", func() []bool { return []bool{true, false, false} })
+	starred := ui.Local(root, "starred", func() []bool { s := make([]bool, len(demoFileItems())); s[1] = true; return s })
 	root.Children(func() {
 		if files.Starred(c, "Starred", demoFileItems(), starred, files.StarredOptions{}).Changed() {
 			log(fmt.Sprint(*starred))

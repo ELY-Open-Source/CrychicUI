@@ -44,7 +44,7 @@ func Language(c *ui.Context, label string, shares []LangShare) ui.Element {
 	}
 	root := kit.Card(c).FillWidth().Role(ui.RoleGroup).Label(label)
 	root.Children(func() {
-		panelHead(c, "code", label, nil)
+		kit.CardHead(c, "code", label, nil)
 		ui.Column(c).FillWidth().Gap(t.Space(3)).Padding(t.Space(3)).Children(func() {
 			bar := ui.Box(c).FillWidth().Height(t.Space(2.5)).Radius(999).Background(t.Surface)
 			g := bar.Keyframes("crychic.grow", []ui.Keyframe{{Value: 0}, {At: 600 * time.Millisecond, Value: 1, Ease: ui.EaseOut}})
@@ -66,7 +66,7 @@ func Language(c *ui.Context, label string, shares []LangShare) ui.Element {
 					c.Key(s.Name)
 					pct := strconv.Itoa(int(s.Share*100+0.5)) + "%"
 					item := ui.Row(c).MinWidth(0).Gap(t.Space(2)).AlignItems(ui.Center).Label(s.Name + " " + pct)
-					stagger(c, root, item, i).Children(func() {
+					kit.Stagger(c, root, item, i).Children(func() {
 						ui.Box(c).Size(t.Space(2.5), t.Space(2.5)).Shrink(0).Radius(999).Background(inks[i])
 						ui.Text(c, s.Name).FontSize(t.Rem(0.85)).Grow(1).MinWidth(0).SingleLine()
 						kit.Numeric(c, pct).FontSize(t.Rem(0.8)).Bold().Shrink(0)

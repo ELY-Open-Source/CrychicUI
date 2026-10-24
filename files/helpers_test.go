@@ -1,6 +1,7 @@
 package files
 
 import (
+	"bytes"
 	"slices"
 	"testing"
 	"time"
@@ -50,6 +51,13 @@ func cues(t *testing.T, before []sound.Cue, want ...sound.Cue) {
 	if !slices.Equal(got, want) {
 		t.Errorf("cues %v, want %v", got, want)
 	}
+}
+
+// moves reports whether the frame changes over d.
+func moves(tt *ui.Tester, d time.Duration) bool {
+	a := bytes.Clone(tt.Image().Pix)
+	tt.Advance(d)
+	return !bytes.Equal(a, tt.Image().Pix)
 }
 
 func panics(t *testing.T, fn func()) {

@@ -30,7 +30,7 @@ func CallStack(c *ui.Context, label string, list []StackFrame, current *int) ui.
 				on := i == *current
 				b := kit.Press(ui.ButtonBase(c).Label(f.Func).FillWidth().AlignItems(ui.Stretch).Padding(t.Space(1.25), t.Space(2)).
 					Radius(t.Radius).Checked(on))
-				stagger(c, root, b, i)
+				kit.Stagger(c, root, b, i)
 				b.Background(b.AnimateColor("bg", t.SurfaceHover.Alpha(unit(b.Hovered())).Mix(t.Warning.Alpha(0.14), unit(on)), ui.Snappy))
 				b.Children(func() {
 					ui.Row(c).FillWidth().Gap(t.Space(2)).AlignItems(ui.Center).Children(func() {

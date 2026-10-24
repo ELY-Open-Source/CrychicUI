@@ -54,7 +54,7 @@ func TestFolderCard(t *testing.T) {
 
 func TestPathBar(t *testing.T) {
 	at := 2
-	tt := ui.NewTester(padded(func(c *ui.Context) { PathBar(c, []string{"home", "work", "docs"}, &at) }), 500, 200)
+	tt := ui.NewTester(padded(func(c *ui.Context) { PathBar(c, "Path", []string{"home", "work", "docs"}, &at) }), 500, 200)
 	settles(t, tt)
 	before := baseline()
 	click(t, tt, "work")

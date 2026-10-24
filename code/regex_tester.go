@@ -44,12 +44,12 @@ func RegexTester(c *ui.Context, label string, pattern, text *string, o RegexTest
 	matches, err := scan()
 	root := kit.Card(c).FillWidth().Role(ui.RoleGroup).Label(label)
 	root.Children(func() {
-		panelHead(c, "regex", label, func() {
+		kit.CardHead(c, "regex", label, func() {
 			if err != nil {
-				chip(c, o.Invalid, t.Danger)
+				kit.Chip(c, o.Invalid, t.Danger)
 				return
 			}
-			chip(c, fmt.Sprintf(o.Matches, len(matches)), t.Accent).ContentTransition(ui.ContentTransition{Numeric: true})
+			kit.Chip(c, fmt.Sprintf(o.Matches, len(matches)), t.Accent)
 		})
 		ui.Column(c).FillWidth().Gap(t.Space(2)).Padding(t.Space(3)).Children(func() {
 			captioned(c, o.Pattern, func() {
@@ -80,7 +80,7 @@ func RegexTester(c *ui.Context, label string, pattern, text *string, o RegexTest
 						for i, m := range matches {
 							c.Key(i)
 							row := ui.Row(c).FillWidth().Gap(t.Space(2)).AlignItems(ui.Center).Padding(t.Space(0.75), t.Space(1))
-							stagger(c, root, row, i).Children(func() {
+							kit.Stagger(c, root, row, i).Children(func() {
 								kit.Numeric(c, "#"+strconv.Itoa(i+1)).FontSize(t.Rem(0.75)).TextColor(t.TextMuted).Width(t.Space(7)).Shrink(0)
 								ui.Text(c, strings.ReplaceAll((*text)[m[0]:m[1]], "\n", "⏎")).Font("monospace").FontSize(t.Rem(0.8)).
 									TextColor(t.Accent).Padding(0, t.Space(1.5)).Radius(t.Radius).Background(t.Accent.Alpha(0.1)).Shrink(1).MinWidth(0).SingleLine()

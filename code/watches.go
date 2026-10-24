@@ -62,7 +62,7 @@ func Watches(c *ui.Context, label string, watches *[]Watch, o WatchesOptions) ui
 				c.Key(w.Expr)
 				row := ui.Row(c).FillWidth().Gap(t.Space(2)).AlignItems(ui.Center).Padding(t.Space(1), t.Space(1), t.Space(1), t.Space(3)).
 					Transition(watchExit).Role(ui.RoleListItem).Label(w.Expr)
-				stagger(c, root, row, i)
+				kit.Stagger(c, root, row, i)
 				var del ui.Element
 				row.Children(func() {
 					ui.Text(c, w.Expr).Font("monospace").FontSize(t.Rem(0.8)).Shrink(0).MaxWidthPercent(55).SingleLine()

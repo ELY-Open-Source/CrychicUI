@@ -58,7 +58,7 @@ func CommandLine(c *ui.Context, label string, history []Command, draft *string, 
 				for i, k := range history {
 					c.Key(i)
 					entry := ui.Column(c).FillWidth().Gap(t.Space(0.5)).Padding(t.Space(0.5), t.Space(3))
-					stagger(c, root, entry, i).Children(func() {
+					kit.Stagger(c, root, entry, i).Children(func() {
 						ui.Row(c).FillWidth().Gap(t.Space(1.5)).Children(func() { termLine(c, o.Prompt, o.Prompt+" "+k.Text, fg) })
 						if k.Output != "" {
 							for j, out := range linesOf(k.Output) {
