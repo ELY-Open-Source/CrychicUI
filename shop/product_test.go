@@ -10,7 +10,7 @@ import (
 
 func TestProductCard(t *testing.T) {
 	added := false
-	tt := ui.NewTester(padded(func(c *ui.Context) { ProductCard(c, testProduct(), "USD", &added, ProductCardOptions{}) }), 500, 450)
+	tt := ui.NewTester(padded(func(c *ui.Context) { ProductCard(c, testProduct(), "USD", &added, ProductCardOptions{}) }), 300, 600)
 	settles(t, tt)
 	before := baseline()
 	click(t, tt, "Add to cart")
@@ -72,9 +72,12 @@ func TestAddToCartReplay(t *testing.T) {
 		t.Fatal("add button missing")
 	}
 	x, y := int(r.X+r.W-4), int(r.Y+4)
+	// The click leaves the pointer hovering, so compare hovered.
+	tt.Move(r.X+r.W/2, r.Y+r.H/2)
+	settles(t, tt)
 	before := tt.Image().RGBAAt(x, y)
 	click(t, tt, "Add")
-	tt.Advance(300 * time.Millisecond)
+	tt.Advance(flightTime + time.Second)
 	if got := tt.Image().RGBAAt(x, y); got != before {
 		t.Errorf("flight remains after completion: got %v want %v", got, before)
 	}

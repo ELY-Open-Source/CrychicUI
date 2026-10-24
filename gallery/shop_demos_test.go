@@ -1,6 +1,8 @@
 package gallery
 
 import (
+	"fmt"
+	"slices"
 	"strings"
 	"testing"
 	"time"
@@ -18,19 +20,35 @@ func TestShopDemosLog(t *testing.T) {
 	}{
 		"ProductCard":    {press("Add to cart"), "added"},
 		"ProductGallery": {press("Image 2"), "selected 1"},
-		"AddToCart":      {press("Add"), "added"},
+		"AddToCart":      {press("Add Arc desk lamp"), "added"},
+		"CartIcon":       {press("Add item"), "count 4"},
 		"CartDrawer":     {press("Checkout"), "checkout"},
-		"CartRow":        {press("Increase"), "quantity 2"},
-		"CheckoutSteps":  {press("Payment"), "step 2"},
-		"Coupon":         {press("Apply"), "applied true"},
-		"Variants":       {press("Red (2 left)"), "color 0"},
-		"ReviewCard":     {press("Helpful (2)"), "helpful"},
-		"Wishlist":       {press("Save"), "saved true"},
-		"Categories":     {press("Desks"), "selected 1"},
-		"ShopFilters":    {press("B"), "false true"},
-		"SortBar":        {press("Price"), "sort Price"},
+		"CartRow": {func(tt *ui.Tester) error {
+			if err := tt.Click("Remove"); err != nil {
+				return err
+			}
+			tt.Advance(time.Second)
+			if tt.HasText("Stoneware mug") {
+				return fmt.Errorf("removed row still shows")
+			}
+			return tt.Click("Undo remove")
+		}, "restored"},
+		"CheckoutSteps": {press("Payment"), "step 2"},
+		"Coupon":        {press("Apply"), "applied true"},
+		"Variants":      {press("Brass (2 left)"), "color 0"},
+		"ReviewCard":    {press("Helpful (14)"), "helpful"},
+		"Wishlist":      {press("Save"), "saved 0 true"},
+		"Categories":    {press("Desks"), "selected 3"},
+		"ShopFilters":   {press("Fold"), "brands 2"},
+		"SortBar": {func(tt *ui.Tester) error {
+			if err := tt.Click("Sort by"); err != nil {
+				return err
+			}
+			tt.Advance(time.Second)
+			return tt.Click("Top rated")
+		}, "sort Top rated"},
 	}
-	quiet := map[string]bool{"ProductPrice": true, "SaleBadge": true, "CartIcon": true, "OrderSummary": true,
+	quiet := map[string]bool{"ProductPrice": true, "SaleBadge": true, "OrderSummary": true,
 		"Stock": true, "Reviews": true, "Compare": true}
 	seen := 0
 	for _, e := range Entries() {
@@ -60,5 +78,19 @@ func TestShopDemosLog(t *testing.T) {
 	}
 	if seen != 20 {
 		t.Errorf("checked %d shop demos", seen)
+	}
+}
+
+func TestCouponDemoLogsEdits(t *testing.T) {
+	var logs []string
+	tt := ui.NewTester(func(c *ui.Context) { demoCoupon(c, func(s string) { logs = append(logs, s) }) }, 600, 300)
+	tt.Advance(time.Second)
+	if err := tt.Click("Coupon code"); err != nil {
+		t.Fatal(err)
+	}
+	tt.Type("X")
+	tt.Frame()
+	if !slices.Contains(logs, "code 9 chars") {
+		t.Errorf("logs %q", logs)
 	}
 }

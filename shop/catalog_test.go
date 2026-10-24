@@ -48,7 +48,7 @@ func TestReviewCardOverflow(t *testing.T) {
 
 func TestWishlist(t *testing.T) {
 	saved := false
-	tt := ui.NewTester(padded(func(c *ui.Context) { Wishlist(c, testProduct(), &saved, WishlistOptions{}) }), 500, 180)
+	tt := ui.NewTester(padded(func(c *ui.Context) { Wishlist(c, testProduct(), "USD", &saved, WishlistOptions{}) }), 500, 180)
 	settles(t, tt)
 	before := baseline()
 	click(t, tt, "Save")
@@ -73,7 +73,7 @@ func TestCategories(t *testing.T) {
 	selected := -1
 	p := testProduct()
 	categories := []Category{{Name: "Lighting", Image: p.Image}, {Name: "Desks", Image: p.Image}}
-	tt := ui.NewTester(padded(func(c *ui.Context) { Categories(c, categories, &selected) }), 500, 350)
+	tt := ui.NewTester(padded(func(c *ui.Context) { Categories(c, categories, &selected, CategoriesOptions{}) }), 500, 350)
 	settles(t, tt)
 	before := baseline()
 	click(t, tt, "Desks")
@@ -133,6 +133,8 @@ func TestSortBar(t *testing.T) {
 	}), 500, 180)
 	settles(t, tt)
 	before := baseline()
+	click(t, tt, "Sort by")
+	settles(t, tt)
 	click(t, tt, "Price")
 	if sort != "Price" || !tt.HasText("2 products") {
 		t.Errorf("sort %q texts %q", sort, tt.Texts())

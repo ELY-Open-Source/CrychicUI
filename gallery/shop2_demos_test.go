@@ -19,7 +19,7 @@ func TestShop2DemosLog(t *testing.T) {
 		"OrderCard": {press("View order"), "opened order"},
 		"Delivery":  {press("Express"), "selected 1"},
 		"Upsell":    {press("Add"), "added 0"},
-		"Bundle":    {press("Desk lamp"), "false"},
+		"Bundle":    {press("Arc desk lamp"), "false"},
 		"MiniCart":  {press("Cart"), "open true"},
 		"Returns":   {press("Damaged"), "reason Damaged"},
 		"Seller":    {press("Follow"), "followed true"},
