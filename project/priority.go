@@ -1,7 +1,6 @@
 package project
 
 import (
-	"github.com/ELY-Open-Source/CrychicUI/icon"
 	"github.com/ELY-Open-Source/CrychicUI/kit"
 	"github.com/ELY-Open-Source/CrychicUI/sound"
 	"github.com/egoist/mygo/ui"
@@ -20,25 +19,23 @@ func Priority(c *ui.Context, level *PriorityLevel, o PriorityOptions) ui.Element
 	def(&o.Medium, "Medium")
 	def(&o.Low, "Low")
 	t := c.Theme()
-	root := ui.Row(c).Wrap().Gap(t.Space(1)).Role(ui.RoleGroup)
+	root := ui.Row(c).Wrap().Gap(t.Space(1.5)).Role(ui.RoleGroup)
 	root.Children(func() {
-		for _, item := range []struct {
-			level PriorityLevel
-			name  string
-			glyph string
-		}{{Urgent, o.Urgent, "flame"}, {High, o.High, "arrow-up"}, {Medium, o.Medium, "minus"}, {Low, o.Low, "arrow-down"}} {
-			b := kit.Press(ui.ButtonBase(c).Label(item.name).Row().Gap(t.Space(1)).Padding(t.Space(1), t.Space(2)).Radius(999).
-				Border(1, t.Border).Checked(*level == item.level))
-			b.Background(b.AnimateColor("bg", t.Surface.Mix(t.Accent.Alpha(0.12), unit(*level == item.level)), ui.Snappy))
-			b.Children(func() {
-				ui.Icon(c, icon.Must(item.glyph)).Size(16, 16)
-				ui.Text(c, item.name).FontSize(t.Rem(0.75))
+		for _, value := range []PriorityLevel{Urgent, High, Medium, Low} {
+			name := priorityText(value, o.Urgent, o.High, o.Medium, o.Low)
+			icon, ink := priorityLook(t, value)
+			on := *level == value
+			c.Key(int(value))
+			b := pill(c, name, on, ink, func() {
+				glyph(c, icon, 14).TextColor(ink)
+				ui.Text(c, name).FontSize(t.Rem(0.75)).Bold().Shrink(0)
 			})
-			if b.Clicked() && *level != item.level {
-				*level = item.level
+			kit.Stagger(c, root, b, int(value))
+			if b.Clicked() && !on {
+				*level = value
 				root.SetChanged()
 				sound.Play(sound.Select)
-				kit.Log("Priority", "selected", "level", *level)
+				kit.Log("Priority", "selected", "level", value)
 			}
 		}
 	})

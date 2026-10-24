@@ -16,22 +16,22 @@ func TestProjectDemosLog(t *testing.T) {
 		do   func(tt *ui.Tester) error
 		want string
 	}{
-		"Board":    {press("Add card"), "New card"},
-		"TaskRow":  {press("Ship UI"), "done true"},
-		"Subtasks": {press("One"), "true"},
+		"Board":    {press("Add card"), "cards [3 1 1]"},
+		"TaskRow":  {press("Offline sync for saved trips"), "done true"},
+		"Subtasks": {press("Resolve conflicts on reconnect"), "3 done"},
 		"Priority": {press("Urgent"), "level 0"},
 		"Status":   {press("Done"), "status 2"},
-		"Assignee": {press("Kai"), "selected 1"},
-		"Labels":   {press("UI"), "true"},
+		"Assignee": {press("Priya Nair"), "selected 2"},
+		"Labels":   {press("Backend"), "[true true true false false]"},
 		"Estimate": {press("5"), "points 5"},
 		"Timeline": {func(tt *ui.Tester) error {
-			r, _ := tt.Find("Task")
+			r, _ := tt.Find("Research")
 			x, y := r.X+r.W+50, r.Y+r.H/2
 			tt.Press(x, y)
 			tt.Move(x+100, y)
 			tt.Release(x+100, y)
 			return nil
-		}, "end 0."},
+		}, "ends [0."},
 		"IssueHeader": {press("Close"), "action 2"},
 		"Comments": {func(tt *ui.Tester) error {
 			if err := tt.Click("Write a comment"); err != nil {
@@ -42,13 +42,13 @@ func TestProjectDemosLog(t *testing.T) {
 		}, "draft 10 runes"},
 		"TimeTracker": {press("Start"), "running true"},
 		"Backlog": {func(tt *ui.Tester) error {
-			a, _ := tt.Find("Alpha")
-			b, _ := tt.Find("Beta")
+			a, _ := tt.Find("Offline sync for saved trips")
+			b, _ := tt.Find("Crash when opening a shared map link")
 			tt.Press(b.X+b.W/2, b.Y+b.H/2)
 			tt.Move(a.X+a.W/2, a.Y+a.H/2)
 			tt.Release(a.X+a.W/2, a.Y+a.H/2)
 			return nil
-		}, "[Beta Alpha]"},
+		}, "[ATL-151 ATL-142"},
 	}
 	quiet := map[string]bool{"TaskCard": true, "SprintHeader": true, "Burndown": true, "Velocity": true,
 		"Roadmap": true, "Milestone": true, "IssueCard": true}

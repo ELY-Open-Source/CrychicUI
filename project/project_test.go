@@ -9,7 +9,7 @@ import (
 )
 
 func TestBoard(t *testing.T) {
-	lanes := []Lane{{Title: "Todo", Cards: []string{"Task"}}, {Title: "Doing"}}
+	lanes := []Lane{{Title: "Todo", Cards: []Task{{ID: "t1", Title: "Task"}}}, {Title: "Doing"}}
 	tt := ui.NewTester(padded(func(c *ui.Context) { Board(c, &lanes, BoardOptions{}) }), 700, 400)
 	settles(t, tt)
 	before := baseline()
@@ -23,7 +23,7 @@ func TestBoard(t *testing.T) {
 	tt.Move(zone.X+zone.W/2, zone.Y+zone.H+20)
 	tt.Release(zone.X+zone.W/2, zone.Y+zone.H+20)
 	tt.Frame()
-	if len(lanes[0].Cards) != 1 || len(lanes[1].Cards) != 1 || lanes[1].Cards[0] != "Task" {
+	if len(lanes[0].Cards) != 1 || len(lanes[1].Cards) != 1 || lanes[1].Cards[0].ID != "t1" {
 		t.Errorf("lanes %v", lanes)
 	}
 	cues(t, before, sound.Pop, sound.Drop)
@@ -51,11 +51,11 @@ func TestTaskRow(t *testing.T) {
 
 func TestSubtasks(t *testing.T) {
 	items := []Subtask{{Title: "One"}}
-	tt := ui.NewTester(padded(func(c *ui.Context) { Subtasks(c, &items) }), 500, 220)
+	tt := ui.NewTester(padded(func(c *ui.Context) { Subtasks(c, &items, SubtasksOptions{}) }), 500, 220)
 	settles(t, tt)
 	before := baseline()
 	click(t, tt, "One")
-	if !items[0].Done || !tt.HasText("1/1") {
+	if !items[0].Done || !tt.HasText("1 of 1") {
 		t.Errorf("items %v texts %q", items, tt.Texts())
 	}
 	cues(t, before, sound.Toggle)
@@ -87,10 +87,10 @@ func TestStatus(t *testing.T) {
 
 func TestAssignee(t *testing.T) {
 	selected := -1
-	tt := ui.NewTester(padded(func(c *ui.Context) { Assignee(c, []string{"Ana", "Kai"}, &selected) }), 500, 180)
+	tt := ui.NewTester(padded(func(c *ui.Context) { Assignee(c, []string{"Ana Lima", "Kai Moreno"}, &selected, AssigneeOptions{}) }), 500, 180)
 	settles(t, tt)
 	before := baseline()
-	click(t, tt, "Kai")
+	click(t, tt, "Kai Moreno")
 	if selected != 1 {
 		t.Errorf("selected %d", selected)
 	}
@@ -126,20 +126,20 @@ func TestSprintHeader(t *testing.T) {
 	end := start.Add(10 * 24 * time.Hour)
 	tt := ui.NewTester(padded(func(c *ui.Context) { SprintHeader(c, "Sprint 1", start, end, SprintHeaderOptions{}) }), 500, 180)
 	settles(t, tt)
-	if !tt.HasText("Sprint 1") || !tt.HasText("9 days left") {
+	if !tt.HasText("Sprint 1") || !tt.HasText("10 days left") {
 		t.Errorf("texts %q", tt.Texts())
 	}
 }
 
 func TestBurndown(t *testing.T) {
 	points := []BurndownPoint{{Day: "Mon", Remaining: 10, Ideal: 10}, {Day: "Tue", Remaining: 5, Ideal: 5}}
-	tt := ui.NewTester(padded(func(c *ui.Context) { Burndown(c, points) }), 500, 250)
+	tt := ui.NewTester(padded(func(c *ui.Context) { Burndown(c, points, BurndownOptions{}) }), 500, 250)
 	settles(t, tt)
 }
 
 func TestVelocity(t *testing.T) {
 	sprints := []Sprint{{Name: "S1", Points: 20}}
-	tt := ui.NewTester(padded(func(c *ui.Context) { Velocity(c, sprints) }), 500, 180)
+	tt := ui.NewTester(padded(func(c *ui.Context) { Velocity(c, sprints, VelocityOptions{}) }), 500, 180)
 	settles(t, tt)
 	if !tt.HasText("S1") || !tt.HasText("20") {
 		t.Errorf("texts %q", tt.Texts())
@@ -148,7 +148,7 @@ func TestVelocity(t *testing.T) {
 
 func TestTimeline(t *testing.T) {
 	tasks := []TimelineTask{{Title: "Task", Start: 0.1, End: 0.5}}
-	tt := ui.NewTester(padded(func(c *ui.Context) { Timeline(c, &tasks) }), 700, 220)
+	tt := ui.NewTester(padded(func(c *ui.Context) { Timeline(c, &tasks, TimelineOptions{}) }), 700, 220)
 	settles(t, tt)
 	r, _ := tt.Find("Task")
 	before := baseline()
@@ -165,7 +165,7 @@ func TestTimeline(t *testing.T) {
 
 func TestRoadmap(t *testing.T) {
 	quarters := []Quarter{{Label: "Q1", Items: []string{"UI refresh"}}}
-	tt := ui.NewTester(padded(func(c *ui.Context) { Roadmap(c, quarters) }), 500, 220)
+	tt := ui.NewTester(padded(func(c *ui.Context) { Roadmap(c, quarters, RoadmapOptions{}) }), 500, 220)
 	settles(t, tt)
 	if !tt.HasText("Q1") || !tt.HasText("UI refresh") {
 		t.Errorf("texts %q", tt.Texts())
@@ -234,8 +234,8 @@ func TestTimeTracker(t *testing.T) {
 }
 
 func TestBacklog(t *testing.T) {
-	issues := []string{"Alpha", "Beta"}
-	tt := ui.NewTester(padded(func(c *ui.Context) { Backlog(c, &issues) }), 500, 250)
+	issues := []Issue{{Key: "A-1", Title: "Alpha", Type: "Task"}, {Key: "A-2", Title: "Beta", Type: "Bug"}}
+	tt := ui.NewTester(padded(func(c *ui.Context) { Backlog(c, &issues, BacklogOptions{}) }), 500, 300)
 	settles(t, tt)
 	a, _ := tt.Find("Alpha")
 	b, _ := tt.Find("Beta")
@@ -244,7 +244,7 @@ func TestBacklog(t *testing.T) {
 	tt.Move(a.X+a.W/2, a.Y+a.H/2)
 	tt.Release(a.X+a.W/2, a.Y+a.H/2)
 	tt.Frame()
-	if issues[0] != "Beta" {
+	if issues[0].Title != "Beta" {
 		t.Errorf("issues %v", issues)
 	}
 	cues(t, before, sound.Drop)

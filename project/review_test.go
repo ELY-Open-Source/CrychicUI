@@ -9,7 +9,7 @@ import (
 )
 
 func TestBoardSameColumnAndDuplicates(t *testing.T) {
-	lanes := []Lane{{Title: "Todo", Cards: []string{"Fix"}}, {Title: "Doing", Cards: []string{"Fix"}}, {Title: "Review"}}
+	lanes := []Lane{{Title: "Todo", Cards: []Task{{ID: "f1", Title: "Fix"}}}, {Title: "Doing", Cards: []Task{{ID: "f2", Title: "Fix"}}}, {Title: "Review"}}
 	tt := ui.NewTester(padded(func(c *ui.Context) { Board(c, &lanes, BoardOptions{}) }), 700, 400)
 	settles(t, tt)
 	click(t, tt, "Add card")
@@ -20,13 +20,13 @@ func TestBoardSameColumnAndDuplicates(t *testing.T) {
 	tt.Move(zone.X+zone.W/2, zone.Y+zone.H+20)
 	tt.Release(zone.X+zone.W/2, zone.Y+zone.H+20)
 	tt.Frame()
-	if len(lanes[0].Cards) != 3 || lanes[1].Cards[0] != "Fix" {
+	if len(lanes[0].Cards) != 3 || lanes[0].Cards[0].ID != "f1" || lanes[1].Cards[0].ID != "f2" {
 		t.Errorf("same-column state %v", lanes)
 	}
 }
 
 func TestBoardSourceIdentity(t *testing.T) {
-	lanes := []Lane{{Title: "A", Cards: []string{"Fix"}}, {Title: "B", Cards: []string{"Fix"}}, {Title: "C"}}
+	lanes := []Lane{{Title: "A", Cards: []Task{{ID: "a", Title: "Fix"}}}, {Title: "B", Cards: []Task{{ID: "b", Title: "Fix"}}}, {Title: "C"}}
 	tt := ui.NewTester(padded(func(c *ui.Context) { Board(c, &lanes, BoardOptions{}) }), 700, 400)
 	settles(t, tt)
 	r, _ := tt.Find("Fix")
@@ -35,14 +35,14 @@ func TestBoardSourceIdentity(t *testing.T) {
 	tt.Move(zone.X+zone.W/2, zone.Y+zone.H+20)
 	tt.Release(zone.X+zone.W/2, zone.Y+zone.H+20)
 	tt.Frame()
-	if len(lanes[0].Cards) != 0 || len(lanes[1].Cards) != 1 || len(lanes[2].Cards) != 1 {
+	if len(lanes[0].Cards) != 0 || len(lanes[1].Cards) != 1 || len(lanes[2].Cards) != 1 || lanes[2].Cards[0].ID != "a" {
 		t.Errorf("wrong source moved: %v", lanes)
 	}
 }
 
 func TestTimelineClickNoChange(t *testing.T) {
 	tasks := []TimelineTask{{Title: "Task", Start: 0.1, End: 0.11}}
-	tt := ui.NewTester(padded(func(c *ui.Context) { Timeline(c, &tasks) }), 700, 220)
+	tt := ui.NewTester(padded(func(c *ui.Context) { Timeline(c, &tasks, TimelineOptions{}) }), 700, 220)
 	settles(t, tt)
 	before := baseline()
 	click(t, tt, "Task")
@@ -78,7 +78,7 @@ func TestTimeTrackerOverflow(t *testing.T) {
 
 func TestAssigneeUnicode(t *testing.T) {
 	selected := -1
-	tt := ui.NewTester(padded(func(c *ui.Context) { Assignee(c, []string{"张三"}, &selected) }), 500, 180)
+	tt := ui.NewTester(padded(func(c *ui.Context) { Assignee(c, []string{"张三"}, &selected, AssigneeOptions{}) }), 500, 180)
 	settles(t, tt)
 	if !tt.HasText("张") {
 		t.Errorf("texts %q", tt.Texts())
@@ -119,13 +119,13 @@ func TestTaskRowUnchecked(t *testing.T) {
 
 func TestBurndownRoadmapMotion(t *testing.T) {
 	points := []BurndownPoint{{Day: "Mon", Remaining: 10, Ideal: 10}, {Day: "Tue", Remaining: 5, Ideal: 5}}
-	tt := ui.NewTester(padded(func(c *ui.Context) { Burndown(c, points) }), 500, 250)
+	tt := ui.NewTester(padded(func(c *ui.Context) { Burndown(c, points, BurndownOptions{}) }), 500, 250)
 	tt.Frame()
 	if !tt.FramePending() {
 		t.Error("burndown has no motion")
 	}
 	quarters := []Quarter{{Label: "Q1", Items: []string{"UI refresh"}}}
-	other := ui.NewTester(padded(func(c *ui.Context) { Roadmap(c, quarters) }), 500, 220)
+	other := ui.NewTester(padded(func(c *ui.Context) { Roadmap(c, quarters, RoadmapOptions{}) }), 500, 220)
 	other.Frame()
 	if !other.FramePending() {
 		t.Error("roadmap has no motion")
