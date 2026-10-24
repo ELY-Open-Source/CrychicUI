@@ -62,7 +62,7 @@ func TestRegexTester(t *testing.T) {
 	settles(t, tt, "regex")
 	foos := 0
 	for _, s := range tt.Texts() {
-		if strings.Contains(s, "foo") {
+		if s == "foo" {
 			foos++
 		}
 	}
@@ -163,7 +163,7 @@ func TestBase64Tool(t *testing.T) {
 	text, encode := "hi", true
 	changed := 0
 	tt := ui.NewTester(padded(func(c *ui.Context) {
-		if Base64Tool(c, "Base64", &text, &encode, Base64ToolOptions{}).Changed() {
+		if root, _ := Base64Tool(c, "Base64", &text, &encode, Base64ToolOptions{}); root.Changed() {
 			changed++
 		}
 	}), 500, 400)
@@ -193,7 +193,7 @@ func TestBase64Tool(t *testing.T) {
 func TestHashTool(t *testing.T) {
 	text := "abc"
 	tt := ui.NewTester(padded(func(c *ui.Context) {
-		HashTool(c, "Hash", &text)
+		HashTool(c, "Hash", &text, HashToolOptions{})
 	}), 500, 300)
 	settles(t, tt, "hash")
 	if !tt.HasText("ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad") {
@@ -206,7 +206,7 @@ func TestHashTool(t *testing.T) {
 	}
 	settles(t, tt, "hash")
 	panics(t, "no text", func() {
-		render(func(c *ui.Context) { HashTool(c, "x", nil) })
+		render(func(c *ui.Context) { HashTool(c, "x", nil, HashToolOptions{}) })
 	})
 }
 
@@ -214,7 +214,7 @@ func TestUnixTime(t *testing.T) {
 	epoch := int64(1700000000)
 	changed := 0
 	tt := ui.NewTester(padded(func(c *ui.Context) {
-		if UnixTime(c, "Unix", &epoch, UnixTimeOptions{}).Changed() {
+		if root, _ := UnixTime(c, "Unix", &epoch, UnixTimeOptions{}); root.Changed() {
 			changed++
 		}
 	}), 500, 300)
@@ -259,7 +259,7 @@ func TestUnixTime(t *testing.T) {
 func TestPackageCard(t *testing.T) {
 	changed, copied := 0, 0
 	tt := ui.NewTester(padded(func(c *ui.Context) {
-		root, copy := PackageCard(c, "github.com/egoist/mygo", "v0.5.5", 12400, PackageCardOptions{})
+		root, copy := PackageCard(c, Package{Name: "github.com/egoist/mygo", Version: "v0.5.5", Downloads: 12400, License: "MIT"}, PackageCardOptions{})
 		if root.Changed() {
 			changed++
 		}
@@ -278,11 +278,11 @@ func TestPackageCard(t *testing.T) {
 	}
 	cues(t, before, sound.Pop)
 	panics(t, "empty version", func() {
-		render(func(c *ui.Context) { PackageCard(c, "x", "", 1, PackageCardOptions{}) })
+		render(func(c *ui.Context) { PackageCard(c, Package{Name: "x", Downloads: 1}, PackageCardOptions{}) })
 	})
 
 	custom := ui.NewTester(padded(func(c *ui.Context) {
-		PackageCard(c, "pkg", "1.0", 5, PackageCardOptions{Install: "install %s@%s"})
+		PackageCard(c, Package{Name: "pkg", Version: "1.0", Downloads: 5}, PackageCardOptions{Install: "install %s@%s"})
 	}), 500, 300)
 	settles(t, custom, "custom card")
 	if !custom.HasText("install pkg@1.0") {

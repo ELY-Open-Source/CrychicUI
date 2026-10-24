@@ -8,6 +8,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"unicode/utf8"
 
 	"github.com/ELY-Open-Source/CrychicUI/button"
 	"github.com/ELY-Open-Source/CrychicUI/icon"
@@ -145,11 +146,125 @@ func codeBody(c *ui.Context, lang, code string, numbers bool, mark func(i int, r
 	})
 }
 
+// panelHead is a card's title row: icon, title, then trailing.
+func panelHead(c *ui.Context, glyph, title string, trailing func()) {
+	t := c.Theme()
+	ui.Row(c).FillWidth().Gap(t.Space(2)).AlignItems(ui.Center).Padding(t.Space(2.5), t.Space(3)).
+		BorderWidth(0, 0, 1, 0).BorderColor(t.Border).Children(func() {
+		ui.Icon(c, icon.Must(glyph)).Size(14, 14).Shrink(0).TextColor(t.TextMuted)
+		ui.Text(c, title).FontSize(t.Rem(0.8)).Bold().Grow(1).MinWidth(0).SingleLine()
+		if trailing != nil {
+			trailing()
+		}
+	})
+}
+
+// chip is a small tinted pill of text.
+func chip(c *ui.Context, text string, ink ui.Color) ui.Element {
+	t := c.Theme()
+	return ui.Text(c, text).FontSize(t.Rem(0.7)).Bold().TextColor(ink).Shrink(0).
+		Padding(t.Space(0.25), t.Space(2)).Radius(999).Background(ink.Alpha(0.12))
+}
+
+// pair is a two-way switch; the caller plays cues.
+func pair(c *ui.Context, left, right, leftGlyph, rightGlyph string, onLeft bool) (l, r ui.Element) {
+	t := c.Theme()
+	track := ui.Row(c).Shrink(0).Padding(t.Space(0.5)).Radius(999).Background(t.Surface).Border(1, t.Border).FocusGroup(ui.Horizontal)
+	x := track.AnimateTo("thumb", unit(!onLeft), ui.Snappy)
+	track.Draw(kit.Inside(999, func(p *ui.Painter, b ui.Rect) {
+		pad := t.Space(0.5) + 1
+		w := (b.W - 2*pad) / 2
+		p.Fill(ui.Rect{X: b.X + pad + w*x, Y: b.Y + pad, W: w, H: b.H - 2*pad}, t.Background, 999)
+	}))
+	track.Children(func() {
+		l = pairSide(c, left, leftGlyph, onLeft)
+		r = pairSide(c, right, rightGlyph, !onLeft)
+	})
+	return l, r
+}
+
+func pairSide(c *ui.Context, name, glyph string, on bool) ui.Element {
+	t := c.Theme()
+	b := kit.Press(ui.ButtonBase(c).Label(name).Width(t.Space(22)).Padding(t.Space(1), t.Space(2)).Radius(999).Checked(on))
+	b.TextColor(b.AnimateColor("ink", t.TextMuted.Mix(t.Text, unit(on || b.Hovered())), ui.Snappy))
+	return b.Children(func() {
+		ui.Row(c).Gap(t.Space(1.5)).AlignItems(ui.Center).Children(func() {
+			ui.Icon(c, icon.Must(glyph)).Size(14, 14).Shrink(0)
+			ui.Text(c, name).FontSize(t.Rem(0.8)).Shrink(0)
+		})
+	})
+}
+
+// action is a labeled icon button; callers play its cue.
+func action(c *ui.Context, label, glyph string, primary bool) ui.Element {
+	t := c.Theme()
+	b := kit.Press(ui.ButtonBase(c).Label(label).Padding(t.Space(1.5), t.Space(3)).Radius(t.Radius))
+	if primary {
+		b.Background(b.AnimateColor("bg", t.Accent.Mix(t.AccentHover, unit(b.Hovered())), ui.Snappy)).TextColor(t.AccentText)
+	} else {
+		b.Background(b.AnimateColor("bg", t.Background.Mix(t.SurfaceHover, unit(b.Hovered())), ui.Snappy)).Border(1, t.Border)
+	}
+	return b.Children(func() {
+		ui.Row(c).Gap(t.Space(1.5)).AlignItems(ui.Center).Children(func() {
+			ui.Icon(c, icon.Must(glyph)).Size(14, 14).Shrink(0)
+			ui.Text(c, label).FontSize(t.Rem(0.85)).Bold().Shrink(0)
+		})
+	})
+}
+
+// edited reports a field edit of a tool; cue Tick.
+func edited(root ui.Element, component string) {
+	root.SetChanged()
+	sound.Play(sound.Tick)
+	kit.Log(component, "edited")
+}
+
+// fieldLabel is the visible caption over an input.
+func fieldLabel(c *ui.Context, text string) ui.Element {
+	return kit.Muted(c, text).FontSize(c.Theme().Rem(0.75)).Bold()
+}
+
+// captioned shows a caption over a field built before it.
+func captioned(c *ui.Context, caption string, field func()) {
+	t := c.Theme()
+	ui.Grid(c).Columns(1).FillWidth().Gap(t.Space(1)).Children(func() {
+		ui.Column(c).RowStart(2).ColumnStart(1).MinWidth(0).Children(field)
+		fieldLabel(c, caption).RowStart(1).ColumnStart(1)
+	})
+}
+
+// indexFold finds q in s ignoring case, as byte bounds.
+func indexFold(s, q string) (int, int) {
+	n := utf8.RuneCountInString(q)
+	for i := range s {
+		end := i
+		for k := 0; k < n && end < len(s); k++ {
+			_, w := utf8.DecodeRuneInString(s[end:])
+			end += w
+		}
+		if strings.EqualFold(s[i:end], q) {
+			return i, end
+		}
+	}
+	return -1, -1
+}
+
+// marked spans s with lo..hi bold in the accent.
+func marked(t *ui.Theme, s string, lo, hi int) []ui.Span {
+	if lo < 0 || lo == hi {
+		return []ui.Span{{Text: s}}
+	}
+	return []ui.Span{{Text: s[:lo]}, {Text: s[lo:hi], Color: t.Accent, Weight: 700}, {Text: s[hi:]}}
+}
+
 // ident keys an item by its text and repeat count.
 func ident(seen map[string]int, s string) string {
 	seen[s]++
 	return s + "#" + strconv.Itoa(seen[s])
 }
+
+// rowExit fades a row out; stagger brings rows in.
+var rowExit = ui.ElementTransition{Duration: 160 * time.Millisecond, Exit: &ui.Motion{}}
 
 // stagger arrives a row, staggered while its list is young.
 func stagger(c *ui.Context, list, row ui.Element, i int) ui.Element {
@@ -182,21 +297,26 @@ func codeHeader(c *ui.Context, title, lang string, actions func()) {
 // langChip is a language name after its colored dot.
 func langChip(c *ui.Context, lang string) {
 	t := c.Theme()
-	ink := t.TextMuted
-	switch strings.ToLower(lang) {
-	case "go":
-		ink = t.Accent
-	case "js", "javascript", "ts", "typescript", "json":
-		ink = t.Warning
-	case "py", "python", "sh", "bash", "shell":
-		ink = t.Success
-	case "rs", "rust", "html", "css":
-		ink = t.Danger
-	}
+	ink, _ := langInk(t, lang)
 	ui.Row(c).Gap(t.Space(1.5)).AlignItems(ui.Center).Shrink(0).Children(func() {
 		ui.Box(c).Size(t.Space(2), t.Space(2)).Radius(999).Background(ink)
 		kit.Muted(c, lang).FontSize(t.Rem(0.75)).Shrink(0)
 	})
+}
+
+// langInk is a language's theme color; known reports a match.
+func langInk(t *ui.Theme, lang string) (ink ui.Color, known bool) {
+	switch strings.ToLower(lang) {
+	case "go":
+		return t.Accent, true
+	case "js", "javascript", "ts", "typescript", "json":
+		return t.Warning, true
+	case "py", "python", "sh", "bash", "shell":
+		return t.Success, true
+	case "rs", "rust", "html", "css":
+		return t.Danger, true
+	}
+	return t.TextMuted, false
 }
 
 // glyphFor picks a Lucide file icon by extension.
@@ -266,6 +386,7 @@ var (
 	iconCheckCircle = icon.Must("circle-check")
 	iconXCircle     = icon.Must("circle-x")
 	iconPackage     = icon.Must("package")
+	iconCommit      = icon.Must("git-commit-horizontal")
 )
 
 // kindBadge is the icon tile of a symbol kind.
@@ -309,9 +430,22 @@ func age(d time.Duration) string {
 		return fmt.Sprintf("%dh", int(d.Hours()))
 	case d < 30*24*time.Hour:
 		return fmt.Sprintf("%dd", int(d.Hours()/24))
+	case d < 365*24*time.Hour:
+		return fmt.Sprintf("%dmo", max(1, int(d.Hours()/24/30.44)))
 	default:
-		return fmt.Sprintf("%dmo", int(d.Hours()/(24*30)))
+		return fmt.Sprintf("%dy", int(d.Hours()/(24*365)))
 	}
+}
+
+// took formats a run time as 45s or 1m 12s.
+func took(d time.Duration) string {
+	switch {
+	case d < 10*time.Second:
+		return strconv.FormatFloat(d.Seconds(), 'f', 1, 64) + "s"
+	case d < time.Minute:
+		return strconv.Itoa(int(d.Seconds())) + "s"
+	}
+	return fmt.Sprintf("%dm %ds", int(d.Minutes()), int(d.Seconds())%60)
 }
 
 // compact formats a count like 1.2k.

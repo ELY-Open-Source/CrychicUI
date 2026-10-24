@@ -60,7 +60,7 @@ func TestSymbolSearch(t *testing.T) {
 }
 
 func TestBranchPicker(t *testing.T) {
-	branches := []string{"main", "dev", "feature/review"}
+	branches := []Branch{{Name: "main"}, {Name: "dev", Ahead: 2}, {Name: "feature/review", Behind: 5}}
 	current, query := 0, ""
 	changed := 0
 	tt := ui.NewTester(padded(func(c *ui.Context) {
@@ -117,9 +117,9 @@ func TestKeyTable(t *testing.T) {
 
 func TestConsole(t *testing.T) {
 	entries := []LogEntry{
-		{LevelLog, "server started"},
-		{LevelWarn, "slow query"},
-		{LevelError, "write failed"},
+		{Level: LevelLog, Text: "server started"},
+		{Level: LevelWarn, Text: "slow query", Source: "db.go:88"},
+		{Level: LevelError, Text: "write failed"},
 	}
 	filter := 7
 	changed := 0
@@ -138,11 +138,20 @@ func TestConsole(t *testing.T) {
 		t.Fatalf("filter %d changed %d", filter, changed)
 	}
 	cues(t, before, sound.Toggle)
-	if tt.HasText("server started") {
+	settles(t, tt, "console")
+	if tt.HasText("server started") || !tt.HasText("db.go:88") {
 		t.Errorf("log row still shown %q", tt.Texts())
 	}
+	filter = 0
+	tt.Frame()
+	settles(t, tt, "console")
+	if !tt.HasText("No messages") {
+		t.Errorf("no empty state %q", tt.Texts())
+	}
 	panics(t, "bad level", func() {
-		render(func(c *ui.Context) { Console(c, "x", []LogEntry{{logLevelCount, "y"}}, &filter, ConsoleOptions{}) })
+		render(func(c *ui.Context) {
+			Console(c, "x", []LogEntry{{Level: logLevelCount, Text: "y"}}, &filter, ConsoleOptions{})
+		})
 	})
 }
 
@@ -181,7 +190,7 @@ func TestPlayground(t *testing.T) {
 	var ran []string
 	changed := 0
 	tt := ui.NewTester(padded(func(c *ui.Context) {
-		root, _ := Playground(c, st, &output, func(code string) {
+		root, _ := Playground(c, "Playground", st, &output, func(code string) {
 			ran = append(ran, code)
 			output = "hi"
 		}, PlaygroundOptions{})
@@ -192,7 +201,7 @@ func TestPlayground(t *testing.T) {
 	settles(t, tt, "playground")
 	was := changed
 	before := baseline()
-	tt.Key(0, ui.KeyTab)
+	click(t, tt, "Code editor")
 	tt.TypeKey(0, ui.KeyX, "x")
 	tt.Frame()
 	if changed != was+1 {
@@ -219,7 +228,7 @@ func TestPlayground(t *testing.T) {
 		t.Errorf("texts %q", tt.Texts())
 	}
 	panics(t, "no run", func() {
-		render(func(c *ui.Context) { Playground(c, st, &output, nil, PlaygroundOptions{}) })
+		render(func(c *ui.Context) { Playground(c, "Playground", st, &output, nil, PlaygroundOptions{}) })
 	})
 
 	calls := 0
@@ -255,7 +264,7 @@ func TestPlayground(t *testing.T) {
 	output = "1\n2\n3\n4\n5\n6\n7\n8\n9\n10\n11\n12"
 	small := ui.NewTester(func(c *ui.Context) {
 		ui.Column(c).Padding(10).Children(func() {
-			Playground(c, st, &output, func(string) {}, PlaygroundOptions{Height: 100, Output: 60})
+			Playground(c, "Playground", st, &output, func(string) {}, PlaygroundOptions{Height: 100, OutputHeight: 60})
 			ui.Text(c, "after")
 		})
 	}, 500, 300)

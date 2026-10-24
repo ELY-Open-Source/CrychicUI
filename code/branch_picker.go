@@ -1,75 +1,100 @@
-// Code components for the gallery.
 package code
 
 import (
+	"fmt"
+	"strconv"
+	"strings"
+
 	"github.com/ELY-Open-Source/CrychicUI/icon"
 	"github.com/ELY-Open-Source/CrychicUI/input"
 	"github.com/ELY-Open-Source/CrychicUI/kit"
 	"github.com/ELY-Open-Source/CrychicUI/sound"
 	"github.com/egoist/mygo/ui"
-	"strings"
 )
 
-type BranchPickerOptions struct {
-	Placeholder string
-	Empty       string
+// Branch is a branch and its distance from its base.
+type Branch struct {
+	Name          string
+	Ahead, Behind int
 }
 
-// BranchPicker is branches with search; cue Select.
+// BranchPickerOptions are the copy knobs of BranchPicker.
+type BranchPickerOptions struct {
+	Placeholder, Empty, Current string
+}
 
-func BranchPicker(c *ui.Context, label string, branches []string, current *int, query *string, o BranchPickerOptions) (root, field ui.Element) {
+// BranchPicker lists branches to search and pick; cue Select.
+func BranchPicker(c *ui.Context, label string, branches []Branch, current *int, query *string, o BranchPickerOptions) (root, field ui.Element) {
 	if label == "" || len(branches) == 0 || current == nil || query == nil || *current < 0 || *current >= len(branches) {
-		panic("code: BranchPicker needs a label, branches and bound values")
+		panic(fmt.Sprintf("code: BranchPicker %q needs branches and bound values", label))
+	}
+	seen := map[string]bool{}
+	for _, b := range branches {
+		if b.Name == "" || seen[b.Name] || b.Ahead < 0 || b.Behind < 0 {
+			panic(fmt.Sprintf("code: BranchPicker %q needs unique names and counts not below zero", label))
+		}
+		seen[b.Name] = true
 	}
 	def(&o.Placeholder, "Search branches")
 	def(&o.Empty, "No branches match")
+	def(&o.Current, "current")
 	t := c.Theme()
-	root = ui.Column(c).AlignSelf(ui.Start).Width(t.Space(72)).Gap(t.Space(1)).Role(ui.RoleGroup).Label(label)
+	root = kit.Card(c).FillWidth().Role(ui.RoleGroup).Label(label)
 	root.Children(func() {
-		field = input.SearchInput(c, query, input.SearchInputOptions{Placeholder: o.Placeholder})
+		ui.Row(c).FillWidth().Padding(t.Space(2)).BorderWidth(0, 0, 1, 0).BorderColor(t.Border).Children(func() {
+			field = input.SearchInput(c, query, input.SearchInputOptions{Placeholder: o.Placeholder}).Grow(1)
+		})
 		if field.Changed() {
 			root.SetChanged()
 		}
-		q := strings.ToLower(*query)
+		q := strings.TrimSpace(*query)
 		hits := 0
-		list := ui.Column(c).FillWidth().Gap(0)
-		list.Children(func() {
+		ui.Column(c).FillWidth().Padding(t.Space(1)).FocusGroup(ui.Vertical).Role(ui.RoleList).Children(func() {
 			for i, b := range branches {
-				if b == "" {
-					panic("code: BranchPicker needs a name for every branch")
-				}
-				if q != "" && !strings.Contains(strings.ToLower(b), q) {
+				lo, hi := indexFold(b.Name, q)
+				if q != "" && lo < 0 {
 					continue
 				}
+				c.Key(b.Name)
+				on := i == *current
+				row := kit.Press(ui.ButtonBase(c).Label(b.Name).FillWidth().AlignItems(ui.Stretch).Padding(t.Space(1.25), t.Space(2)).
+					Radius(t.Radius).Checked(on))
+				stagger(c, root, row, hits)
 				hits++
-				c.Key(b)
-				row := kit.Press(ui.ButtonBase(c).Label(b).Row().FillWidth().Gap(t.Space(2)).AlignItems(ui.Center).
-					Padding(t.Space(1), t.Space(2)).Radius(t.Radius).Checked(i == *current))
-				bg := t.SurfaceHover.Alpha(unit(row.Hovered()))
-				if i == *current {
-					bg = t.Accent.Alpha(0.12)
-				}
-				row.Background(row.AnimateColor("bg", bg, ui.Snappy))
+				row.Background(row.AnimateColor("bg", t.SurfaceHover.Alpha(unit(row.Hovered())).Mix(t.Accent.Alpha(0.12), unit(on)), ui.Snappy))
 				row.Children(func() {
-					ui.Icon(c, icon.Must("git-branch")).Size(16, 16).TextColor(t.TextMuted)
-					ui.Text(c, b).Font("monospace").FontSize(t.Rem(0.85)).SingleLine().Grow(1)
-					if i == *current {
-						ui.Icon(c, iconCheck).Size(16, 16).TextColor(t.Accent)
-					}
+					ui.Row(c).FillWidth().Gap(t.Space(2)).AlignItems(ui.Center).Children(func() {
+						ink := t.TextMuted
+						if on {
+							ink = t.Accent
+						}
+						ui.Icon(c, icon.Must("git-branch")).Size(14, 14).Shrink(0).TextColor(ink)
+						ui.RichText(c, marked(t, b.Name, lo, hi)...).Font("monospace").FontSize(t.Rem(0.85)).Grow(1).MinWidth(0).SingleLine()
+						if b.Ahead > 0 {
+							kit.Numeric(c, "↑"+strconv.Itoa(b.Ahead)).FontSize(t.Rem(0.7)).TextColor(t.Success).Shrink(0)
+						}
+						if b.Behind > 0 {
+							kit.Numeric(c, "↓"+strconv.Itoa(b.Behind)).FontSize(t.Rem(0.7)).TextColor(t.Warning).Shrink(0)
+						}
+						if on {
+							chip(c, o.Current, t.Accent)
+						}
+					})
 				})
-				if row.Clicked() && *current != i {
+				if row.Clicked() && !on {
 					*current = i
 					root.SetChanged()
 					sound.Play(sound.Select)
 					kit.Log("BranchPicker", "selected", "index", i)
 				}
 			}
+			if hits == 0 {
+				ui.Column(c).Key("empty").FillWidth().Gap(t.Space(1.5)).AlignItems(ui.Center).Padding(t.Space(4)).Transition(kit.Enter).Children(func() {
+					ui.Icon(c, icon.Must("search-x")).Size(20, 20).TextColor(t.TextMuted)
+					kit.Muted(c, o.Empty).FontSize(t.Rem(0.85))
+				})
+			}
 		})
-		if hits == 0 {
-			kit.Muted(c, o.Empty).FontSize(t.Rem(0.85)).Padding(t.Space(1), t.Space(2))
-		}
 	})
 	return root, field
 }
-
-// LangShare is one language's share of a codebase.

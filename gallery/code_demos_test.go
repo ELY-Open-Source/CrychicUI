@@ -51,8 +51,8 @@ func TestCodeDemosLog(t *testing.T) {
 		"CallStack":    {press("net/http.HandlerFunc.ServeHTTP"), "selected 2"},
 		"Problems":     {press("integer division truncates the discount"), "selected integer division truncates the discount"},
 		"Outline":      {press("Close"), "selected Close"},
-		"Breadcrumb":   {press("gallery"), "at gallery"},
-		"SymbolSearch": {press("runServer"), "selected 0"},
+		"Breadcrumb":   {press("invoice"), "at invoice"},
+		"SymbolSearch": {press("sendInvoice"), "selected sendInvoice"},
 		"RegexTester": {func(tt *ui.Tester) error {
 			if err := tt.Click("Pattern"); err != nil {
 				return err
@@ -64,7 +64,7 @@ func TestCodeDemosLog(t *testing.T) {
 		"JSONFormat": {press("Format"), "action on"},
 		"Base64Tool": {press("Decode"), "encode false"},
 		"HashTool": {func(tt *ui.Tester) error {
-			if err := tt.Click("SHA-256"); err != nil {
+			if err := tt.Click("Text to hash"); err != nil {
 				return err
 			}
 			tt.Type("x")
@@ -79,7 +79,7 @@ func TestCodeDemosLog(t *testing.T) {
 			return nil
 		}, "epoch 1704067200"},
 		"Commit":       {press("Copy hash"), "copied hash"},
-		"BranchPicker": {press("dev"), "selected dev"},
+		"BranchPicker": {press("release/2.4"), "selected release/2.4"},
 		"Console":      {press("Error 1"), "filter 3"},
 		"REPL": {func(tt *ui.Tester) error {
 			if err := tt.Click("1 + 2 * 3"); err != nil {
@@ -88,10 +88,10 @@ func TestCodeDemosLog(t *testing.T) {
 			tt.Type("2+2")
 			tt.Key(0, ui.KeyEnter)
 			return nil
-		}, "2 lines"},
+		}, "3 lines"},
 		"PackageCard": {press("Copy install"), "copied install"},
 		"Env":         {press("Show values"), "values shown"},
-		"Playground":  {press("Run"), "ran 32 runes"},
+		"Playground":  {press("Run"), "ran 185 runes"},
 		"Minimap": {func(tt *ui.Tester) error {
 			r, ok := tt.Find("Editor map")
 			if !ok {
