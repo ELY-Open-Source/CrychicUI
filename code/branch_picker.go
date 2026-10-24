@@ -51,7 +51,7 @@ func BranchPicker(c *ui.Context, label string, branches []Branch, current *int, 
 		hits := 0
 		ui.Column(c).FillWidth().Padding(t.Space(1)).FocusGroup(ui.Vertical).Role(ui.RoleList).Children(func() {
 			for i, b := range branches {
-				lo, hi := indexFold(b.Name, q)
+				lo, hi := kit.IndexFold(b.Name, q)
 				if q != "" && lo < 0 {
 					continue
 				}
@@ -69,7 +69,7 @@ func BranchPicker(c *ui.Context, label string, branches []Branch, current *int, 
 							ink = t.Accent
 						}
 						ui.Icon(c, icon.Must("git-branch")).Size(14, 14).Shrink(0).TextColor(ink)
-						ui.RichText(c, marked(t, b.Name, lo, hi)...).Font("monospace").FontSize(t.Rem(0.85)).Grow(1).MinWidth(0).SingleLine()
+						ui.RichText(c, kit.Marked(t, b.Name, lo, hi)...).Font("monospace").FontSize(t.Rem(0.85)).Grow(1).MinWidth(0).SingleLine()
 						if b.Ahead > 0 {
 							kit.Numeric(c, "↑"+strconv.Itoa(b.Ahead)).FontSize(t.Rem(0.7)).TextColor(t.Success).Shrink(0)
 						}

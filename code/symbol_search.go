@@ -48,7 +48,7 @@ func SymbolSearch(c *ui.Context, label string, symbols []Symbol, query *string, 
 		ui.Column(c).FillWidth().Padding(t.Space(1)).FocusGroup(ui.Vertical).Role(ui.RoleList).Children(func() {
 			seen := map[string]int{}
 			for i, s := range symbols {
-				lo, hi := indexFold(s.Name, q)
+				lo, hi := kit.IndexFold(s.Name, q)
 				if q != "" && lo < 0 {
 					continue
 				}
@@ -62,7 +62,7 @@ func SymbolSearch(c *ui.Context, label string, symbols []Symbol, query *string, 
 				b.Children(func() {
 					ui.Row(c).FillWidth().Gap(t.Space(2)).AlignItems(ui.Center).Children(func() {
 						kindBadge(c, s.Kind)
-						ui.RichText(c, marked(t, s.Name, lo, hi)...).Font("monospace").FontSize(t.Rem(0.85)).Grow(1).MinWidth(0).SingleLine()
+						ui.RichText(c, kit.Marked(t, s.Name, lo, hi)...).Font("monospace").FontSize(t.Rem(0.85)).Grow(1).MinWidth(0).SingleLine()
 						kit.Muted(c, fmt.Sprintf(o.Line, s.Line)).Font("monospace").FontSize(t.Rem(0.75)).Shrink(0)
 					})
 				})

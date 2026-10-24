@@ -137,29 +137,9 @@ func unique(component, label string, list []FileItem) {
 	}
 }
 
-func fileIcon(c *ui.Context, name string) ui.Element {
-	return ui.Icon(c, icon.Must(glyph(name))).Size(16, 16).ContentTransition(ui.ContentTransition{})
-}
-
 func sizeText(c *ui.Context, size int64) ui.Element {
 	return typography.Bytes(c, size).FontSize(c.Theme().Rem(0.8)).TextColor(c.Theme().TextMuted)
 }
-
-func fileButton(c *ui.Context, label string, chosen bool) ui.Element {
-	t := c.Theme()
-	b := kit.Press(ui.ButtonBase(c).Label(label).Row().FillWidth().Gap(t.Space(2)).AlignItems(ui.Center).
-		Padding(t.Space(1.5), t.Space(2)).Radius(t.Radius).Checked(chosen))
-	bg := t.SurfaceHover.Alpha(unit(b.Hovered()))
-	if chosen {
-		bg = t.Accent.Alpha(0.12)
-	}
-	b.Background(b.AnimateColor("bg", bg, ui.Snappy))
-	return b
-}
-
-func date(t time.Time) string { return t.Format("2006-01-02") }
-
-func sizeLabel(size int64) string { return fmt.Sprintf("%d B", size) }
 
 func progressBar(c *ui.Context, value float64, color ui.Color) ui.Element {
 	if value < 0 || value > 1 || math.IsNaN(value) || math.IsInf(value, 0) {

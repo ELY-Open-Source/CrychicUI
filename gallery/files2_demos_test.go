@@ -17,28 +17,28 @@ func TestFiles2DemosLog(t *testing.T) {
 		want string
 	}{
 		"DownloadRow":   {press("Open"), "opened download"},
-		"ZipList":       {press("main.go"), "open 0"},
-		"ImageFiles":    {press("two.png"), "selected 1"},
-		"FileSearch":    {press(".go"), "kind .go"},
-		"ColumnBrowser": {press("work"), "[1 -1]"},
+		"ZipList":       {press("guidelines.pdf"), "open 1"},
+		"ImageFiles":    {press("lake-house.jpg"), "selected lake-house.jpg"},
+		"FileSearch":    {press(".pdf"), "kind .pdf"},
+		"ColumnBrowser": {press("Marketing"), "[1 -1 -1]"},
 		"FileCrumbs": {func(tt *ui.Tester) error {
-			if err := tt.Click("docs"); err != nil {
+			if err := tt.Click("Finance"); err != nil {
 				return err
 			}
 			return tt.ChooseMenuItem("Open")
-		}, "opened 2"},
+		}, "opened 1"},
 		"QuotaWarning": {press("Upgrade"), "upgraded"},
-		"Starred":      {press("Unstar Q3 board report.pdf"), "false"},
+		"Starred":      {press("Unstar brand-guidelines.pdf"), "[true false false false]"},
 		"Conflict":     {press("Keep both"), "choice 3"},
 		"SelectBar":    {press("Delete"), "action 2"},
-		"FileTags":     {press("urgent"), "true true false"},
+		"FileTags":     {press("Urgent"), "[true true false true false]"},
 		"UploadButtonRow": {func(tt *ui.Tester) error {
 			if err := tt.Click("New"); err != nil {
 				return err
 			}
 			return tt.ChooseMenuItem("New folder")
 		}, "action 2"},
-		"FileTypeFilter": {press("Code 8"), "selected 1"},
+		"FileTypeFilter": {press("Code 57"), "selected 3"},
 		"Thumbs":         {press("billing.go"), "selected 5"},
 	}
 	quiet := map[string]bool{"Storage": true, "SyncRow": true, "Compress": true}

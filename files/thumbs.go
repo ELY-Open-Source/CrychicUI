@@ -1,6 +1,7 @@
 package files
 
 import (
+	"fmt"
 	"math"
 
 	"github.com/ELY-Open-Source/CrychicUI/icon"
@@ -9,37 +10,46 @@ import (
 	"github.com/egoist/mygo/ui"
 )
 
-// ThumbsOptions are the thumbnail labels.
+// ThumbsOptions name the zoom slider.
 type ThumbsOptions struct{ Zoom string }
 
-// Thumbs shows large icons with a zoom slider; cue Tick.
+// Thumbs shows tiles sized by a zoom slider; cue Tick.
 func Thumbs(c *ui.Context, label string, list []FileItem, zoom *float64, selected *int, o ThumbsOptions) ui.Element {
 	validFiles("Thumbs", label, list)
-	if zoom == nil || selected == nil || *zoom < 0.5 || *zoom > 2 || math.IsNaN(*zoom) || math.IsInf(*zoom, 0) ||
-		*selected < -1 || *selected >= len(list) {
-		panic("files: Thumbs needs valid zoom and selection")
+	unique("Thumbs", label, list)
+	if zoom == nil || selected == nil || !(*zoom >= 0.5 && *zoom <= 2) || math.IsInf(*zoom, 0) || *selected < -1 || *selected >= len(list) {
+		panic(fmt.Sprintf("files: Thumbs %q needs zoom in [0.5,2] and a selection or -1", label))
 	}
-	t := c.Theme()
 	def(&o.Zoom, "Zoom")
-	root := ui.Column(c).FillWidth().Gap(t.Space(2)).Role(ui.RoleGroup).Label(label)
+	t := c.Theme()
+	root := kit.Card(c).FillWidth().Role(ui.RoleGroup).Label(label)
 	root.Children(func() {
-		s := ui.Slider(c, zoom, 0.5, 2).Label(o.Zoom).FillWidth()
-		if kit.Changed(s, sound.Tick) {
-			root.SetChanged()
-			kit.Log("Thumbs", "zoom", "value", *zoom)
-		}
-		ui.Row(c).Wrap().Gap(t.Space(2)).Children(func() {
-			for i, item := range list {
-				c.Key(i)
-				side := t.Space(12) * float32(*zoom)
-				tile := kit.Press(ui.ButtonBase(c).Label(item.Name).Column().Gap(t.Space(1)).AlignItems(ui.Center).
-					Width(side).Padding(t.Space(2)).Radius(t.Radius).Border(1, t.Border).Checked(i == *selected))
-				tile.Background(tile.AnimateColor("bg", t.Surface.Mix(t.Accent.Alpha(0.12), unit(i == *selected)), ui.Snappy))
+		kit.CardHead(c, "images", label, func() {
+			ui.Row(c).Width(t.Space(40)).Shrink(0).Gap(t.Space(1.5)).AlignItems(ui.Center).Children(func() {
+				ui.Icon(c, icon.Must("zoom-out")).Size(14, 14).Shrink(0).TextColor(t.TextMuted)
+				s := ui.Slider(c, zoom, 0.5, 2).Label(o.Zoom).Grow(1)
+				if kit.Changed(s, sound.Tick) {
+					root.SetChanged()
+					kit.Log("Thumbs", "zoom", "value", *zoom)
+				}
+				ui.Icon(c, icon.Must("zoom-in")).Size(14, 14).Shrink(0).TextColor(t.TextMuted)
+			})
+		})
+		side := root.AnimateTo("side", t.Space(24)*float32(*zoom), ui.Snappy)
+		ui.Row(c).FillWidth().Wrap().Gap(t.Space(2)).Padding(t.Space(3)).Children(func() {
+			for i, f := range list {
+				c.Key(fileKey(f))
+				on := i == *selected
+				tile := kit.Press(ui.ButtonBase(c).Label(f.Name).Column().Gap(t.Space(1.5)).AlignItems(ui.Center).Width(side).
+					Padding(t.Space(2)).Radius(t.Radius).Checked(on))
+				kit.Stagger(c, root, tile, i)
+				tile.Background(tile.AnimateColor("bg", t.Background.Mix(t.SurfaceHover, unit(tile.Hovered())).Mix(t.Accent.Alpha(0.1), unit(on)), ui.Snappy))
+				tile.Border(1, tile.AnimateColor("line", t.Border.Mix(t.Accent, unit(on)), ui.Snappy))
 				tile.Children(func() {
-					ui.Icon(c, icon.Must(itemGlyph(item))).Size(side/2, side/2).TextColor(t.Accent)
-					ui.Text(c, item.Name).FontSize(t.Rem(0.75)).SingleLine()
+					fileTile(c, f, side*0.55)
+					ui.Text(c, f.Name).FontSize(t.Rem(0.75)).Bold().TextAlign(ui.Center).FillWidth().SingleLine()
 				})
-				if tile.Clicked() && *selected != i {
+				if tile.Clicked() && !on {
 					*selected = i
 					root.SetChanged()
 					sound.Play(sound.Select)

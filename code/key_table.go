@@ -25,10 +25,12 @@ func KeyTable(c *ui.Context, label string, groups []KeyGroup) ui.Element {
 	if label == "" || len(groups) == 0 {
 		panic(fmt.Sprintf("code: KeyTable %q needs a label and groups", label))
 	}
+	seen := map[string]bool{}
 	for _, g := range groups {
-		if g.Name == "" || len(g.Shortcuts) == 0 {
-			panic(fmt.Sprintf("code: KeyTable %q needs a name and shortcuts in every group", label))
+		if g.Name == "" || seen[g.Name] || len(g.Shortcuts) == 0 {
+			panic(fmt.Sprintf("code: KeyTable %q needs a unique name and shortcuts in every group", label))
 		}
+		seen[g.Name] = true
 		for _, s := range g.Shortcuts {
 			if s.Keys == "" || s.Action == "" || strings.Contains("+"+s.Keys+"+", "++") {
 				panic(fmt.Sprintf("code: KeyTable %q needs keys and an action in every shortcut", label))

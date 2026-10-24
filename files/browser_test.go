@@ -10,9 +10,9 @@ import (
 
 func TestStorage(t *testing.T) {
 	parts := []StoragePart{{Name: "Images", Bytes: 40}, {Name: "Code", Bytes: 10}}
-	tt := ui.NewTester(padded(func(c *ui.Context) { Storage(c, "Storage", parts, 100) }), 500, 250)
+	tt := ui.NewTester(padded(func(c *ui.Context) { Storage(c, "Storage", parts, 100, StorageOptions{}) }), 500, 300)
 	settles(t, tt)
-	if !tt.HasText("50 B / 100 B") || !tt.HasText("Images") {
+	if !tt.HasText("50 B") || !tt.HasText("of") || !tt.HasText("Images") || !tt.HasText("Free") || !tt.HasText("50%") {
 		t.Errorf("texts %q", tt.Texts())
 	}
 }
@@ -51,7 +51,8 @@ func TestZipList(t *testing.T) {
 	settles(t, tt)
 	before := baseline()
 	click(t, tt, "a.txt")
-	if opened != 0 || !tt.HasText("Compressed") {
+	settles(t, tt)
+	if opened != 0 || !tt.HasText("Compressed") || !tt.HasText("−60%") {
 		t.Errorf("opened %d texts %q", opened, tt.Texts())
 	}
 	cues(t, before, sound.Toggle)
@@ -147,7 +148,7 @@ func TestColumnBrowser(t *testing.T) {
 func TestFileCrumbs(t *testing.T) {
 	at := 0
 	tt := ui.NewTester(padded(func(c *ui.Context) {
-		FileCrumbs(c, []string{"home", "docs"}, &at, FileCrumbsOptions{})
+		FileCrumbs(c, "Path", []string{"home", "docs"}, &at, FileCrumbsOptions{})
 	}), 500, 180)
 	settles(t, tt)
 	before := baseline()
@@ -172,6 +173,10 @@ func TestQuotaWarning(t *testing.T) {
 	if !upgraded {
 		t.Error("quota was not upgraded")
 	}
+	settles(t, tt)
+	if !tt.HasText("Plan upgraded") || tt.HasText("Upgrade") {
+		t.Errorf("texts %q", tt.Texts())
+	}
 	if recent := sound.Recent(); recent[len(recent)-1] != sound.Warning {
 		t.Errorf("cues %v", recent)
 	}
@@ -193,7 +198,8 @@ func TestStarred(t *testing.T) {
 
 func TestConflict(t *testing.T) {
 	choice := ConflictNone
-	tt := ui.NewTester(padded(func(c *ui.Context) { Conflict(c, "Conflict", &choice, ConflictOptions{}) }), 500, 180)
+	mine, theirs := sampleFiles()[0], sampleFiles()[1]
+	tt := ui.NewTester(padded(func(c *ui.Context) { Conflict(c, "Conflict", mine, theirs, &choice, ConflictOptions{}) }), 500, 300)
 	settles(t, tt)
 	before := baseline()
 	click(t, tt, "Keep both")
@@ -253,7 +259,7 @@ func TestUploadButtonRow(t *testing.T) {
 
 func TestFileTypeFilter(t *testing.T) {
 	selected := -1
-	types := []TypeCount{{Kind: "Text", Count: 2}, {Kind: "Go", Count: 1}}
+	types := []TypeCount{{Kind: "Text", Sample: "a.txt", Count: 2}, {Kind: "Go", Sample: "a.go", Count: 1}}
 	tt := ui.NewTester(padded(func(c *ui.Context) {
 		FileTypeFilter(c, "Types", types, &selected)
 	}), 500, 180)

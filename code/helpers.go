@@ -8,7 +8,6 @@ import (
 	"strconv"
 	"strings"
 	"time"
-	"unicode/utf8"
 
 	"github.com/ELY-Open-Source/CrychicUI/button"
 	"github.com/ELY-Open-Source/CrychicUI/icon"
@@ -211,30 +210,6 @@ func captioned(c *ui.Context, caption string, field func()) {
 		ui.Column(c).RowStart(2).ColumnStart(1).MinWidth(0).Children(field)
 		fieldLabel(c, caption).RowStart(1).ColumnStart(1)
 	})
-}
-
-// indexFold finds q in s ignoring case, as byte bounds.
-func indexFold(s, q string) (int, int) {
-	n := utf8.RuneCountInString(q)
-	for i := range s {
-		end := i
-		for k := 0; k < n && end < len(s); k++ {
-			_, w := utf8.DecodeRuneInString(s[end:])
-			end += w
-		}
-		if strings.EqualFold(s[i:end], q) {
-			return i, end
-		}
-	}
-	return -1, -1
-}
-
-// marked spans s with lo..hi bold in the accent.
-func marked(t *ui.Theme, s string, lo, hi int) []ui.Span {
-	if lo < 0 || lo == hi {
-		return []ui.Span{{Text: s}}
-	}
-	return []ui.Span{{Text: s[:lo]}, {Text: s[lo:hi], Color: t.Accent, Weight: 700}, {Text: s[hi:]}}
 }
 
 // ident keys an item by its text and repeat count.
