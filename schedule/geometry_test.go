@@ -51,8 +51,9 @@ func TestDayViewTimezone(t *testing.T) {
 	now := time.Date(2026, 10, 24, 2, 30, 0, 0, time.UTC)
 	tt := ui.NewTester(padded(func(c *ui.Context) { DayView(c, day, nil, DayViewOptions{Now: now}) }), 600, 600)
 	tt.Advance(time.Second)
-	if dangerY(tt) < 300 {
-		t.Errorf("now line is not at 22:30: %d", dangerY(tt))
+	r, ok := tt.Find("22:00")
+	if y := float32(dangerY(tt)); !ok || y < r.Y || y > r.Y+40 {
+		t.Errorf("now line at %v is not in the 22:00 row %v", y, r)
 	}
 }
 

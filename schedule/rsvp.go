@@ -17,28 +17,34 @@ const (
 )
 
 // RSVPOptions are the RSVP labels.
-type RSVPOptions struct{ Yes, Maybe, No string }
+type RSVPOptions struct{ Prompt, Yes, Maybe, No string }
 
 // RSVP selects yes, maybe, or no; cue Select.
 func RSVP(c *ui.Context, response *RSVPResponse, o RSVPOptions) ui.Element {
 	if response == nil || *response > No {
 		panic("schedule: RSVP needs a valid response")
 	}
+	def(&o.Prompt, "Going?")
 	def(&o.Yes, "Yes")
 	def(&o.Maybe, "Maybe")
 	def(&o.No, "No")
 	t := c.Theme()
-	root := ui.Row(c).Wrap().Gap(t.Space(2)).Role(ui.RoleGroup)
+	root := ui.Row(c).FillWidth().Wrap().Gap(t.Space(2)).AlignItems(ui.Center).Role(ui.RoleGroup)
 	root.Children(func() {
-		for _, item := range []struct {
-			value RSVPResponse
-			name  string
-		}{{Yes, o.Yes}, {Maybe, o.Maybe}, {No, o.No}} {
-			b := kit.Press(ui.ButtonBase(c).Label(item.name).Padding(t.Space(1.5), t.Space(3)).Radius(999).
-				Border(1, t.Border).Checked(*response == item.value))
-			b.Background(b.AnimateColor("bg", t.Surface.Mix(t.Accent.Alpha(0.12), unit(*response == item.value)), ui.Snappy))
-			b.Children(func() { ui.Text(c, item.name).SingleLine() })
-			if b.Clicked() && *response != item.value {
+		ui.Text(c, o.Prompt).FontSize(t.Rem(0.85)).Bold().Grow(1).Shrink(0)
+		for i, item := range []struct {
+			value       RSVPResponse
+			name, glyph string
+			ink         ui.Color
+		}{{Yes, o.Yes, "check", t.Success}, {Maybe, o.Maybe, "circle-help", t.Warning}, {No, o.No, "x", t.Danger}} {
+			on := *response == item.value
+			c.Key(i)
+			b := pill(c, item.name, on, item.ink, func() {
+				c.Key(on)
+				kit.Arrive(glyph(c, item.glyph, 14), ui.Pose{Scale: 0.5, Fade: 1}, 0)
+				ui.Text(c, item.name).Bold().Shrink(0)
+			})
+			if b.Clicked() && !on {
 				*response = item.value
 				root.SetChanged()
 				sound.Play(sound.Select)

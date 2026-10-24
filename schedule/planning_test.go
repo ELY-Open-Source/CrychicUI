@@ -9,17 +9,17 @@ import (
 )
 
 func TestShifts(t *testing.T) {
-	shifts := []Shift{{Name: "Ana", Day: "Mon", Start: "09:00", End: "17:00"}}
-	tt := ui.NewTester(padded(func(c *ui.Context) { Shifts(c, shifts) }), 500, 180)
+	shifts := []Shift{{Name: "Ana Lima", Day: "Mon", Start: "09:00", End: "17:00"}}
+	tt := ui.NewTester(padded(func(c *ui.Context) { Shifts(c, shifts, ShiftsOptions{}) }), 500, 220)
 	settles(t, tt)
-	if !tt.HasText("Ana") || !tt.HasText("Mon 09:00–17:00") {
+	if !tt.HasText("Ana Lima") || !tt.HasText("Mon") || !tt.HasText("09:00–17:00") {
 		t.Errorf("texts %q", tt.Texts())
 	}
 }
 
 func TestTimeOff(t *testing.T) {
-	requests := []TimeOffRequest{{Name: "Ana", Range: "Nov 1–3", Status: "Approved"}}
-	tt := ui.NewTester(padded(func(c *ui.Context) { TimeOff(c, requests) }), 500, 180)
+	requests := []TimeOffRequest{{Name: "Ana Lima", Range: "Nov 1–3", Status: Approved}}
+	tt := ui.NewTester(padded(func(c *ui.Context) { TimeOff(c, requests, TimeOffOptions{}) }), 500, 220)
 	settles(t, tt)
 	if !tt.HasText("Approved") {
 		t.Errorf("texts %q", tt.Texts())
@@ -27,7 +27,7 @@ func TestTimeOff(t *testing.T) {
 }
 
 func TestTimesheet(t *testing.T) {
-	tt := ui.NewTester(padded(func(c *ui.Context) { Timesheet(c, []float64{1, 1, 1, 1, 1, 1, 2}, TimesheetOptions{}) }), 500, 180)
+	tt := ui.NewTester(padded(func(c *ui.Context) { Timesheet(c, []float64{1, 1, 1, 1, 1, 1, 2}, TimesheetOptions{}) }), 500, 320)
 	settles(t, tt)
 	if !tt.HasText("Total 8.0 h") {
 		t.Errorf("texts %q", tt.Texts())
@@ -68,7 +68,7 @@ func TestConflicts(t *testing.T) {
 	b.Title = "Overlap"
 	tt := ui.NewTester(padded(func(c *ui.Context) { Conflicts(c, []Event{a, b}, ConflictsOptions{}) }), 500, 300)
 	settles(t, tt)
-	if !tt.HasText("1 conflicts") {
+	if !tt.HasText("1 conflict") || tt.HasText("1 conflicts") {
 		t.Errorf("texts %q", tt.Texts())
 	}
 }
@@ -82,8 +82,8 @@ func TestYearView(t *testing.T) {
 }
 
 func TestItinerary(t *testing.T) {
-	days := []TripDay{{Label: "Day 1", Stops: []string{"Station", "Museum"}}}
-	tt := ui.NewTester(padded(func(c *ui.Context) { Itinerary(c, days) }), 500, 250)
+	days := []TripDay{{Label: "Day 1", Stops: []Stop{{Time: "09:00", Title: "Station", Icon: "train-front"}, {Time: "11:00", Title: "Museum", Icon: "landmark"}}}}
+	tt := ui.NewTester(padded(func(c *ui.Context) { Itinerary(c, days) }), 500, 300)
 	settles(t, tt)
 	if !tt.HasText("Day 1") || !tt.HasText("Museum") {
 		t.Errorf("texts %q", tt.Texts())
@@ -92,7 +92,7 @@ func TestItinerary(t *testing.T) {
 
 func TestClasses(t *testing.T) {
 	classes := []ClassSession{{Name: "Math", Day: "Mon", Start: "09:00", End: "10:00", Room: "A1"}}
-	tt := ui.NewTester(padded(func(c *ui.Context) { Classes(c, classes) }), 500, 180)
+	tt := ui.NewTester(padded(func(c *ui.Context) { Classes(c, classes, ClassesOptions{}) }), 500, 180)
 	settles(t, tt)
 	if !tt.HasText("Math") || !tt.HasText("A1") {
 		t.Errorf("texts %q", tt.Texts())
@@ -102,16 +102,17 @@ func TestClasses(t *testing.T) {
 func TestWaitlist(t *testing.T) {
 	tt := ui.NewTester(padded(func(c *ui.Context) { Waitlist(c, 3, WaitlistOptions{}) }), 500, 180)
 	settles(t, tt)
-	if !tt.HasText("Position") || !tt.HasText("3") {
+	if !tt.HasText("#3") || !tt.HasText("2 ahead of you") {
 		t.Errorf("texts %q", tt.Texts())
 	}
 }
 
 func TestSlotCalendar(t *testing.T) {
 	days := []SlotDay{{Date: "Fri 23", Available: 3}}
-	tt := ui.NewTester(padded(func(c *ui.Context) { SlotCalendar(c, days) }), 500, 180)
+	picked := -1
+	tt := ui.NewTester(padded(func(c *ui.Context) { SlotCalendar(c, days, &picked, SlotCalendarOptions{}) }), 500, 180)
 	settles(t, tt)
-	if !tt.HasText("Fri 23") || !tt.HasText("3") {
+	if !tt.HasText("Fri 23") || !tt.HasText("3 left") {
 		t.Errorf("texts %q", tt.Texts())
 	}
 }
@@ -140,7 +141,7 @@ func TestDragCreate(t *testing.T) {
 
 func TestZoneCompare(t *testing.T) {
 	zones := []Zone{{Name: "UTC", Offset: 0}, {Name: "Tokyo", Offset: 9}}
-	tt := ui.NewTester(padded(func(c *ui.Context) { ZoneCompare(c, 10, zones) }), 500, 180)
+	tt := ui.NewTester(padded(func(c *ui.Context) { ZoneCompare(c, 10, zones, ZoneCompareOptions{}) }), 500, 180)
 	settles(t, tt)
 	if !tt.HasText("10:00") || !tt.HasText("19:00") {
 		t.Errorf("texts %q", tt.Texts())
@@ -149,7 +150,7 @@ func TestZoneCompare(t *testing.T) {
 
 func TestFocusTime(t *testing.T) {
 	blocks := []FocusBlock{{Start: 0.25, End: 0.75}}
-	tt := ui.NewTester(padded(func(c *ui.Context) { FocusTime(c, blocks) }), 500, 180)
+	tt := ui.NewTester(padded(func(c *ui.Context) { FocusTime(c, blocks, FocusTimeOptions{}) }), 500, 180)
 	settles(t, tt)
 }
 

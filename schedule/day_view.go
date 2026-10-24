@@ -8,40 +8,61 @@ import (
 	"github.com/egoist/mygo/ui"
 )
 
-// DayViewOptions are the day view options.
-type DayViewOptions struct{ Now time.Time }
+// DayViewOptions word the day; Now overrides the clock.
+type DayViewOptions struct {
+	Now                time.Time
+	Format, Count, One string
+}
 
 // DayView shows hours with events and a moving now line.
 func DayView(c *ui.Context, day time.Time, events []Event, o DayViewOptions) ui.Element {
 	validEvents("DayView", events)
+	def(&o.Format, "Monday, January 2")
+	def(&o.Count, "%d events")
+	def(&o.One, "1 event")
 	t := c.Theme()
 	now := o.Now
 	if now.IsZero() {
 		now = c.Now()
+		c.After(now.Truncate(time.Minute).Add(time.Minute).Sub(now))
 	}
 	now = now.In(day.Location())
-	root := ui.Column(c).FillWidth().Gap(t.Space(1)).Role(ui.RoleGroup)
-	kit.Arrive(root, ui.Pose{Fade: 1}, 0)
-	c.After(time.Second)
+	hourH := t.Space(10)
+	count := len(lanesOf(events, day))
+	root := card(c)
+	scroll := ui.Local(root, "scroll", func() *ui.ScrollState {
+		open := firstHour([]time.Time{day}, events)
+		if sameDate(now, day) {
+			open = max(0, float32(now.Hour()-1))
+		}
+		return &ui.ScrollState{Y: open * hourH}
+	})
 	root.Children(func() {
-		ui.Text(c, day.Format("2006-01-02")+" "+now.Format("15:04:05")).Bold()
-		for hour := range 24 {
-			ui.Row(c).Gap(t.Space(1)).AlignItems(ui.Center).Children(func() {
-				kit.Muted(c, fmt.Sprintf("%02d:00", hour)).FontSize(t.Rem(0.7))
-				ui.Box(c).Grow(1).Height(t.Space(4)).Children(func() {
-					for _, event := range events {
-						local := event.Start.In(day.Location())
-						if sameDate(local, day) && local.Hour() == hour {
-							ui.Text(c, event.Title).FontSize(t.Rem(0.75)).TextColor(t.Accent)
-						}
-					}
-					if sameDate(now, day) && now.Hour() == hour {
-						y := float32(now.Minute()) / 60 * t.Space(4)
-						ui.Box(c).Absolute().Left(0).Right(0).Top(y).Height(1).Background(t.Danger)
-					}
+		kit.CardHead(c, "calendar-days", day.Format(o.Format), func() {
+			text := fmt.Sprintf(o.Count, count)
+			if count == 1 {
+				text = o.One
+			}
+			kit.Chip(c, text, t.Accent)
+		})
+		ui.Scroll(c).TrackScroll(*scroll).FillWidth().Height(t.Space(80)).Children(func() {
+			ui.Row(c).FillWidth().Padding(t.Space(1), t.Space(2), t.Space(1), 0).Children(func() {
+				gutter(c, hourH)
+				dayColumn(c, day, events, now, hourH, func(e Event, top, height float32) {
+					b := ui.Column(c).Absolute().Left(t.Space(1)).Right(t.Space(1)).Top(top).Height(height)
+					kit.Arrive(eventBox(c, e, day.Location(), b, false), ui.Pose{X: t.Space(2), Fade: 1}, 0)
 				})
 			})
-		}
+		})
 	})
 	return root
+}
+
+// lanesOf lists the events that touch day.
+func lanesOf(events []Event, day time.Time) []Event {
+	var out []Event
+	for _, lane := range lanes(events, day, 0) {
+		out = append(out, lane...)
+	}
+	return out
 }

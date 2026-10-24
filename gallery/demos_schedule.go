@@ -3,7 +3,6 @@ package gallery
 import (
 	"fmt"
 	"time"
-	"unicode/utf8"
 
 	"github.com/ELY-Open-Source/CrychicUI/schedule"
 	"github.com/egoist/mygo/ui"
@@ -42,50 +41,83 @@ var scheduleEntries = []Entry{
 	{ID: 1120, Name: "ScheduleSend", Category: "schedule", Summary: "Send later choices; cue Select.", Demo: demoScheduleSend},
 }
 
+// at is a time in the demo month, October 2026.
+func at(day, hour, minute int) time.Time {
+	return time.Date(2026, 10, day, hour, minute, 0, 0, time.UTC)
+}
+
 func demoScheduleEvent() schedule.Event {
-	return schedule.Event{ID: "e1", Title: "Design review", Place: "Room A",
-		Start: time.Date(2026, 10, 23, 10, 0, 0, 0, time.UTC), End: time.Date(2026, 10, 23, 11, 0, 0, 0, time.UTC)}
+	return schedule.Event{ID: "design", Title: "Design review", Place: "Atlas room, 4th floor", Start: at(23, 10, 0), End: at(23, 11, 0)}
+}
+
+func demoScheduleEvents() []schedule.Event {
+	return []schedule.Event{
+		{ID: "sprint", Title: "Sprint planning", Place: "Borealis room", Start: at(19, 9, 30), End: at(19, 10, 30), Tint: 1},
+		{ID: "maya", Title: "1:1 with Maya Chen", Place: "Video call", Start: at(20, 14, 0), End: at(20, 14, 30), Tint: 2},
+		{ID: "northwind", Title: "Northwind customer call", Place: "Video call", Start: at(21, 11, 0), End: at(21, 12, 0), Tint: 3},
+		{ID: "learn", Title: "Lunch & learn: accessibility", Place: "Cafeteria", Start: at(22, 12, 30), End: at(22, 13, 30), Tint: 1},
+		demoScheduleEvent(),
+		{ID: "roadmap", Title: "Roadmap sync", Place: "Cosmos room", Start: at(23, 10, 30), End: at(23, 11, 30), Tint: 2},
+		{ID: "retro", Title: "Team retro", Place: "Atlas room", Start: at(23, 15, 0), End: at(23, 16, 0)},
+	}
 }
 
 func demoScheduleDays() []time.Time {
 	days := make([]time.Time, 7)
 	for i := range days {
-		days[i] = time.Date(2026, 10, 19+i, 0, 0, 0, 0, time.UTC)
+		days[i] = at(19+i, 0, 0)
 	}
 	return days
 }
 
 func demoWeekView(c *ui.Context, log func(string)) {
-	root := ui.Column(c)
+	root := ui.Column(c).Width(520)
 	selected := textState(root, "selected", "")
 	root.Children(func() {
-		if schedule.WeekView(c, demoScheduleDays(), []schedule.Event{demoScheduleEvent()}, selected, schedule.WeekViewOptions{}).Changed() {
+		o := schedule.WeekViewOptions{Now: at(23, 10, 40)}
+		if schedule.WeekView(c, demoScheduleDays(), demoScheduleEvents(), selected, o).Changed() {
 			log("selected " + *selected)
 		}
 	})
 }
 
 func demoDayView(c *ui.Context, log func(string)) {
-	schedule.DayView(c, demoScheduleDays()[4], []schedule.Event{demoScheduleEvent()}, schedule.DayViewOptions{})
+	now := c.Now()
+	day := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
+	slot := func(id, title, place string, h, m, mins, tint int) schedule.Event {
+		start := day.Add(time.Duration(h)*time.Hour + time.Duration(m)*time.Minute)
+		return schedule.Event{ID: id, Title: title, Place: place, Start: start, End: start.Add(time.Duration(mins) * time.Minute), Tint: tint}
+	}
+	events := []schedule.Event{
+		slot("standup", "Daily standup", "Video call", 9, 0, 15, 1),
+		slot("design", "Design review", "Atlas room", 10, 0, 60, 0),
+		slot("roadmap", "Roadmap sync", "Cosmos room", 10, 30, 60, 2),
+		slot("lunch", "Lunch with Priya Nair", "Cafe Lisboa", 12, 30, 60, 1),
+		slot("focus", "Focus: billing export", "", 14, 0, 120, 3),
+	}
+	ui.Column(c).Width(420).Children(func() { schedule.DayView(c, day, events, schedule.DayViewOptions{}) })
 }
 
 func demoMonthView(c *ui.Context, log func(string)) {
-	root := ui.Column(c)
+	root := ui.Column(c).Width(520)
 	selected := textState(root, "selected", "")
-	month := time.Date(2026, 10, 1, 0, 0, 0, 0, time.UTC)
 	root.Children(func() {
-		if schedule.MonthView(c, month, []schedule.Event{demoScheduleEvent()}, selected).Changed() {
+		o := schedule.MonthViewOptions{Now: at(23, 9, 0)}
+		if schedule.MonthView(c, at(1, 0, 0), demoScheduleEvents(), selected, o).Changed() {
 			log("selected " + *selected)
 		}
 	})
 }
 
 func demoEventCard(c *ui.Context, log func(string)) {
-	schedule.EventCard(c, demoScheduleEvent())
+	ui.Column(c).Width(380).Gap(8).Children(func() {
+		schedule.EventCard(c, demoScheduleEvent(), schedule.EventCardOptions{})
+		schedule.EventCard(c, demoScheduleEvents()[2], schedule.EventCardOptions{})
+	})
 }
 
 func demoEventBlock(c *ui.Context, log func(string)) {
-	root := ui.Column(c)
+	root := ui.Column(c).Width(320)
 	event := ui.Local(root, "event", func() schedule.Event { return demoScheduleEvent() })
 	root.Children(func() {
 		if schedule.EventBlock(c, event).Changed() {
@@ -95,192 +127,100 @@ func demoEventBlock(c *ui.Context, log func(string)) {
 }
 
 func demoNowLine(c *ui.Context, log func(string)) {
-	schedule.NowLine(c, c.Now())
+	ui.Column(c).Width(400).Children(func() { schedule.NowLine(c, c.Now()) })
 }
 
 func demoBooking(c *ui.Context, log func(string)) {
-	root := ui.Column(c)
+	root := ui.Column(c).Width(440)
 	day, slot, confirmed := intState(root, "day", -1), textState(root, "slot", ""), boolState(root, "confirmed", false)
+	slots := []string{"09:00", "09:30", "10:00", "11:00", "14:00", "15:30"}
 	root.Children(func() {
-		root, book := schedule.Booking(c, demoScheduleDays(), []string{"10:00", "11:00"}, day, slot, confirmed, schedule.BookingOptions{})
-		if root.Changed() {
+		booking, book := schedule.Booking(c, demoScheduleDays(), slots, day, slot, confirmed, schedule.BookingOptions{Title: "Book a demo with Lena Fischer"})
+		if booking.Changed() {
 			log(fmt.Sprintf("day %d slot %s", *day, *slot))
 		}
 		if book.Clicked() {
 			log("booked " + *slot)
-			*confirmed = false
 		}
 	})
 }
 
 func demoAvailability(c *ui.Context, log func(string)) {
-	root := ui.Column(c)
-	cells := ui.Local(root, "cells", func() []bool { return []bool{true, false} })
-	selected := ui.Local(root, "selected", func() []bool { return []bool{false, false} })
+	root := ui.Column(c).Width(420)
+	busy := map[int]bool{1: true, 2: true, 9: true, 13: true, 14: true, 20: true, 25: true, 28: true}
+	cells := ui.Local(root, "cells", func() []bool {
+		free := make([]bool, 30)
+		for i := range free {
+			free[i] = !busy[i]
+		}
+		return free
+	})
+	selected := ui.Local(root, "selected", func() []bool { return make([]bool, 30) })
+	o := schedule.AvailabilityOptions{Days: []string{"Mon", "Tue", "Wed", "Thu", "Fri"}, Hours: []string{"09:00", "10:00", "11:00", "13:00", "14:00", "15:00"}}
 	root.Children(func() {
-		if schedule.Availability(c, cells, selected, schedule.AvailabilityOptions{}).Changed() {
-			log(fmt.Sprint(*selected))
+		if schedule.Availability(c, cells, selected, o).Changed() {
+			n := 0
+			for _, on := range *selected {
+				if on {
+					n++
+				}
+			}
+			log(fmt.Sprintf("%d picked", n))
 		}
 	})
 }
 
 func demoMeetingCard(c *ui.Context, log func(string)) {
-	root := ui.Column(c)
+	root := ui.Column(c).Width(400)
 	joined := boolState(root, "joined", false)
+	people := []string{"Maya Chen", "Daniel Okafor", "Priya Nair", "Lucas Martin", "Sofia Rossi"}
 	root.Children(func() {
-		if schedule.MeetingCard(c, "Review", time.Now(), []string{"Ana", "Kai"}, joined, schedule.MeetingCardOptions{}).Changed() {
+		if schedule.MeetingCard(c, "Design review", at(23, 10, 0), people, joined, schedule.MeetingCardOptions{}).Changed() {
 			log("joined")
 		}
 	})
 }
 
 func demoAttendees(c *ui.Context, log func(string)) {
-	people := []schedule.Attendee{{Name: "Ana", Response: "Yes"}, {Name: "Kai", Response: "Maybe"}}
-	schedule.Attendees(c, people)
+	people := []schedule.Attendee{{Name: "Maya Chen", Response: schedule.Yes}, {Name: "Daniel Okafor", Response: schedule.Yes},
+		{Name: "Priya Nair", Response: schedule.Maybe}, {Name: "Lucas Martin", Response: schedule.No}, {Name: "Sofia Rossi"}}
+	ui.Column(c).Width(380).Children(func() { schedule.Attendees(c, people, schedule.AttendeesOptions{}) })
 }
 
 func demoRSVP(c *ui.Context, log func(string)) {
-	root := ui.Column(c)
+	root := ui.Column(c).Width(380)
 	response := ui.Local(root, "response", func() schedule.RSVPResponse { return schedule.RSVPNone })
 	root.Children(func() {
-		if schedule.RSVP(c, response, schedule.RSVPOptions{}).Changed() {
+		if schedule.RSVP(c, response, schedule.RSVPOptions{Prompt: "Going to the team retro?"}).Changed() {
 			log("response " + fmt.Sprint(*response))
 		}
 	})
 }
 
 func demoReminder(c *ui.Context, log func(string)) {
-	root := ui.Column(c)
-	choice := textState(root, "choice", "")
+	root := ui.Column(c).Width(400)
+	choice := textState(root, "choice", "15 min")
 	root.Children(func() {
-		if schedule.Reminder(c, choice, []string{"10m", "1h"}, schedule.ReminderOptions{}).Changed() {
+		options := []string{"At start", "5 min", "15 min", "1 hour", "1 day"}
+		if schedule.Reminder(c, choice, options, schedule.ReminderOptions{Label: "Remind me before Design review"}).Changed() {
 			log("reminder " + *choice)
 		}
 	})
 }
 
 func demoUpcoming(c *ui.Context, log func(string)) {
-	schedule.Upcoming(c, []schedule.Event{demoScheduleEvent()})
+	ui.Column(c).Width(400).Children(func() {
+		schedule.Upcoming(c, demoScheduleEvents()[2:], schedule.UpcomingOptions{})
+	})
 }
 
 func demoCalendarList(c *ui.Context, log func(string)) {
-	root := ui.Column(c)
-	visible := ui.Local(root, "visible", func() []bool { return []bool{true} })
-	calendars := []schedule.Calendar{{Name: "Work", Tint: 0}}
+	root := ui.Column(c).Width(320)
+	visible := ui.Local(root, "visible", func() []bool { return []bool{true, true, false, true} })
+	calendars := []schedule.Calendar{{Name: "Work", Tint: 0}, {Name: "Personal", Tint: 1}, {Name: "Team Atlas", Tint: 2}, {Name: "Holidays", Tint: 3}}
 	root.Children(func() {
-		if schedule.CalendarList(c, calendars, visible).Changed() {
+		if schedule.CalendarList(c, calendars, visible, schedule.CalendarListOptions{}).Changed() {
 			log(fmt.Sprint(*visible))
-		}
-	})
-}
-
-func demoResourceRows(c *ui.Context, log func(string)) {
-	resources := []schedule.Resource{{Name: "Room A", Events: []schedule.Event{demoScheduleEvent()}}}
-	schedule.ResourceRows(c, resources)
-}
-
-func demoShifts(c *ui.Context, log func(string)) {
-	shifts := []schedule.Shift{{Name: "Ana", Day: "Mon", Start: "09:00", End: "17:00"}}
-	schedule.Shifts(c, shifts)
-}
-
-func demoTimeOff(c *ui.Context, log func(string)) {
-	requests := []schedule.TimeOffRequest{{Name: "Ana", Range: "Nov 1–3", Status: "Approved"}}
-	schedule.TimeOff(c, requests)
-}
-
-func demoTimesheet(c *ui.Context, log func(string)) {
-	schedule.Timesheet(c, []float64{1, 1, 1, 1, 1, 1, 2}, schedule.TimesheetOptions{})
-}
-
-func demoNextEvent(c *ui.Context, log func(string)) {
-	root := ui.Column(c)
-	event := ui.Local(root, "event", func() schedule.Event {
-		e := demoScheduleEvent()
-		e.Start = time.Now().Add(time.Hour)
-		e.End = e.Start.Add(time.Hour)
-		return e
-	})
-	root.Children(func() {
-		schedule.NextEvent(c, *event, schedule.NextEventOptions{})
-	})
-}
-
-func demoQuickEvent(c *ui.Context, log func(string)) {
-	root := ui.Column(c)
-	title, created := textState(root, "title", ""), boolState(root, "created", false)
-	root.Children(func() {
-		root, create := schedule.QuickEvent(c, title, created, schedule.QuickEventOptions{})
-		if root.Changed() {
-			log("title " + fmt.Sprint(utf8.RuneCountInString(*title)) + " runes")
-		}
-		if create.Changed() {
-			log("created " + *title)
-			*created = false
-		}
-	})
-}
-
-func demoConflicts(c *ui.Context, log func(string)) {
-	a := demoScheduleEvent()
-	b := a
-	b.ID, b.Title = "e2", "Overlap"
-	schedule.Conflicts(c, []schedule.Event{a, b}, schedule.ConflictsOptions{})
-}
-
-func demoYearView(c *ui.Context, log func(string)) {
-	schedule.YearView(c, 2026, schedule.YearViewOptions{})
-}
-
-func demoItinerary(c *ui.Context, log func(string)) {
-	days := []schedule.TripDay{{Label: "Day 1", Stops: []string{"Station", "Museum"}}}
-	schedule.Itinerary(c, days)
-}
-
-func demoClasses(c *ui.Context, log func(string)) {
-	classes := []schedule.ClassSession{{Name: "Math", Day: "Mon", Start: "09:00", End: "10:00", Room: "A1"}}
-	schedule.Classes(c, classes)
-}
-
-func demoWaitlist(c *ui.Context, log func(string)) {
-	schedule.Waitlist(c, 3, schedule.WaitlistOptions{})
-}
-
-func demoSlotCalendar(c *ui.Context, log func(string)) {
-	days := []schedule.SlotDay{{Date: "Fri 23", Available: 3}}
-	schedule.SlotCalendar(c, days)
-}
-
-func demoDragCreate(c *ui.Context, log func(string)) {
-	root := ui.Column(c)
-	start := timeState(root, "start", c)
-	end := timeState(root, "end", c)
-	created := boolState(root, "created", false)
-	root.Children(func() {
-		if schedule.DragCreate(c, start, end, created, schedule.DragCreateOptions{}).Changed() {
-			log("created")
-			*created = false
-		}
-	})
-}
-
-func demoZoneCompare(c *ui.Context, log func(string)) {
-	zones := []schedule.Zone{{Name: "UTC", Offset: 0}, {Name: "Tokyo", Offset: 9}}
-	schedule.ZoneCompare(c, 10, zones)
-}
-
-func demoFocusTime(c *ui.Context, log func(string)) {
-	blocks := []schedule.FocusBlock{{Start: 0.25, End: 0.75}}
-	schedule.FocusTime(c, blocks)
-}
-
-func demoScheduleSend(c *ui.Context, log func(string)) {
-	root := ui.Column(c)
-	choice := timeState(root, "choice", c)
-	options := []time.Time{time.Date(2026, 10, 24, 9, 0, 0, 0, time.UTC)}
-	root.Children(func() {
-		if schedule.ScheduleSend(c, choice, options, schedule.ScheduleSendOptions{}).Changed() {
-			log("scheduled")
 		}
 	})
 }

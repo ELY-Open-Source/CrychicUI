@@ -26,31 +26,33 @@ func TestScheduleDemosLog(t *testing.T) {
 		do   func(tt *ui.Tester) error
 		want string
 	}{
-		"WeekView":   {press("Design review"), "selected e1"},
-		"MonthView":  {press("Design review"), "selected e1"},
+		"WeekView":   {press("Design review"), "selected design"},
+		"MonthView":  {press("Design review"), "selected design"},
 		"EventBlock": {drag("Design review"), "moved 11:00"},
 		"Booking": {func(tt *ui.Tester) error {
 			return tt.Click("Fri 23")
 		}, "day 4"},
-		"Availability": {press("Free"), "true"},
+		"Availability": {press("Mon 09:00"), "1 picked"},
 		"MeetingCard":  {press("Join"), "joined"},
 		"RSVP":         {press("Yes"), "response 1"},
-		"Reminder":     {press("10m"), "reminder 10m"},
+		"Reminder":     {press("1 hour"), "reminder 1 hour"},
 		"CalendarList": {press("Work"), "false"},
 		"QuickEvent": {func(tt *ui.Tester) error {
-			if err := tt.Click("Event title"); err != nil {
+			if err := tt.Click("Coffee with Maya on Friday at 3pm"); err != nil {
 				return err
 			}
 			tt.Type("Lunch")
 			return nil
 		}, "title 5 runes"},
-		"DragCreate":   {drag("Drag to create"), "created"},
-		"ScheduleSend": {press("Oct 24 09:00"), "scheduled"},
+		"DragCreate":   {drag("Drag to create"), "created 60 min"},
+		"ScheduleSend": {press("Sat, Oct 24 · 08:00"), "scheduled Oct 24 08:00"},
+		"Waitlist":     {press("Someone left"), "position 6"},
+		"SlotCalendar": {press("Fri 23"), "picked Fri 23"},
 	}
 	quiet := map[string]bool{"DayView": true, "EventCard": true, "NowLine": true, "Attendees": true,
 		"Upcoming": true, "ResourceRows": true, "Shifts": true, "TimeOff": true, "Timesheet": true,
 		"NextEvent": true, "Conflicts": true, "YearView": true, "Itinerary": true, "Classes": true,
-		"Waitlist": true, "SlotCalendar": true, "ZoneCompare": true, "FocusTime": true}
+		"ZoneCompare": true, "FocusTime": true}
 	seen := 0
 	for _, e := range Entries() {
 		if e.Category != "schedule" {

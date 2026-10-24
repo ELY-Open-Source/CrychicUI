@@ -31,7 +31,7 @@ func TestDayView(t *testing.T) {
 func TestMonthView(t *testing.T) {
 	selected := ""
 	month := time.Date(2026, 10, 1, 0, 0, 0, 0, time.UTC)
-	tt := ui.NewTester(padded(func(c *ui.Context) { MonthView(c, month, []Event{testEvent()}, &selected) }), 700, 500)
+	tt := ui.NewTester(padded(func(c *ui.Context) { MonthView(c, month, []Event{testEvent()}, &selected, MonthViewOptions{}) }), 700, 500)
 	settles(t, tt)
 	before := baseline()
 	click(t, tt, "Design review")
@@ -42,7 +42,7 @@ func TestMonthView(t *testing.T) {
 }
 
 func TestEventCard(t *testing.T) {
-	tt := ui.NewTester(padded(func(c *ui.Context) { EventCard(c, testEvent()) }), 500, 180)
+	tt := ui.NewTester(padded(func(c *ui.Context) { EventCard(c, testEvent(), EventCardOptions{}) }), 500, 180)
 	settles(t, tt)
 	if !tt.HasText("Design review") || !tt.HasText("Room A") {
 		t.Errorf("texts %q", tt.Texts())
@@ -121,10 +121,10 @@ func TestMeetingCard(t *testing.T) {
 }
 
 func TestAttendees(t *testing.T) {
-	people := []Attendee{{Name: "Ana", Response: "Yes"}, {Name: "Kai", Response: "Maybe"}}
-	tt := ui.NewTester(padded(func(c *ui.Context) { Attendees(c, people) }), 500, 180)
+	people := []Attendee{{Name: "Ana Lima", Response: Yes}, {Name: "Kai Moreno", Response: Maybe}}
+	tt := ui.NewTester(padded(func(c *ui.Context) { Attendees(c, people, AttendeesOptions{}) }), 500, 260)
 	settles(t, tt)
-	if !tt.HasText("Yes") || !tt.HasText("Maybe") {
+	if !tt.HasText("Going") || !tt.HasText("Maybe") || !tt.HasText("1 going") {
 		t.Errorf("texts %q", tt.Texts())
 	}
 }
@@ -154,7 +154,7 @@ func TestReminder(t *testing.T) {
 }
 
 func TestUpcoming(t *testing.T) {
-	tt := ui.NewTester(padded(func(c *ui.Context) { Upcoming(c, []Event{testEvent()}) }), 500, 220)
+	tt := ui.NewTester(padded(func(c *ui.Context) { Upcoming(c, []Event{testEvent()}, UpcomingOptions{}) }), 500, 220)
 	settles(t, tt)
 	if !tt.HasText("Design review") {
 		t.Errorf("texts %q", tt.Texts())
@@ -164,7 +164,7 @@ func TestUpcoming(t *testing.T) {
 func TestCalendarList(t *testing.T) {
 	visible := []bool{true}
 	calendars := []Calendar{{Name: "Work", Tint: 0}}
-	tt := ui.NewTester(padded(func(c *ui.Context) { CalendarList(c, calendars, &visible) }), 500, 180)
+	tt := ui.NewTester(padded(func(c *ui.Context) { CalendarList(c, calendars, &visible, CalendarListOptions{}) }), 500, 180)
 	settles(t, tt)
 	before := baseline()
 	click(t, tt, "Work")
@@ -176,7 +176,7 @@ func TestCalendarList(t *testing.T) {
 
 func TestResourceRows(t *testing.T) {
 	resources := []Resource{{Name: "Room A", Events: []Event{testEvent()}}}
-	tt := ui.NewTester(padded(func(c *ui.Context) { ResourceRows(c, resources) }), 500, 220)
+	tt := ui.NewTester(padded(func(c *ui.Context) { ResourceRows(c, resources, ResourceRowsOptions{}) }), 500, 220)
 	settles(t, tt)
 	if !tt.HasText("Room A") || !tt.HasText("Design review") {
 		t.Errorf("texts %q", tt.Texts())

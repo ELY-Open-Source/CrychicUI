@@ -1,6 +1,9 @@
 package schedule
 
 import (
+	"fmt"
+	"slices"
+
 	"github.com/ELY-Open-Source/CrychicUI/kit"
 	"github.com/ELY-Open-Source/CrychicUI/sound"
 	"github.com/egoist/mygo/ui"
@@ -14,26 +17,41 @@ func Reminder(c *ui.Context, choice *string, options []string, o ReminderOptions
 	if choice == nil || len(options) == 0 {
 		panic("schedule: Reminder needs options")
 	}
+	for i, option := range options {
+		if option == "" || slices.Contains(options[:i], option) {
+			panic(fmt.Sprintf("schedule: Reminder option %q is empty or repeated", option))
+		}
+	}
 	def(&o.Label, "Remind me")
 	t := c.Theme()
-	root := ui.Row(c).Wrap().Gap(t.Space(1)).AlignItems(ui.Center).Role(ui.RoleGroup)
+	set := slices.Contains(options, *choice)
+	root := card(c).Row().Gap(t.Space(3)).AlignItems(ui.Center).Padding(t.Space(3))
 	root.Children(func() {
-		ui.Text(c, o.Label).FontSize(t.Rem(0.75)).TextColor(t.TextMuted)
-		for _, option := range options {
-			if option == "" {
-				panic("schedule: Reminder option must not be empty")
+		ui.Box(c).Size(t.Space(8), t.Space(8)).Shrink(0).Center().Radius(t.Radius).
+			Background(root.AnimateColor("tile", t.TextMuted.Alpha(0.1).Mix(t.Warning.Alpha(0.14), unit(set)), ui.Snappy)).
+			TextColor(t.TextMuted.Mix(t.Warning, unit(set))).Children(func() {
+			name := "bell"
+			if set {
+				name = "bell-ring"
 			}
-			b := kit.Press(ui.ButtonBase(c).Label(option).Padding(t.Space(1), t.Space(2)).Radius(999).
-				Border(1, t.Border).Checked(*choice == option))
-			b.Background(b.AnimateColor("bg", t.Surface.Mix(t.Accent.Alpha(0.12), unit(*choice == option)), ui.Snappy))
-			b.Children(func() { ui.Text(c, option).FontSize(t.Rem(0.75)) })
-			if b.Clicked() && *choice != option {
-				*choice = option
-				root.SetChanged()
-				sound.Play(sound.Select)
-				kit.Log("Reminder", "selected", "option", *choice)
-			}
-		}
+			c.Key(name)
+			kit.Arrive(glyph(c, name, 16), ui.Pose{Rotate: -30, Fade: 1}, 0)
+		})
+		ui.Column(c).Grow(1).MinWidth(0).Gap(t.Space(1.5)).Children(func() {
+			ui.Text(c, o.Label).FontSize(t.Rem(0.8)).Bold()
+			ui.Row(c).FillWidth().Wrap().Gap(t.Space(1.5)).Children(func() {
+				for _, option := range options {
+					c.Key(option)
+					b := pill(c, option, *choice == option, t.Warning, func() { ui.Text(c, option).FontSize(t.Rem(0.75)).Bold().Shrink(0) })
+					if b.Clicked() && *choice != option {
+						*choice = option
+						root.SetChanged()
+						sound.Play(sound.Select)
+						kit.Log("Reminder", "selected", "option", option)
+					}
+				}
+			})
+		})
 	})
 	return root
 }

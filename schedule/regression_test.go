@@ -1,6 +1,7 @@
 package schedule
 
 import (
+	"strings"
 	"testing"
 	"time"
 
@@ -105,7 +106,7 @@ func TestResourceRowsAxis(t *testing.T) {
 	event.Start = event.Start.Add(-time.Hour)
 	event.End = event.Start.Add(time.Hour)
 	resources := []Resource{{Name: "Room A", Events: []Event{event}}}
-	tt := ui.NewTester(padded(func(c *ui.Context) { ResourceRows(c, resources) }), 700, 220)
+	tt := ui.NewTester(padded(func(c *ui.Context) { ResourceRows(c, resources, ResourceRowsOptions{}) }), 700, 220)
 	settles(t, tt)
 	early, _ := tt.Find("Design review")
 	resources[0].Events[0].Start = resources[0].Events[0].Start.Add(6 * time.Hour)
@@ -127,10 +128,17 @@ func TestConflictsFlagged(t *testing.T) {
 	other.End = other.Start.Add(time.Hour)
 	tt := ui.NewTester(padded(func(c *ui.Context) { Conflicts(c, []Event{a, b, other}, ConflictsOptions{}) }), 500, 400)
 	settles(t, tt)
-	r, _ := tt.Find("Design review")
-	ink := ui.LightTheme().Danger
-	if got := tt.Image().RGBAAt(10, int(r.Y+5)); got.R != ink.R || got.G != ink.G || got.B != ink.B {
-		t.Errorf("conflicting event not flagged: %v", got)
+	if !tt.HasText("Overlaps Overlap") || !tt.HasText("Overlaps Design review") {
+		t.Errorf("conflicting events not flagged: %q", tt.Texts())
+	}
+	n := 0
+	for _, s := range tt.Texts() {
+		if strings.HasPrefix(s, "Overlaps ") {
+			n++
+		}
+	}
+	if n != 2 {
+		t.Errorf("%d events flagged, want 2", n)
 	}
 }
 
@@ -153,7 +161,7 @@ func TestFocusTimeValidation(t *testing.T) {
 	}()
 	ui.NewTester(func(c *ui.Context) {
 		ui.Box(c).Height(1000)
-		FocusTime(c, []FocusBlock{{Start: -1, End: 2}})
+		FocusTime(c, []FocusBlock{{Start: -1, End: 2}}, FocusTimeOptions{})
 	}, 500, 100)
 }
 
@@ -171,6 +179,5 @@ func TestTimesheetOverflow(t *testing.T) {
 func TestCalendarListDuplicate(t *testing.T) {
 	visible := []bool{true, false}
 	calendars := []Calendar{{Name: "Work", Tint: 0}, {Name: "Work", Tint: 1}}
-	tt := ui.NewTester(padded(func(c *ui.Context) { CalendarList(c, calendars, &visible) }), 500, 250)
-	settles(t, tt)
+	panics(t, `repeated calendar "Work"`, func(c *ui.Context) { CalendarList(c, calendars, &visible, CalendarListOptions{}) })
 }
