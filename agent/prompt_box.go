@@ -12,7 +12,7 @@ import (
 
 // PromptBoxOptions tune a PromptBox.
 type PromptBoxOptions struct {
-	Placeholder, Attach, Send string
+	Placeholder, Attach, Send, Hint string
 }
 
 // PromptBox is a large prompt input with model and attach.
@@ -23,13 +23,15 @@ func PromptBox(c *ui.Context, draft *string, model string, onSend func(text stri
 	def(&o.Placeholder, "Ask anything")
 	def(&o.Attach, "Attach")
 	def(&o.Send, "Send")
+	def(&o.Hint, "Enter to send · Shift+Enter for a new line")
 	t := c.Theme()
-	root = ui.Column(c).FillWidth().Gap(t.Space(2)).Padding(t.Space(3)).Radius(t.Radius*2).
-		Background(t.Background).Border(1, t.Border)
+	root = ui.Column(c).FillWidth().Gap(t.Space(2)).Padding(t.Space(3)).Radius(t.Radius*2).Background(t.Background).
+		Shadow(0, 1, 3, 0, kit.Shade(0.06))
+	root.Border(1, root.AnimateColor("ring", t.Border.Mix(t.Accent, unit(root.FocusWithin())), ui.Snappy))
 	pending := ui.Local(root, "pending", func() string { return "" })
 	blank := strings.TrimSpace(*draft) == ""
 	root.Children(func() {
-		in := ui.TextArea(c, draft).FillWidth().Lines(3, 8).Placeholder(o.Placeholder).Label(o.Placeholder).OnTextKey(func(k ui.TextKey) bool {
+		in := ui.TextAreaBase(c, draft).FillWidth().Lines(2, 8).Placeholder(o.Placeholder).Label(o.Placeholder).OnTextKey(func(k ui.TextKey) bool {
 			if k.Key != ui.KeyEnter || k.Mods != 0 {
 				return false
 			}
@@ -43,13 +45,21 @@ func PromptBox(c *ui.Context, draft *string, model string, onSend func(text stri
 			root.SetChanged()
 		}
 		ui.Row(c).FillWidth().Gap(t.Space(2)).AlignItems(ui.Center).Children(func() {
-			tag(c, model)
-			ui.Box(c).Grow(1)
 			attach = round(c, o.Attach, "paperclip")
+			ui.Row(c).Shrink(0).Gap(t.Space(1)).AlignItems(ui.Center).Padding(t.Space(1), t.Space(2)).Radius(999).Background(t.Surface).
+				Children(func() {
+					ui.Icon(c, icon.Must("sparkles")).Size(16, 16).TextColor(t.Accent)
+					ui.Text(c, model).FontSize(t.Rem(0.8)).Shrink(0)
+				})
+			kit.Muted(c, o.Hint).FontSize(t.Rem(0.75)).Grow(1).MinWidth(0).SingleLine()
 			send = kit.Press(ui.ButtonBase(c).Label(o.Send).Tooltip(o.Send).Size(t.Space(8), t.Space(8)).Shrink(0).Center().Radius(999)).
 				Disabled(blank)
-			send.Background(send.AnimateColor("bg", t.Accent.Mix(t.AccentHover, unit(send.Hovered())), ui.Snappy)).
-				TextColor(t.AccentText).Children(func() { ui.Icon(c, icon.Must("send")).Size(16, 16) })
+			bg := t.SurfaceHover
+			if !blank {
+				bg = t.Accent.Mix(t.AccentHover, unit(send.Hovered()))
+			}
+			send.Background(send.AnimateColor("bg", bg, ui.Snappy)).TextColor(send.AnimateColor("ink", t.TextMuted.Mix(t.AccentText, unit(!blank)), ui.Snappy)).
+				Children(func() { ui.Icon(c, icon.Must("arrow-up")).Size(16, 16) })
 		})
 	})
 	if kit.Clicked(attach, sound.Tap) {

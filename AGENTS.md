@@ -73,12 +73,18 @@ health, home, marketing, content, desktop, geo · 6 gallery · 7 cmd/gallery
   code, no versioned APIs.
 - A category file holds one exported component, named in snake case (`KPIGrid` in `kpi_grid.go`), or private
   helpers only.
+- Quality bar is the layout–chat categories (`chat.ConversationList`): real structure (icon, avatar via
+  `display.Avatar`, status badge, meta line), hover and selected colors animated, staggered `kit.Arrive` on lists,
+  empty state where a list can empty, every catalog clause implemented. A bordered box of plain text fails.
+- Panics name the component and caller label: `fmt.Sprintf("pkg: Name %q needs ...", label)`.
 
 ## Gallery entry
 
 Each component adds one `Entry` in `gallery/demos_<category>*.go`: ID, Name, Category, Summary, Demo. Each file's list
 joins `entries` in `gallery/demos.go`. The demo is a top-level function and reports every event through `log`. The
-code panel shows the demo function's own source, cut from the embedded `demos*.go`.
+code panel shows the demo function's own source, cut from the embedded `demos*.go`. Demos sit in a fixed width
+(320–520) and use realistic sample data: full names, real titles, 3–6 rows for lists, photos from `photos()`.
+Filler such as "A", "Item", "Notes" fails review.
 
 ## Tests
 

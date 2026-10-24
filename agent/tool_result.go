@@ -1,6 +1,10 @@
 package agent
 
 import (
+	"fmt"
+	"strings"
+
+	"github.com/ELY-Open-Source/CrychicUI/button"
 	"github.com/ELY-Open-Source/CrychicUI/icon"
 	"github.com/ELY-Open-Source/CrychicUI/kit"
 	"github.com/ELY-Open-Source/CrychicUI/layout"
@@ -8,32 +12,40 @@ import (
 	"github.com/egoist/mygo/ui"
 )
 
-// ToolResultOptions tune a ToolResult panel.
+// ToolResultOptions word the line count and copy.
 type ToolResultOptions struct {
-	// Title words the header.
-	Title string
+	Lines, Copy string
 }
 
-// ToolResult is a collapsible result body.
-func ToolResult(c *ui.Context, body string, open *bool, o ToolResultOptions) ui.Element {
-	if body == "" || open == nil {
-		panic("agent: ToolResult needs a body and open")
+// ToolResult is a collapsible result body with copy.
+func ToolResult(c *ui.Context, name, body string, open *bool, o ToolResultOptions) (root, copy ui.Element) {
+	if name == "" || body == "" || open == nil {
+		panic(fmt.Sprintf("agent: ToolResult %q needs a name, a body and open", name))
 	}
-	def(&o.Title, "Result")
+	def(&o.Lines, "%d lines")
+	def(&o.Copy, "Copy")
 	t := c.Theme()
-	root := ui.Column(c).FillWidth().Gap(t.Space(1)).Padding(t.Space(2), t.Space(3)).Radius(t.Radius).
-		Border(1, t.Border).Role(ui.RoleGroup)
+	lines := strings.Count(strings.TrimRight(body, "\n"), "\n") + 1
+	root = ui.Column(c).FillWidth().Radius(t.Radius).Background(t.Background).Border(1, t.Border).Clip()
 	var head ui.Element
 	root.Children(func() {
-		head = kit.Press(ui.ButtonBase(c).Label(o.Title).Row().FillWidth().Gap(t.Space(1.5)).AlignItems(ui.Center))
-		head.Children(func() {
-			ch := ui.Icon(c, icon.Must("chevron-right")).Size(16, 16).TextColor(t.TextMuted)
-			ch.Rotate(90 * ch.AnimateTo("turn", unit(*open), ui.Snappy))
-			ui.Icon(c, icon.Must("wrench")).Size(16, 16).TextColor(t.TextMuted)
-			ui.Text(c, o.Title).Bold().Grow(1).SingleLine()
+		ui.Row(c).FillWidth().AlignItems(ui.Center).PaddingEnd(t.Space(2)).Children(func() {
+			head = ui.ButtonBase(c).Label(name).Row().Grow(1).Gap(t.Space(2)).AlignItems(ui.Center).
+				Padding(t.Space(2), t.Space(3)).Checked(*open)
+			head.Background(head.AnimateColor("bg", t.SurfaceHover.Alpha(unit(head.Hovered())), ui.Snappy))
+			head.Children(func() {
+				ch := ui.Icon(c, icon.Must("chevron-down")).Size(16, 16).TextColor(t.TextMuted)
+				ch.Rotate(-90 + 90*ch.AnimateTo("turn", unit(*open), ui.Snappy))
+				ui.Icon(c, icon.Must("file-output")).Size(16, 16).TextColor(t.Success)
+				ui.Text(c, name).Bold().FontSize(t.Rem(0.9)).Grow(1).SingleLine()
+				tag(c, fmt.Sprintf(o.Lines, lines))
+			})
+			copy = button.CopyButton(c, o.Copy, body)
 		})
 		layout.Collapse(c, *open, func() {
-			ui.Text(c, body).Font("monospace").FontSize(t.Rem(0.85)).Wrap().Padding(t.Space(2)).Radius(t.Radius).Background(t.Surface)
+			ui.Scroll(c).FillWidth().MaxHeight(t.Space(48)).Padding(t.Space(2), t.Space(3)).Background(t.Surface).Children(func() {
+				ui.Text(c, body).Font("monospace").FontSize(t.Rem(0.8)).Wrap()
+			})
 		})
 	})
 	if head.Clicked() {
@@ -42,5 +54,8 @@ func ToolResult(c *ui.Context, body string, open *bool, o ToolResultOptions) ui.
 		sound.Play(sound.Toggle)
 		kit.Log("ToolResult", "open", *open)
 	}
-	return root
+	if copy.Clicked() {
+		kit.Log("ToolResult", "copied", "lines", lines)
+	}
+	return root, copy
 }

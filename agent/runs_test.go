@@ -1,158 +1,148 @@
 package agent
 
 import (
-	"image/color"
-	"math"
 	"testing"
-	"time"
 
 	"github.com/ELY-Open-Source/CrychicUI/sound"
 	"github.com/egoist/mygo/ui"
 )
 
+func testSource() Source {
+	return Source{Title: "Layout in MyGo", Host: "mygo.egoist.dev", URL: "https://mygo.egoist.dev/docs/ui", Snippet: "Rows, columns and grids."}
+}
+
 func TestCitation(t *testing.T) {
 	changed := 0
 	tt := ui.NewTester(padded(func(c *ui.Context) {
-		if Citation(c, 1, "https://example.com/docs").Changed() {
+		if Citation(c, 2, testSource()).Changed() {
 			changed++
 		}
 	}), 400, 200)
 	settles(t, tt, "citation")
-	before := baseline()
-	click(t, tt, "1")
-	if changed != 1 {
-		t.Errorf("changed %d", changed)
+	if !tt.HasText("2") {
+		t.Errorf("texts %q", tt.Texts())
 	}
-	if got := tt.OpenedURLs(); len(got) != 1 || got[0] != "https://example.com/docs" {
-		t.Errorf("opened %v", got)
+	before := baseline()
+	click(t, tt, "2 Layout in MyGo")
+	if changed != 1 || len(tt.OpenedURLs()) != 1 || tt.OpenedURLs()[0] != testSource().URL {
+		t.Errorf("changed %d opened %q", changed, tt.OpenedURLs())
 	}
 	cues(t, before, sound.Open)
-	panics(t, "zero number", func() { render(func(c *ui.Context) { Citation(c, 0, "https://x.co") }) })
-	panics(t, "empty url", func() { render(func(c *ui.Context) { Citation(c, 1, "") }) })
+	panics(t, "zero number", func() { render(func(c *ui.Context) { Citation(c, 0, testSource()) }) })
+	panics(t, "no URL", func() { render(func(c *ui.Context) { Citation(c, 1, Source{Title: "x", Host: "y"}) }) })
 }
 
 func TestSourceCard(t *testing.T) {
 	changed := 0
 	tt := ui.NewTester(padded(func(c *ui.Context) {
-		if SourceCard(c, "MyGo docs", "mygo.egoist.dev", "Native UI for Go.").Changed() {
+		if SourceCard(c, 1, testSource()).Changed() {
 			changed++
 		}
 	}), 400, 300)
-	settles(t, tt, "card")
-	tt.Key(0, ui.KeyTab)
-	if !tt.Focused("MyGo docs") {
-		t.Fatal("card does not take the focus")
+	settles(t, tt, "source")
+	for _, s := range []string{"mygo.egoist.dev", "M", "Rows, columns and grids."} {
+		if !tt.HasText(s) {
+			t.Errorf("missing %q in %q", s, tt.Texts())
+		}
 	}
 	before := baseline()
-	tt.Key(0, ui.KeyEnter)
-	tt.Frame()
-	if changed != 1 {
-		t.Errorf("changed %d after Enter", changed)
+	click(t, tt, "Layout in MyGo")
+	if changed != 1 || len(tt.OpenedURLs()) != 1 || tt.OpenedURLs()[0] != testSource().URL {
+		t.Errorf("changed %d opened %q", changed, tt.OpenedURLs())
 	}
-	click(t, tt, "MyGo docs")
-	if changed != 2 {
-		t.Errorf("changed %d after pointer", changed)
-	}
-	cues(t, before, sound.Tap, sound.Tap)
-	panics(t, "empty host", func() { render(func(c *ui.Context) { SourceCard(c, "t", "", "") }) })
+	cues(t, before, sound.Tap)
 }
 
 func TestModelPicker(t *testing.T) {
-	models := []Model{{Name: "GPT-6.1", Speed: "Fast", Cost: "$$$"}, {Name: "Local 8B", Speed: "Slow", Cost: "$"}}
 	selected, changed := 0, 0
+	models := []Model{{Name: "Opus", Description: "Deep reasoning", Speed: "Slow", Cost: "$$$"}, {Name: "Haiku", Speed: "Fast", Cost: "$"}}
 	tt := ui.NewTester(padded(func(c *ui.Context) {
 		if ModelPicker(c, "Models", models, &selected).Changed() {
 			changed++
 		}
 	}), 500, 300)
-	tt.Frame()
-	if !tt.FramePending() {
-		t.Error("rows do not arrive")
-	}
-	settles(t, tt, "models")
-	if !tt.HasText("Fast") || !tt.HasText("$$$") {
+	settles(t, tt, "picker")
+	if !tt.HasText("Deep reasoning") || !tt.HasText("$$$") {
 		t.Errorf("texts %q", tt.Texts())
 	}
 	before := baseline()
-	click(t, tt, "Local 8B")
+	click(t, tt, "Haiku")
+	click(t, tt, "Haiku")
 	if selected != 1 || changed != 1 {
-		t.Fatalf("selected %d changed %d", selected, changed)
+		t.Errorf("selected %d changed %d", selected, changed)
 	}
 	cues(t, before, sound.Select)
-	panics(t, "empty name", func() {
-		render(func(c *ui.Context) { ModelPicker(c, "x", []Model{{Name: ""}}, &selected) })
+	panics(t, "out of range", func() {
+		n := 2
+		render(func(c *ui.Context) { ModelPicker(c, "M", models, &n) })
+	})
+	panics(t, "duplicate names", func() {
+		n := 0
+		render(func(c *ui.Context) { ModelPicker(c, "M", []Model{{Name: "A"}, {Name: "A"}}, &n) })
 	})
 }
 
-func TestTokenCount(t *testing.T) {
-	used := 1248
-	tt := ui.NewTester(padded(func(c *ui.Context) { TokenCount(c, used, 4096, TokenCountOptions{}) }), 400, 200)
-	settles(t, tt, "count")
-	if !tt.HasText("1,248") || !tt.HasText("4,096") || !tt.HasText("tokens") {
-		t.Errorf("texts %q", tt.Texts())
-	}
-	used = 1500
+func TestModelPickerKeepsIdentityOnReorder(t *testing.T) {
+	selected := -1
+	models := []Model{{Name: "Opus"}, {Name: "Haiku"}}
+	tt := ui.NewTester(padded(func(c *ui.Context) { ModelPicker(c, "Models", models, &selected) }), 500, 300)
+	settles(t, tt, "picker")
+	r := find(t, tt, "Opus")
+	tt.Press(r.X+r.W/2, r.Y+r.H/2)
 	tt.Frame()
-	if !tt.FramePending() {
-		t.Error("digits do not roll")
+	models[0], models[1] = models[1], models[0]
+	tt.Frame()
+	r = find(t, tt, "Opus")
+	tt.Release(r.X+r.W/2, r.Y+r.H/2)
+	tt.Frame()
+	if selected != 1 {
+		t.Errorf("selected %d, want Opus at 1", selected)
 	}
-	settles(t, tt, "count")
-	if !tt.HasText("1,500") {
+}
+
+func TestTokenCount(t *testing.T) {
+	used := 1200
+	tt := ui.NewTester(padded(func(c *ui.Context) { TokenCount(c, used, 4000, TokenCountOptions{}) }), 400, 200)
+	settles(t, tt, "tokens")
+	if !tt.HasText("2800 left") {
 		t.Errorf("texts %q", tt.Texts())
 	}
-	panics(t, "negative", func() { render(func(c *ui.Context) { TokenCount(c, -1, 5, TokenCountOptions{}) }) })
-	panics(t, "zero limit", func() { render(func(c *ui.Context) { TokenCount(c, 0, 0, TokenCountOptions{}) }) })
+	used = 4500
+	tt.Frame()
+	settles(t, tt, "over")
+	if !tt.HasText("500 over") {
+		t.Errorf("texts %q", tt.Texts())
+	}
+	panics(t, "zero limit", func() { render(func(c *ui.Context) { TokenCount(c, 1, 0, TokenCountOptions{}) }) })
+	panics(t, "inexact count", func() { render(func(c *ui.Context) { TokenCount(c, exact+1, exact, TokenCountOptions{}) }) })
 }
 
 func TestContextMeter(t *testing.T) {
-	used := 0.5
-	var acc, warn color.RGBA
-	tt := ui.NewTester(padded(func(c *ui.Context) {
-		acc, warn = rgba(c.Theme().Accent), rgba(c.Theme().Warning)
-		ContextMeter(c, used, ContextMeterOptions{})
-	}), 400, 200)
-	settles(t, tt, "ring")
-	if !tt.HasText("50%") {
+	used := 90_000
+	tt := ui.NewTester(padded(func(c *ui.Context) { ContextMeter(c, used, 200_000, ContextMeterOptions{}) }), 400, 200)
+	settles(t, tt, "meter")
+	if !tt.HasText("45%") || !tt.HasText("90k of 200k tokens") || tt.HasText("Older messages will be summarized") {
 		t.Errorf("texts %q", tt.Texts())
 	}
-	r := find(t, tt, "Context used")
-	rad := r.W/2 - 6
-	if !at(tt, r.X+r.W/2+rad, r.Y+r.H/2, acc) {
-		t.Error("no accent arc at half full")
-	}
-	used = 0.9
+	used = 170_000
 	tt.Frame()
-	settles(t, tt, "ring")
-	if !at(tt, r.X+r.W/2+rad, r.Y+r.H/2, warn) {
-		t.Error("ring does not warn near full")
+	settles(t, tt, "near full")
+	if !tt.HasText("85%") || !tt.HasText("Older messages will be summarized") {
+		t.Errorf("texts %q", tt.Texts())
 	}
-	short := ui.NewTester(func(c *ui.Context) {
-		ui.Column(c).Padding(50).Children(func() { ContextMeter(c, 1, ContextMeterOptions{}).Height(20) })
-	}, 400, 300)
-	short.Frame()
-	short.Advance(2 * time.Second)
-	if bg := short.Image().RGBAAt(82, 34); bg.R < 240 && bg.G < 240 {
-		t.Errorf("ring paints outside its box: %v", bg)
+	if short(950) != "950" || short(12_400) != "12.4k" || short(1_000_000) != "1M" {
+		t.Errorf("short %q %q %q", short(950), short(12_400), short(1_000_000))
 	}
-	panics(t, "over one", func() { render(func(c *ui.Context) { ContextMeter(c, 1.5, ContextMeterOptions{}) }) })
+	panics(t, "over limit", func() { render(func(c *ui.Context) { ContextMeter(c, 3, 2, ContextMeterOptions{}) }) })
 }
 
 func TestCostMeter(t *testing.T) {
-	amount := 12.4
-	tt := ui.NewTester(padded(func(c *ui.Context) { CostMeter(c, amount, "USD", CostMeterOptions{}) }), 400, 200)
+	tt := ui.NewTester(padded(func(c *ui.Context) { CostMeter(c, 20.5, 50, "USD", CostMeterOptions{}) }), 400, 250)
 	settles(t, tt, "cost")
-	if !tt.HasText("USD 12.40") || !tt.HasText("Spend") {
-		t.Errorf("texts %q", tt.Texts())
+	for _, s := range []string{"USD 20.50", "USD 50.00", "41% used", "Budget"} {
+		if !tt.HasText(s) {
+			t.Errorf("missing %q in %q", s, tt.Texts())
+		}
 	}
-	amount = 13
-	tt.Frame()
-	if !tt.FramePending() {
-		t.Error("digits do not roll")
-	}
-	settles(t, tt, "cost")
-	if !tt.HasText("USD 13.00") {
-		t.Errorf("texts %q", tt.Texts())
-	}
-	panics(t, "NaN", func() { render(func(c *ui.Context) { CostMeter(c, math.NaN(), "USD", CostMeterOptions{}) }) })
-	panics(t, "empty currency", func() { render(func(c *ui.Context) { CostMeter(c, 1, "", CostMeterOptions{}) }) })
+	panics(t, "zero budget", func() { render(func(c *ui.Context) { CostMeter(c, 1, 0, "USD", CostMeterOptions{}) }) })
 }
