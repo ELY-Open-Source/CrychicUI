@@ -217,7 +217,7 @@ func TestCommandLine(t *testing.T) {
 		}
 	}), 500, 400)
 	settles(t, tt, "prompt")
-	if !tt.HasText("deck.md") || !tt.HasText("$ ls") {
+	if !tt.HasText("deck.md") || !tt.HasText("ls") || !tt.HasText("Shell") {
 		t.Fatalf("texts %q", tt.Texts())
 	}
 	before := baseline()

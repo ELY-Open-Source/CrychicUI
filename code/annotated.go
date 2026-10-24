@@ -3,6 +3,7 @@ package code
 import (
 	"fmt"
 	"strconv"
+	"time"
 
 	"github.com/ELY-Open-Source/CrychicUI/kit"
 	"github.com/egoist/mygo/ui"
@@ -14,10 +15,10 @@ type Note struct {
 	Text string
 }
 
-// Annotated shows code with numbered notes beside lines.
+// Annotated shows code with numbered notes beside its lines.
 func Annotated(c *ui.Context, lang, code string, notes []Note) ui.Element {
-	if code == "" {
-		panic("code: Annotated needs code")
+	if code == "" || len(notes) == 0 {
+		panic("code: Annotated needs code and notes")
 	}
 	n := len(linesOf(code))
 	byLine := map[int]int{}
@@ -30,29 +31,27 @@ func Annotated(c *ui.Context, lang, code string, notes []Note) ui.Element {
 		last = nt.Line
 	}
 	t := c.Theme()
-	root := ui.Column(c).FillWidth().Clip().Radius(t.Radius).Background(t.Surface).Border(1, t.Border).
-		Padding(t.Space(2), 0).Role(ui.RoleGroup).Label(lang)
+	root := ui.Column(c).FillWidth().Clip().Radius(t.Radius).Background(t.Surface).Border(1, t.Border).Role(ui.RoleGroup).Label(lang)
+	kit.Arrive(root, ui.Pose{Fade: 1}, 0)
 	return root.Children(func() {
-		h := newHighlighter(c, lang)
-		state := uint64(0)
-		for i, line := range linesOf(code) {
-			c.Key(i)
-			var spans []ui.Span
-			spans, state = h.line(state, line)
-			ui.Row(c).FillWidth().Gap(t.Space(3)).Padding(0, t.Space(2)).Children(func() {
-				ui.RichText(c, spans...).Font("monospace").FontSize(t.Rem(0.85)).Grow(1)
-				m, ok := byLine[i+1]
-				if !ok {
-					return
-				}
-				ui.Row(c).Width(t.Space(44)).Shrink(0).Gap(t.Space(1.5)).AlignItems(ui.Center).Children(func() {
-					chip := ui.Box(c).Size(t.Space(4.5), t.Space(4.5)).Shrink(0).Center().Radius(999).Background(t.Accent).TextColor(t.AccentText)
-					kit.Arrive(chip, ui.Pose{Scale: 0.5, Fade: 1}, 0).Children(func() {
-						ui.Text(c, strconv.Itoa(m)).FontSize(t.Rem(0.7)).Bold()
-					})
-					kit.Muted(c, notes[m-1].Text).FontSize(t.Rem(0.8)).Wrap()
+		codeBody(c, lang, code, true, func(i int, row ui.Element) {
+			if byLine[i+1] > 0 {
+				row.Background(t.Accent.Alpha(0.07))
+			}
+		}, func(i int) {
+			margin := ui.Row(c).Width(t.Space(46)).Shrink(0).FillHeight().Gap(t.Space(2)).Padding(0, 0, 0, t.Space(3)).
+				BorderWidth(0, 0, 0, 1).BorderColor(t.Border)
+			m := byLine[i+1]
+			if m == 0 {
+				return
+			}
+			kit.Arrive(margin, ui.Pose{X: t.Space(2), Fade: 1}, time.Duration(m)*80*time.Millisecond).Role(ui.RoleGroup).Label(notes[m-1].Text)
+			margin.Children(func() {
+				ui.Box(c).Size(t.Space(5), t.Space(5)).Shrink(0).Center().Radius(999).Background(t.Accent).TextColor(t.AccentText).Children(func() {
+					ui.Text(c, strconv.Itoa(m)).FontSize(t.Rem(0.7)).Bold()
 				})
+				ui.Text(c, notes[m-1].Text).FontSize(t.Rem(0.8)).LineHeight(1.4).Grow(1).MinWidth(0).Wrap()
 			})
-		}
+		})
 	})
 }

@@ -4,6 +4,8 @@ package code
 import (
 	"fmt"
 	"math"
+	"path"
+	"strconv"
 	"strings"
 	"time"
 
@@ -86,10 +88,10 @@ func newHighlighter(c *ui.Context, lang string) *highlighter {
 	return h
 }
 
-// line returns the spans of one line of code.
+// line returns the spans of a line, tabs as spaces.
 func (h *highlighter) line(state uint64, line string) ([]ui.Span, uint64) {
 	if h.tok == nil {
-		return []ui.Span{{Text: line, Color: h.theme.Text}}, 0
+		return []ui.Span{{Text: untab(line), Color: h.theme.Text}}, 0
 	}
 	toks, next := h.tok.Tokenize(line, state, nil)
 	out := make([]ui.Span, 0, len(toks)+1)
@@ -102,29 +104,140 @@ func (h *highlighter) line(state uint64, line string) ([]ui.Span, uint64) {
 		if ink.A == 0 {
 			ink = h.theme.Text
 		}
-		out = append(out, ui.Span{Text: line[at:tk.End], Color: ink})
+		out = append(out, ui.Span{Text: untab(line[at:tk.End]), Color: ink})
 		at = tk.End
 	}
 	if at < len(line) {
-		out = append(out, ui.Span{Text: line[at:], Color: h.theme.Text})
+		out = append(out, ui.Span{Text: untab(line[at:]), Color: h.theme.Text})
 	}
 	return out, next
 }
 
-// codeLines builds highlighted mono lines of code.
-func codeLines(c *ui.Context, lang, code string, mark func(i int, e ui.Element)) {
+func untab(s string) string { return strings.ReplaceAll(s, "\t", "    ") }
+
+// codeBody builds lines; mark styles rows, tail ends them.
+func codeBody(c *ui.Context, lang, code string, numbers bool, mark func(i int, row ui.Element), tail func(i int)) {
 	t := c.Theme()
 	h := newHighlighter(c, lang)
+	lines := linesOf(code)
+	digits := float32(len(strconv.Itoa(len(lines))))
 	state := uint64(0)
-	for i, line := range linesOf(code) {
-		c.Key(i)
-		var spans []ui.Span
-		spans, state = h.line(state, line)
-		row := ui.RichText(c, spans...).Font("monospace").FontSize(t.Rem(0.85))
-		if mark != nil {
-			mark(i, row)
+	ui.Column(c).FillWidth().Padding(t.Space(2), 0).Children(func() {
+		for i, line := range lines {
+			c.Key(i)
+			var spans []ui.Span
+			spans, state = h.line(state, line)
+			row := ui.Row(c).FillWidth().Gap(t.Space(3)).Padding(0, t.Space(3))
+			if mark != nil {
+				mark(i, row)
+			}
+			row.Children(func() {
+				if numbers {
+					kit.Numeric(c, strconv.Itoa(i+1)).Font("monospace").FontSize(t.Rem(0.8)).TextColor(t.TextMuted.Alpha(0.7)).
+						Width(t.Space(2 * digits)).Shrink(0).TextAlign(ui.End).LineHeight(1.6)
+				}
+				ui.RichText(c, spans...).Font("monospace").FontSize(t.Rem(0.8)).LineHeight(1.6).Grow(1).MinWidth(0).Wrap()
+				if tail != nil {
+					tail(i)
+				}
+			})
 		}
+	})
+}
+
+// ident keys an item by its text and repeat count.
+func ident(seen map[string]int, s string) string {
+	seen[s]++
+	return s + "#" + strconv.Itoa(seen[s])
+}
+
+// stagger arrives a row, staggered while its list is young.
+func stagger(c *ui.Context, list, row ui.Element, i int) ui.Element {
+	born := ui.Local(list, "crychic.born", func() time.Time { return c.Now() })
+	delay := ui.Local(row, "crychic.delay", func() time.Duration {
+		if c.Now().Sub(*born) < time.Second {
+			return time.Duration(min(i, 8)) * 40 * time.Millisecond
+		}
+		return 0
+	})
+	return kit.Arrive(row, ui.Pose{Y: c.Theme().Space(1), Fade: 1}, *delay)
+}
+
+// codeHeader is a file bar: glyph, title, language and actions.
+func codeHeader(c *ui.Context, title, lang string, actions func()) {
+	t := c.Theme()
+	ui.Row(c).FillWidth().Gap(t.Space(2)).AlignItems(ui.Center).Padding(t.Space(1), t.Space(1), t.Space(1), t.Space(3)).
+		Background(t.SurfaceHover).BorderWidth(0, 0, 1, 0).BorderColor(t.Border).Children(func() {
+		ui.Icon(c, icon.Must(glyphFor(title))).Size(16, 16).Shrink(0).TextColor(t.TextMuted)
+		ui.Text(c, title).Font("monospace").FontSize(t.Rem(0.8)).Bold().Grow(1).MinWidth(0).SingleLine()
+		if lang != "" && lang != title {
+			langChip(c, lang)
+		}
+		if actions != nil {
+			actions()
+		}
+	})
+}
+
+// langChip is a language name after its colored dot.
+func langChip(c *ui.Context, lang string) {
+	t := c.Theme()
+	ink := t.TextMuted
+	switch strings.ToLower(lang) {
+	case "go":
+		ink = t.Accent
+	case "js", "javascript", "ts", "typescript", "json":
+		ink = t.Warning
+	case "py", "python", "sh", "bash", "shell":
+		ink = t.Success
+	case "rs", "rust", "html", "css":
+		ink = t.Danger
 	}
+	ui.Row(c).Gap(t.Space(1.5)).AlignItems(ui.Center).Shrink(0).Children(func() {
+		ui.Box(c).Size(t.Space(2), t.Space(2)).Radius(999).Background(ink)
+		kit.Muted(c, lang).FontSize(t.Rem(0.75)).Shrink(0)
+	})
+}
+
+// glyphFor picks a Lucide file icon by extension.
+func glyphFor(name string) string {
+	switch strings.ToLower(path.Ext(name)) {
+	case ".go", ".js", ".ts", ".py", ".rs", ".json", ".html", ".css", ".c", ".java":
+		return "file-code"
+	case ".sh", ".bash", ".zsh":
+		return "file-terminal"
+	case ".md", ".txt":
+		return "file-text"
+	case "":
+		return "code"
+	}
+	return "file"
+}
+
+// termChrome is a terminal title bar with three lights.
+func termChrome(c *ui.Context, title string, fg ui.Color) {
+	t := c.Theme()
+	ui.Row(c).FillWidth().Gap(t.Space(1.5)).AlignItems(ui.Center).Padding(t.Space(2), t.Space(3)).
+		BorderWidth(0, 0, 1, 0).BorderColor(fg.Alpha(0.12)).Children(func() {
+		for _, ink := range []ui.Color{t.Danger, t.Warning, t.Success} {
+			ui.Box(c).Size(t.Space(2.5), t.Space(2.5)).Shrink(0).Radius(999).Background(ink)
+		}
+		ui.Text(c, title).FontSize(t.Rem(0.75)).TextColor(fg.Alpha(0.6)).Grow(1).MinWidth(0).TextAlign(ui.Center).SingleLine()
+		ui.Box(c).Width(t.Space(9.5)).Shrink(0)
+	})
+}
+
+// valueInk colors a debugger value by its look.
+func valueInk(t *ui.Theme, v string) ui.Color {
+	switch {
+	case strings.HasPrefix(v, `"`), strings.HasPrefix(v, "'"):
+		return t.Success
+	case v == "true", v == "false", v == "nil", v == "null":
+		return t.Warning
+	case v != "" && (v[0] == '-' || v[0] >= '0' && v[0] <= '9'):
+		return t.Accent
+	}
+	return t.Text
 }
 
 // StackFrame is one frame of a trace or stack.
@@ -155,16 +268,14 @@ var (
 	iconPackage     = icon.Must("package")
 )
 
-// kindBadge is the letter chip of a symbol kind.
+// kindBadge is the icon tile of a symbol kind.
 func kindBadge(c *ui.Context, kind SymbolKind) ui.Element {
 	t := c.Theme()
-	letters := [4]string{"f", "T", "v", "c"}
+	glyphs := [4]string{"square-function", "box", "variable", "pi"}
 	inks := [4]ui.Color{t.Accent, t.Success, t.Warning, t.TextMuted}
-	badge := ui.Box(c).Size(t.Space(4.5), t.Space(4.5)).Shrink(0).Center().Radius(t.Radius).
-		Background(inks[kind].Alpha(0.15)).TextColor(inks[kind])
-	return badge.Children(func() {
-		ui.Text(c, letters[kind]).Font("monospace").FontSize(t.Rem(0.75)).Bold()
-	})
+	badge := ui.Box(c).Size(t.Space(5.5), t.Space(5.5)).Shrink(0).Center().Radius(t.Radius).
+		Background(inks[kind].Alpha(0.14)).TextColor(inks[kind])
+	return badge.Children(func() { ui.Icon(c, icon.Must(glyphs[kind])).Size(14, 14) })
 }
 
 // avatarChip is a small initials circle.

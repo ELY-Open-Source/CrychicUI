@@ -2,6 +2,8 @@ package code
 
 import (
 	"fmt"
+	"strings"
+	"unicode/utf8"
 
 	"github.com/ELY-Open-Source/CrychicUI/kit"
 	"github.com/ELY-Open-Source/CrychicUI/sound"
@@ -14,15 +16,26 @@ type MinimapOptions struct {
 	Height float32
 }
 
-// Minimap is a narrow file view with a viewport box.
-func Minimap(c *ui.Context, label string, lines, visible int, at *int, o MinimapOptions) ui.Element {
-	if label == "" || lines < 1 || visible < 1 || visible > lines || at == nil || *at < 0 || *at > lines-visible {
-		panic(fmt.Sprintf("code: Minimap %q needs lines, a window and a start, got %d of %d", label, *at, lines))
+// mapCols is how many columns the strip's width shows.
+const mapCols = 80
+
+// mapRun is one colored token of a minimap line.
+type mapRun struct {
+	line, col, n int
+	ink          ui.Color
+}
+
+// Minimap draws a file's tokens small under a viewport box.
+func Minimap(c *ui.Context, label, lang, code string, visible int, at *int, o MinimapOptions) ui.Element {
+	lines := linesOf(code)
+	n := len(lines)
+	if label == "" || code == "" || visible < 1 || visible > n || at == nil || *at < 0 || *at > n-visible {
+		panic(fmt.Sprintf("code: Minimap %q needs code, a window and a start, got %d of %d", label, deref(at), n))
 	}
 	t := c.Theme()
-	size("Minimap", &o.Height, t.Space(40))
-	root := kit.Press(ui.ButtonBase(c).Label(label).Width(t.Space(18)).Height(o.Height).Radius(t.Radius).Clip().
-		Background(t.Surface).Role(ui.RoleSlider).Range(0, float64(lines), float64(*at)))
+	size("Minimap", &o.Height, t.Space(60))
+	root := kit.Press(ui.ButtonBase(c).Label(label).Width(t.Space(24)).Height(o.Height).Radius(t.Radius).Clip().
+		Background(t.Surface).Border(1, t.Border).Role(ui.RoleSlider).Range(0, float64(n-visible), float64(*at)))
 	height := ui.Local(root, "height", func() float32 { return o.Height })
 	pressY := ui.Local(root, "pressY", func() float32 { return -1 })
 	dragOffset := ui.Local(root, "dragOffset", func() float32 { return 0 })
@@ -30,19 +43,22 @@ func Minimap(c *ui.Context, label string, lines, visible int, at *int, o Minimap
 	if got := root.LayoutBounds().H; got > 0 {
 		*height = got
 	}
-	frac := float32(*at) / float32(lines)
-	span := float32(visible) / float32(lines)
+	runs := mapRuns(c, lang, lines)
+	frac := root.AnimateTo("at", float32(*at)/float32(n), ui.Snappy)
+	span := float32(visible) / float32(n)
 	root.Draw(kit.Inside(t.Radius, func(p *ui.Painter, r ui.Rect) {
-		for i := 0; i < lines; i++ {
-			y := r.Y + r.H*float32(i)/float32(lines)
-			h := max(r.H/float32(lines), 1)
-			w := r.W * (0.3 + 0.6*float32((i*2654435761)%97)/97)
-			p.Fill(ui.Rect{X: r.X + t.Space(0.75), Y: y, W: w - t.Space(0.75), H: h}, t.TextMuted.Alpha(0.4), 0)
+		pad := t.Space(1.5)
+		lh := r.H / float32(n)
+		cw := (r.W - 2*pad) / mapCols
+		for _, run := range runs {
+			w := min(float32(run.n), float32(mapCols-run.col)) * cw
+			if w > 0 {
+				p.Fill(ui.Rect{X: r.X + pad + float32(run.col)*cw, Y: r.Y + float32(run.line)*lh + lh*0.15, W: w, H: max(lh*0.7, 1)}, run.ink.Alpha(0.7), 0)
+			}
 		}
-		vy := r.Y + r.H*frac
-		vh := max(r.H*span, t.Space(2))
-		p.Fill(ui.Rect{X: r.X, Y: vy, W: r.W, H: vh}, t.Accent.Alpha(0.18), t.Radius)
-		p.Stroke(ui.Rect{X: r.X, Y: vy, W: r.W, H: vh}, t.Accent.Alpha(0.5), t.Radius, 1)
+		box := ui.Rect{X: r.X, Y: r.Y + r.H*frac, W: r.W, H: max(r.H*span, t.Space(2))}
+		p.Fill(box, t.Accent.Alpha(0.14), 0)
+		p.Stroke(box, t.Accent.Alpha(0.5), 0, 1)
 	}))
 	root.HandleInput(func(ev ui.InputEvent) bool {
 		if ev.Kind == ui.InputPointerDown && ev.Button == 0 {
@@ -51,17 +67,17 @@ func Minimap(c *ui.Context, label string, lines, visible int, at *int, o Minimap
 		return false
 	})
 	if *pressY >= 0 {
-		if moved := clampAt(int(*pressY / *height * float32(lines))-visible/2, lines, visible); moved != *at {
+		if moved := clampAt(int(*pressY / *height * float32(n))-visible/2, n, visible); moved != *at {
 			*at = moved
 			root.SetChanged()
 		}
 		*pressY = -1
 	}
 	if _, dy, held := root.Dragged(); held {
-		*dragOffset += dy * float32(lines) / *height
+		*dragOffset += dy * float32(n) / *height
 		steps := int(*dragOffset)
 		*dragOffset -= float32(steps)
-		if moved := clampAt(*at+steps, lines, visible); moved != *at {
+		if moved := clampAt(*at+steps, n, visible); moved != *at {
 			*at = moved
 			root.SetChanged()
 		}
@@ -70,7 +86,7 @@ func Minimap(c *ui.Context, label string, lines, visible int, at *int, o Minimap
 	}
 	released(root, "Minimap", float64(*at))
 	move := func(to int, event string) {
-		if to = clampAt(to, lines, visible); to == *at {
+		if to = clampAt(to, n, visible); to == *at {
 			return
 		}
 		*at = to
@@ -90,9 +106,31 @@ func Minimap(c *ui.Context, label string, lines, visible int, at *int, o Minimap
 	case root.Shortcut(0, ui.KeyHome):
 		move(0, "home")
 	case root.Shortcut(0, ui.KeyEnd):
-		move(lines-visible, "end")
+		move(n-visible, "end")
 	}
 	return root
+}
+
+// mapRuns cuts highlighted lines into colored non-blank runs.
+func mapRuns(c *ui.Context, lang string, lines []string) []mapRun {
+	h := newHighlighter(c, lang)
+	state := uint64(0)
+	var out []mapRun
+	for i, line := range lines {
+		var spans []ui.Span
+		spans, state = h.line(state, line)
+		col := 0
+		for _, s := range spans {
+			for _, word := range strings.SplitAfter(s.Text, " ") {
+				text := strings.TrimRight(word, " ")
+				if k := utf8.RuneCountInString(text); k > 0 && col < mapCols {
+					out = append(out, mapRun{line: i, col: col, n: k, ink: s.Color})
+				}
+				col += utf8.RuneCountInString(word)
+			}
+		}
+	}
+	return out
 }
 
 // clampAt keeps a viewport start inside the file.

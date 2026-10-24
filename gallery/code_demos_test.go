@@ -16,14 +16,14 @@ func TestCodeDemosLog(t *testing.T) {
 		do   func(tt *ui.Tester) error
 		want string
 	}{
-		"CodeBlock": {press("Copy"), "copied 56 runes"},
+		"CodeBlock": {press("Copy"), "copied 349 runes"},
 		"CodeEditor": {func(tt *ui.Tester) error {
 			tt.Key(0, ui.KeyTab)
 			tt.Type("x")
 			return nil
 		}, "edited"},
-		"DiffView": {press("Unified"), "layout unified"},
-		"Terminal": {press("New line"), "3 lines"},
+		"DiffView": {press("Split"), "layout split"},
+		"Terminal": {press("Run vet"), "6 lines"},
 		"CommandLine": {func(tt *ui.Tester) error {
 			if err := tt.Click("Run a command"); err != nil {
 				return err
@@ -32,14 +32,14 @@ func TestCodeDemosLog(t *testing.T) {
 			tt.Key(0, ui.KeyEnter)
 			return nil
 		}, "ran 3 runes"},
-		"CodeTabs":     {press("util.go"), "selected util.go"},
+		"CodeTabs":     {press("price.go"), "selected price.go"},
 		"FileHeader":   {press("Copy path"), "copied"},
-		"Snippet":      {press("Copy"), "copied 33 runes"},
-		"StackTrace":   {press("2 more frames"), "open true"},
-		"ErrorOverlay": {press("Trigger"), "open true"},
-		"Gutter":       {press("3"), "1 breakpoints"},
+		"Snippet":      {press("Copy"), "copied 40 runes"},
+		"StackTrace":   {press("Show 4 library frames"), "open true"},
+		"ErrorOverlay": {press("Close"), "open false"},
+		"Gutter":       {press("Breakpoint on line 3"), "2 breakpoints"},
 		"DebugBar":     {press("Step over"), "over"},
-		"Variables":    {press("cfg"), "toggled"},
+		"Variables":    {press("ws"), "toggled"},
 		"Watches": {func(tt *ui.Tester) error {
 			if err := tt.Click("Watch an expression"); err != nil {
 				return err
@@ -47,10 +47,10 @@ func TestCodeDemosLog(t *testing.T) {
 			tt.Type("x")
 			tt.Key(0, ui.KeyEnter)
 			return nil
-		}, "2 watches"},
-		"CallStack":    {press("http.serve"), "selected 1"},
-		"Problems":     {press("missing return"), "selected missing return"},
-		"Outline":      {press("Serve"), "selected Serve"},
+		}, "4 watches"},
+		"CallStack":    {press("net/http.HandlerFunc.ServeHTTP"), "selected 2"},
+		"Problems":     {press("integer division truncates the discount"), "selected integer division truncates the discount"},
+		"Outline":      {press("Close"), "selected Close"},
 		"Breadcrumb":   {press("gallery"), "at gallery"},
 		"SymbolSearch": {press("runServer"), "selected 0"},
 		"RegexTester": {func(tt *ui.Tester) error {
