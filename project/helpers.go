@@ -12,6 +12,7 @@ import (
 type Task struct {
 	ID, Title, Assignee, Due string
 	Labels                   []string
+	Done                     bool
 }
 
 // PriorityLevel is a task priority.
