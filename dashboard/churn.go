@@ -26,7 +26,7 @@ func Churn(c *ui.Context, rate float64, points []Point, o ChurnOptions) ui.Eleme
 	root.Children(func() {
 		ui.Text(c, o.Title).Bold()
 		kit.Numeric(c, fmt.Sprintf("%.1f%%", rate)).FontSize(t.Rem(1.4))
-		series(c, points, t.Danger)
+		series(c, "Churn", points, t.Danger)
 	})
 	return root
 }

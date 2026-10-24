@@ -1,7 +1,6 @@
 package dashboard
 
 import (
-	"math"
 	"strings"
 	"testing"
 	"time"
@@ -69,7 +68,7 @@ func TestKPIGrid(t *testing.T) {
 }
 
 func TestMetricTile(t *testing.T) {
-	tt := ui.NewTester(padded(func(c *ui.Context) { MetricTile(c, "Users", "1,200", "+8%", []float64{1, 2}) }), 500, 220)
+	tt := ui.NewTester(padded(func(c *ui.Context) { MetricTile(c, "Users", "1,200", "+8%", []float64{1, 2}, MetricTileOptions{}) }), 500, 220)
 	settles(t, tt)
 	if !tt.HasText("Users") || !tt.HasText("1,200") {
 		t.Errorf("texts %q", tt.Texts())
@@ -78,9 +77,9 @@ func TestMetricTile(t *testing.T) {
 
 func TestGoalProgress(t *testing.T) {
 	goals := []Goal{{Quarter: "Q1", Current: 80, Target: 100}}
-	tt := ui.NewTester(padded(func(c *ui.Context) { GoalProgress(c, goals) }), 500, 180)
+	tt := ui.NewTester(padded(func(c *ui.Context) { GoalProgress(c, goals, GoalProgressOptions{}) }), 500, 180)
 	settles(t, tt)
-	if !tt.HasText("Q1") || !tt.HasText("80/100") {
+	if !tt.HasText("Q1") || !tt.HasText("80 of 100") || !tt.HasText("80%") {
 		t.Errorf("texts %q", tt.Texts())
 	}
 }
@@ -89,7 +88,7 @@ func TestRevenue(t *testing.T) {
 	period := "Month"
 	points := []Point{{Label: "Jan", Value: 10}, {Label: "Feb", Value: 20}}
 	tt := ui.NewTester(padded(func(c *ui.Context) {
-		Revenue(c, points, &period, []string{"Month", "Year"}, RevenueOptions{})
+		Revenue(c, points, "USD", &period, []string{"Month", "Year"}, RevenueOptions{})
 	}), 500, 300)
 	settles(t, tt)
 	before := baseline()
@@ -122,25 +121,25 @@ func TestUsersNegative(t *testing.T) {
 
 func TestConversion(t *testing.T) {
 	stages := []FunnelStage{{Label: "Visits", Count: 100}, {Label: "Signups", Count: 20}}
-	tt := ui.NewTester(padded(func(c *ui.Context) { Conversion(c, stages) }), 500, 250)
+	tt := ui.NewTester(padded(func(c *ui.Context) { Conversion(c, stages, ConversionOptions{}) }), 500, 300)
 	settles(t, tt)
-	if !tt.HasText("Visits") || !tt.HasText("20 (20%)") {
+	if !tt.HasText("Visits") || !tt.HasText("20%") || !tt.HasText("20% overall") {
 		t.Errorf("texts %q", tt.Texts())
 	}
 }
 
 func TestConversionZeroStage(t *testing.T) {
 	stages := []FunnelStage{{Label: "Visits", Count: 100}, {Label: "Signups", Count: 0}, {Label: "Active", Count: 0}}
-	tt := ui.NewTester(padded(func(c *ui.Context) { Conversion(c, stages) }), 500, 250)
+	tt := ui.NewTester(padded(func(c *ui.Context) { Conversion(c, stages, ConversionOptions{}) }), 500, 400)
 	settles(t, tt)
-	if !tt.HasText("0 (0%)") || strings.Contains(strings.Join(tt.Texts(), " "), "NaN") {
+	if !tt.HasText("0%") || strings.Contains(strings.Join(tt.Texts(), " "), "NaN") {
 		t.Errorf("texts %q", tt.Texts())
 	}
 }
 
 func TestTraffic(t *testing.T) {
 	sources := []Share{{Name: "Search", Share: 0.6}}
-	tt := ui.NewTester(padded(func(c *ui.Context) { Traffic(c, sources) }), 500, 180)
+	tt := ui.NewTester(padded(func(c *ui.Context) { Traffic(c, sources, TrafficOptions{}) }), 500, 180)
 	settles(t, tt)
 	if !tt.HasText("Search") || !tt.HasText("60%") {
 		t.Errorf("texts %q", tt.Texts())
@@ -149,7 +148,7 @@ func TestTraffic(t *testing.T) {
 
 func TestTopPages(t *testing.T) {
 	pages := []PageView{{Path: "/home", Views: 100}}
-	tt := ui.NewTester(padded(func(c *ui.Context) { TopPages(c, pages) }), 500, 180)
+	tt := ui.NewTester(padded(func(c *ui.Context) { TopPages(c, pages, TopPagesOptions{}) }), 500, 180)
 	settles(t, tt)
 	if !tt.HasText("/home") || !tt.HasText("100") {
 		t.Errorf("texts %q", tt.Texts())
@@ -157,28 +156,33 @@ func TestTopPages(t *testing.T) {
 }
 
 func TestRealtime(t *testing.T) {
-	count, changed := 10, 0
+	count := 10
 	tt := ui.NewTester(padded(func(c *ui.Context) {
-		if Realtime(c, &count, RealtimeOptions{}).Changed() {
-			changed++
-		}
-	}), 500, 180)
+		Realtime(c, count, RealtimeOptions{History: []int{4, 8, 10}})
+	}), 500, 300)
 	tt.Frame()
-	tt.Advance(1100 * time.Millisecond)
-	if count != 11 || changed != 1 {
-		t.Errorf("count %d changed %d", count, changed)
+	if !tt.HasText("Visitors now") || !tt.HasText("10") {
+		t.Fatalf("texts %q", tt.Texts())
 	}
-	maxCount := math.MaxInt
-	maxTest := ui.NewTester(padded(func(c *ui.Context) { Realtime(c, &maxCount, RealtimeOptions{}) }), 500, 180)
-	maxTest.Advance(1100 * time.Millisecond)
-	if maxCount != math.MaxInt {
-		t.Errorf("count overflowed to %d", maxCount)
+	count = 12
+	tt.Advance(time.Second)
+	if !tt.HasText("12") || !tt.FramePending() {
+		t.Errorf("count %q, pulse pending %v", tt.Texts(), tt.FramePending())
 	}
+	panics := func() {
+		defer func() {
+			if recover() == nil {
+				t.Error("expected panic")
+			}
+		}()
+		ui.Render(func(c *ui.Context) { Realtime(c, -1, RealtimeOptions{}) }, 500, 180, 1)
+	}
+	panics()
 }
 
 func TestActivityFeed(t *testing.T) {
 	events := []Activity{{ID: "a", Text: "Deployed", Time: "2m ago"}}
-	tt := ui.NewTester(padded(func(c *ui.Context) { ActivityFeed(c, events) }), 500, 180)
+	tt := ui.NewTester(padded(func(c *ui.Context) { ActivityFeed(c, events, ActivityFeedOptions{}) }), 500, 180)
 	settles(t, tt)
 	events = append([]Activity{{ID: "n", Text: "New event", Time: "now"}}, events...)
 	tt.Frame()
@@ -189,26 +193,25 @@ func TestActivityFeed(t *testing.T) {
 
 func TestLeaders(t *testing.T) {
 	people := []Leader{{Name: "Ana", Score: 100}}
-	tt := ui.NewTester(padded(func(c *ui.Context) { Leaders(c, people) }), 500, 180)
+	tt := ui.NewTester(padded(func(c *ui.Context) { Leaders(c, people, LeadersOptions{}) }), 500, 180)
 	settles(t, tt)
-	if !tt.HasText("#1") || !tt.HasText("Ana") {
+	if !tt.HasText("1") || !tt.HasText("Ana") {
 		t.Errorf("texts %q", tt.Texts())
 	}
 }
 
 func TestUptime(t *testing.T) {
 	days := []UptimeDay{{Label: "Mon", Status: Up}, {Label: "Tue", Status: Down}}
-	tt := ui.NewTester(padded(func(c *ui.Context) { Uptime(c, days) }), 500, 180)
+	tt := ui.NewTester(padded(func(c *ui.Context) { Uptime(c, days, UptimeOptions{}) }), 500, 250)
 	settles(t, tt)
-	ink := ui.LightTheme().Success
-	if got := tt.Image().RGBAAt(12, 20); got.R != ink.R || got.G != ink.G || got.B != ink.B {
-		t.Errorf("uptime color %v", got)
+	if !tt.HasText("50.00% uptime") || !tt.HasText("Mon") || !tt.HasText("Tue") {
+		t.Errorf("texts %q", tt.Texts())
 	}
 }
 
 func TestStatusGrid(t *testing.T) {
 	services := []Service{{Name: "API", Status: Up}}
-	tt := ui.NewTester(padded(func(c *ui.Context) { StatusGrid(c, services) }), 500, 180)
+	tt := ui.NewTester(padded(func(c *ui.Context) { StatusGrid(c, services, StatusGridOptions{}) }), 500, 250)
 	settles(t, tt)
 	if !tt.HasText("API") {
 		t.Errorf("texts %q", tt.Texts())
@@ -217,7 +220,7 @@ func TestStatusGrid(t *testing.T) {
 
 func TestStatusGridMotion(t *testing.T) {
 	services := []Service{{Name: "API", Status: Up}}
-	tt := ui.NewTester(padded(func(c *ui.Context) { StatusGrid(c, services) }), 500, 180)
+	tt := ui.NewTester(padded(func(c *ui.Context) { StatusGrid(c, services, StatusGridOptions{}) }), 500, 250)
 	settles(t, tt)
 	services[0].Status = Down
 	tt.Frame()
@@ -257,7 +260,7 @@ func TestSLAValidation(t *testing.T) {
 
 func TestRegions(t *testing.T) {
 	regions := []RegionValue{{Name: "US", Value: 100}}
-	tt := ui.NewTester(padded(func(c *ui.Context) { Regions(c, regions) }), 500, 180)
+	tt := ui.NewTester(padded(func(c *ui.Context) { Regions(c, regions, RegionsOptions{}) }), 500, 180)
 	settles(t, tt)
 	if !tt.HasText("US") || !tt.HasText("100") {
 		t.Errorf("texts %q", tt.Texts())
@@ -266,7 +269,7 @@ func TestRegions(t *testing.T) {
 
 func TestDevices(t *testing.T) {
 	shares := []DeviceShare{{Kind: "Mobile", Share: 0.7}}
-	tt := ui.NewTester(padded(func(c *ui.Context) { Devices(c, shares) }), 500, 180)
+	tt := ui.NewTester(padded(func(c *ui.Context) { Devices(c, shares, DevicesOptions{}) }), 500, 180)
 	settles(t, tt)
 	if !tt.HasText("Mobile") || !tt.HasText("70%") {
 		t.Errorf("texts %q", tt.Texts())
@@ -275,7 +278,7 @@ func TestDevices(t *testing.T) {
 
 func TestCohortMotion(t *testing.T) {
 	rows := []CohortRow{{Label: "Jan", Values: []float64{1, 0.8, 0.6, 0.4, 0.2}}}
-	tt := ui.NewTester(padded(func(c *ui.Context) { Cohort(c, rows) }), 500, 180)
+	tt := ui.NewTester(padded(func(c *ui.Context) { Cohort(c, rows, CohortOptions{}) }), 500, 300)
 	settles(t, tt)
 	rows[0].Values[1] = 0.2
 	tt.Frame()
@@ -286,7 +289,7 @@ func TestCohortMotion(t *testing.T) {
 
 func TestCohort(t *testing.T) {
 	rows := []CohortRow{{Label: "Jan", Values: []float64{1, 0.8, 0.6, 0.4, 0.2}}}
-	tt := ui.NewTester(padded(func(c *ui.Context) { Cohort(c, rows) }), 500, 180)
+	tt := ui.NewTester(padded(func(c *ui.Context) { Cohort(c, rows, CohortOptions{}) }), 500, 300)
 	settles(t, tt)
 	if !tt.HasText("Jan") || !tt.HasText("80%") {
 		t.Errorf("texts %q", tt.Texts())
