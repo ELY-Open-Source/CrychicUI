@@ -5,6 +5,7 @@ import (
 	"math"
 	"time"
 
+	"github.com/ELY-Open-Source/CrychicUI/kit"
 	"github.com/egoist/mygo/ui"
 )
 
@@ -37,16 +38,25 @@ func AgentStatus(c *ui.Context, state RunState, o AgentStatusOptions) ui.Element
 	t := c.Theme()
 	names := [4]string{o.Idle, o.Working, o.Blocked, o.Done}
 	inks := [4]ui.Color{t.TextMuted, t.Accent, t.Warning, t.Success}
-	name, ink := names[state], inks[state]
-	root := ui.Row(c).AlignSelf(ui.Start).Gap(t.Space(1.5)).AlignItems(ui.Center).Role(ui.RoleStatus).Label(name)
-	glow := float32(1)
+	name := names[state]
+	root := ui.Row(c).AlignSelf(ui.Start).Gap(t.Space(1.5)).AlignItems(ui.Center).Padding(t.Space(0.5), t.Space(2)).
+		Radius(999).Role(ui.RoleStatus).Label(name)
+	ink := root.AnimateColor("ink", inks[state], ui.Snappy)
+	root.Background(ink.Alpha(0.12)).TextColor(ink)
+	halo := float32(0)
 	if state == Working {
-		ph := float64(root.Loop("pulse", 1400*time.Millisecond, ui.Linear))
-		glow = 0.5 + 0.5*float32(math.Abs(math.Sin(math.Pi*ph)))
+		halo = float32(root.Loop("pulse", 1400*time.Millisecond, ui.Linear))
 	}
 	return root.Children(func() {
-		dot := ui.Box(c).Size(t.Space(2.5), t.Space(2.5)).Radius(999).Background(ink.Alpha(glow))
-		dot.Background(dot.AnimateColor("dot", ink, ui.Snappy)).Opacity(dot.AnimateTo("glow", glow, ui.Snappy))
-		ui.Text(c, name).FontSize(t.Rem(0.9)).ContentTransition(ui.ContentTransition{})
+		dot := ui.Box(c).Size(t.Space(4), t.Space(4)).Shrink(0).Margin(-t.Space(1))
+		dot.Draw(kit.Inside(0, func(p *ui.Painter, r ui.Rect) {
+			cx, cy, rad := r.X+r.W/2, r.Y+r.H/2, r.W/4
+			if halo > 0 {
+				grow := rad * (1 + float32(math.Sqrt(float64(halo))))
+				p.Fill(ui.Rect{X: cx - grow, Y: cy - grow, W: 2 * grow, H: 2 * grow}, ink.Alpha(0.4*(1-halo)), 999)
+			}
+			p.Fill(ui.Rect{X: cx - rad, Y: cy - rad, W: 2 * rad, H: 2 * rad}, ink, 999)
+		}))
+		ui.Text(c, name).FontSize(t.Rem(0.8)).Bold().ContentTransition(ui.ContentTransition{})
 	})
 }

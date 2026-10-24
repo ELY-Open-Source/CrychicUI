@@ -55,7 +55,7 @@ func Artifact(c *ui.Context, name string, kind ArtifactKind, meta string, o Arti
 				Padding(t.Space(1.5), t.Space(3)).Radius(t.Radius))
 			open.Background(open.AnimateColor("bg", t.Accent.Mix(t.AccentHover, unit(open.Hovered())), ui.Snappy)).TextColor(t.AccentText).
 				Children(func() {
-					ui.Text(c, o.Open).Bold().SingleLine()
+					ui.Text(c, o.Open).Bold().Shrink(0)
 					ui.Icon(c, icon.Must("arrow-up-right")).Size(16, 16)
 				})
 		})

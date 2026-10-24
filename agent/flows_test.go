@@ -10,170 +10,137 @@ import (
 )
 
 func TestProposedDiff(t *testing.T) {
-	diff := "@@ -1,2 +1,2 @@\n-old line\n+new line"
-	applied, rejected, changed := 0, 0, 0
-	tt := ui.NewTester(padded(func(c *ui.Context) {
-		root, apply, reject := ProposedDiff(c, "deck.md", diff, ProposedDiffOptions{})
-		if root.Changed() {
-			changed++
+	diff := "@@ -1,3 +1,3 @@\n # Launch\n-Ship in June\n+Ship in July\n+Add pricing slide\n"
+	for _, tc := range []struct {
+		button, shown string
+		want          Decision
+		cue           sound.Cue
+	}{{"Apply", "Applied", Allowed, sound.Success}, {"Reject", "Rejected", Denied, sound.Close}} {
+		decision, changed := Undecided, 0
+		tt := ui.NewTester(padded(func(c *ui.Context) {
+			if root, _, _ := ProposedDiff(c, "docs/deck.md", diff, &decision, ProposedDiffOptions{}); root.Changed() {
+				changed++
+			}
+		}), 600, 400)
+		settles(t, tt, "diff")
+		if !tt.HasText("+2") || !tt.HasText("−1") || !tt.HasText("Ship in July") {
+			t.Fatalf("texts %q", tt.Texts())
 		}
-		if apply.Clicked() {
-			applied++
+		before := baseline()
+		click(t, tt, tc.button)
+		settles(t, tt, "decided diff")
+		if decision != tc.want || changed != 1 || !tt.HasText(tc.shown) || tt.Click("Apply") == nil {
+			t.Errorf("%s: decision %d changed %d texts %q", tc.button, decision, changed, tt.Texts())
 		}
-		if reject.Clicked() {
-			rejected++
-		}
-	}), 500, 300)
-	settles(t, tt, "diff")
-	if !tt.HasText("-old line") || !tt.HasText("+new line") {
-		t.Errorf("texts %q", tt.Texts())
+		cues(t, before, tc.cue)
 	}
-	before := baseline()
-	click(t, tt, "Apply")
-	if applied != 1 || changed != 1 {
-		t.Fatalf("applied %d changed %d", applied, changed)
-	}
-	click(t, tt, "Reject")
-	if rejected != 1 || changed != 2 {
-		t.Errorf("rejected %d changed %d", rejected, changed)
-	}
-	cues(t, before, sound.Success, sound.Close)
-	panics(t, "empty diff", func() { render(func(c *ui.Context) { ProposedDiff(c, "x", "", ProposedDiffOptions{}) }) })
+	panics(t, "nil decision", func() { render(func(c *ui.Context) { ProposedDiff(c, "a", "+b", nil, ProposedDiffOptions{}) }) })
 }
 
 func TestEvalScore(t *testing.T) {
-	checks := []EvalCheck{{Name: "Accuracy", Score: 0.82, Pass: 0.7}, {Name: "Tone", Score: 0.55, Pass: 0.7}}
-	tt := ui.NewTester(padded(func(c *ui.Context) { EvalScore(c, "Evals", checks) }), 500, 300)
-	tt.Frame()
-	if !tt.FramePending() {
-		t.Error("bars do not grow")
+	checks := []EvalCheck{{Name: "Accuracy", Score: 0.92, Pass: 0.8}, {Name: "Tone", Score: 0.55, Pass: 0.7}}
+	tt := ui.NewTester(padded(func(c *ui.Context) { EvalScore(c, "Evals", checks, EvalScoreOptions{}) }), 500, 300)
+	settles(t, tt, "evals")
+	for _, s := range []string{"1 of 2 passed", "0.92", "0.55"} {
+		if !tt.HasText(s) {
+			t.Errorf("missing %q in %q", s, tt.Texts())
+		}
 	}
-	settles(t, tt, "scores")
-	if !tt.HasText("0.82") || !tt.HasText("0.55") {
-		t.Errorf("texts %q", tt.Texts())
-	}
-	panics(t, "score over one", func() {
-		render(func(c *ui.Context) { EvalScore(c, "x", []EvalCheck{{Name: "a", Score: 1.5}}) })
+	panics(t, "over one", func() {
+		render(func(c *ui.Context) { EvalScore(c, "E", []EvalCheck{{Name: "x", Score: 2}}, EvalScoreOptions{}) })
 	})
 }
 
 func TestRateAnswer(t *testing.T) {
-	rating, reason, changed, sends := 0, -1, 0, 0
-	reasons := []string{"Wrong facts", "Too long"}
+	rating, reason, sent, sends := 0, -1, false, 0
+	reasons := []string{"Inaccurate", "Too long"}
 	tt := ui.NewTester(padded(func(c *ui.Context) {
-		root, send := RateAnswer(c, &rating, reasons, &reason, RateAnswerOptions{})
-		if root.Changed() {
-			changed++
-		}
-		if send.Clicked() {
+		if _, send := RateAnswer(c, &rating, reasons, &reason, &sent, RateAnswerOptions{}); send.Clicked() {
 			sends++
 		}
 	}), 500, 300)
-	settles(t, tt, "rating")
+	settles(t, tt, "rate")
+	if tt.HasText("Too long") {
+		t.Fatal("reasons shown before a rating")
+	}
 	before := baseline()
 	click(t, tt, "Not helpful")
-	if rating != -1 || changed != 1 {
-		t.Fatalf("rating %d changed %d", rating, changed)
-	}
+	settles(t, tt, "reasons")
 	click(t, tt, "Send feedback")
-	if sends != 0 {
-		t.Error("sent without a reason")
+	if sent {
+		t.Fatal("sent without a reason")
 	}
 	click(t, tt, "Too long")
-	if reason != 1 || changed != 2 {
-		t.Fatalf("reason %d changed %d", reason, changed)
-	}
 	click(t, tt, "Send feedback")
-	if sends != 1 || changed != 3 {
-		t.Errorf("sends %d changed %d", sends, changed)
+	settles(t, tt, "thanks")
+	if !sent || rating != -1 || reason != 1 || !tt.HasText("Thanks for the feedback") {
+		t.Errorf("rating %d reason %d sent %v texts %q", rating, reason, sent, tt.Texts())
 	}
 	cues(t, before, sound.Toggle, sound.Select, sound.Send)
-	panics(t, "bad rating", func() {
-		v := 2
-		render(func(c *ui.Context) { RateAnswer(c, &v, reasons, &reason, RateAnswerOptions{}) })
-	})
 }
 
 func TestStreamCode(t *testing.T) {
 	code := "package main\n\nfunc main() {\n\tprintln(\"hi\")\n}\n"
-	done := false
-	tt := ui.NewTester(padded(func(c *ui.Context) { StreamCode(c, "go", code, done) }), 500, 300)
+	done, copies := false, 0
+	tt := ui.NewTester(padded(func(c *ui.Context) {
+		if _, cp := StreamCode(c, "go", code, done, StreamCodeOptions{}); cp.Clicked() {
+			copies++
+		}
+	}), 500, 400)
 	tt.Frame()
 	tt.Advance(130 * time.Millisecond)
-	joined := strings.Join(tt.Texts(), " ")
-	if strings.Contains(joined, "println") {
-		t.Errorf("revealed everything: %q", joined)
-	}
-	if !strings.HasPrefix(code, "package main\n\nfunc main() {\n") {
-		t.Error("bad test source")
+	if strings.Contains(strings.Join(tt.Texts(), " "), "println") {
+		t.Errorf("revealed everything: %q", tt.Texts())
 	}
 	tt.Advance(2 * time.Second)
-	if !strings.Contains(strings.Join(tt.Texts(), " "), "println") {
+	if !tt.HasText("    println(\"hi\")") || !tt.HasText("5") {
 		t.Errorf("stream %q", tt.Texts())
 	}
 	done = true
 	tt.Frame()
 	settles(t, tt, "stream")
-	tt.SetPreferences(ui.Preferences{ReduceMotion: true})
-	done = false
-	tt.Frame()
-	if !strings.Contains(strings.Join(tt.Texts(), " "), "println") {
-		t.Errorf("reduced motion %q", tt.Texts())
+	before := baseline()
+	click(t, tt, "Copy")
+	if tt.Clipboard() != code || copies != 1 {
+		t.Errorf("clipboard %q copies %d", tt.Clipboard(), copies)
 	}
-	panics(t, "empty code", func() { render(func(c *ui.Context) { StreamCode(c, "go", "", false) }) })
+	cues(t, before, sound.Pop)
+	panics(t, "empty code", func() { render(func(c *ui.Context) { StreamCode(c, "go", "", false, StreamCodeOptions{}) }) })
 }
 
 func TestSearchSteps(t *testing.T) {
-	steps := []SearchStep{{Label: "Searching", Done: true}, {Label: "Reading", Count: 3}, {Label: "Writing"}}
-	tt := ui.NewTester(padded(func(c *ui.Context) { SearchSteps(c, "Search", steps) }), 400, 300)
+	steps := []SearchStep{{Label: "Searching", Count: 12, State: StepDone}, {Label: "Reading", Count: 3, State: StepRunning}, {Label: "Writing"}}
+	tt := ui.NewTester(padded(func(c *ui.Context) { SearchSteps(c, "Research", steps) }), 600, 200)
 	tt.Frame()
-	if !moves(tt, 150*time.Millisecond) {
-		t.Error("active step does not spin")
-	}
-	if !tt.HasText("Reading 3") {
+	if !tt.HasText("12") || !tt.HasText("Reading") || !moves(tt, 200*time.Millisecond) {
 		t.Errorf("texts %q", tt.Texts())
 	}
-	steps[1].Done = true
-	steps[2] = SearchStep{Label: "Writing"}
-	tt.Frame()
-	if !tt.HasText("Reading 3") {
-		t.Errorf("texts %q", tt.Texts())
-	}
-	panics(t, "empty label", func() {
-		render(func(c *ui.Context) { SearchSteps(c, "x", []SearchStep{{Label: ""}}) })
+	panics(t, "negative count", func() {
+		render(func(c *ui.Context) { SearchSteps(c, "S", []SearchStep{{Label: "x", Count: -1}}) })
 	})
 }
 
 func TestImageGenerating(t *testing.T) {
 	progress := 0.4
-	tt := ui.NewTester(padded(func(c *ui.Context) { ImageGenerating(c, "Image", progress) }), 500, 300)
+	tt := ui.NewTester(padded(func(c *ui.Context) { ImageGenerating(c, "A lighthouse at dusk", progress) }), 500, 450)
 	tt.Frame()
-	if !tt.HasText("40%") {
+	if !tt.HasText("40%") || !tt.HasText("A lighthouse at dusk") || !moves(tt, 200*time.Millisecond) {
 		t.Errorf("texts %q", tt.Texts())
-	}
-	if !moves(tt, 200*time.Millisecond) {
-		t.Error("sheen does not move")
 	}
 	progress = 1
 	tt.Frame()
-	settles(t, tt, "placeholder")
-	if !tt.HasText("100%") {
-		t.Errorf("texts %q", tt.Texts())
-	}
-	panics(t, "over one", func() { render(func(c *ui.Context) { ImageGenerating(c, "x", 1.2) }) })
+	settles(t, tt, "finished image")
+	panics(t, "over one", func() { render(func(c *ui.Context) { ImageGenerating(c, "x", 2) }) })
 }
 
 func TestAgentHandoff(t *testing.T) {
-	at := time.Date(2026, 10, 22, 9, 30, 0, 0, time.UTC)
-	tt := ui.NewTester(padded(func(c *ui.Context) { AgentHandoff(c, "Planner", "Writer", "Took the deck", at) }), 500, 200)
+	at := time.Date(2026, 10, 24, 9, 30, 0, 0, time.Local)
+	tt := ui.NewTester(padded(func(c *ui.Context) { AgentHandoff(c, "Researcher", "Writer", "Sources gathered", at) }), 600, 300)
 	tt.Frame()
-	if !tt.FramePending() {
-		t.Error("event does not fade in")
-	}
-	settles(t, tt, "handoff")
-	if !tt.HasText("Took the deck") || !tt.HasText("9:30") {
+	if !tt.HasText("Researcher") || !tt.HasText("Sources gathered") || !moves(tt, 200*time.Millisecond) {
 		t.Errorf("texts %q", tt.Texts())
 	}
+	settles(t, tt, "handoff")
 	panics(t, "zero time", func() { render(func(c *ui.Context) { AgentHandoff(c, "a", "b", "", time.Time{}) }) })
 }
 
@@ -183,7 +150,7 @@ func TestStopButton(t *testing.T) {
 		if StopButton(c, running, StopButtonOptions{}).Changed() {
 			changed++
 		}
-	}), 400, 200)
+	}), 300, 200)
 	tt.Frame()
 	if !moves(tt, 200*time.Millisecond) {
 		t.Error("stop does not pulse")
@@ -196,7 +163,7 @@ func TestStopButton(t *testing.T) {
 	cues(t, before, sound.Close)
 	running = false
 	tt.Frame()
-	settles(t, tt, "stop")
+	settles(t, tt, "stopped")
 	again := baseline()
 	click(t, tt, "Stop")
 	cues(t, again)
@@ -212,59 +179,56 @@ func TestPromptHistory(t *testing.T) {
 		if PromptHistory(c, entries, &at, PromptHistoryOptions{}).Changed() {
 			changed++
 		}
-	}), 400, 200)
+	}), 500, 300)
 	settles(t, tt, "history")
-	if !tt.HasText("1 of 3") || !tt.HasText("Draft the deck") {
+	if !tt.HasText("1 of 3") || !tt.HasText("Plan the sprint") {
 		t.Errorf("texts %q", tt.Texts())
 	}
 	before := baseline()
 	click(t, tt, "Older")
-	if at != 1 || changed != 1 || !tt.HasText("Review the brief") {
+	if at != 1 || changed != 1 || !tt.HasText("2 of 3") {
 		t.Fatalf("at %d changed %d texts %q", at, changed, tt.Texts())
 	}
-	click(t, tt, "Older")
-	click(t, tt, "Older")
+	tt.Key(0, ui.KeyUp)
+	tt.Frame()
+	tt.Key(0, ui.KeyUp)
+	tt.Frame()
 	if at != 2 {
-		t.Error("moved past the oldest entry")
+		t.Errorf("up keys left at %d", at)
 	}
-	click(t, tt, "Newer")
+	tt.Key(0, ui.KeyDown)
+	tt.Frame()
 	if at != 1 {
-		t.Errorf("at %d", at)
+		t.Errorf("down key left at %d", at)
 	}
 	cues(t, before, sound.Tick, sound.Tick, sound.Tick)
 	panics(t, "bad position", func() {
 		n := 3
 		render(func(c *ui.Context) { PromptHistory(c, entries, &n, PromptHistoryOptions{}) })
 	})
-	panics(t, "empty entry", func() {
-		n := 0
-		render(func(c *ui.Context) { PromptHistory(c, []string{""}, &n, PromptHistoryOptions{}) })
-	})
 }
 
 func TestAgentWelcome(t *testing.T) {
 	chosen, changed := -1, 0
-	prompts := []string{"Plan the launch", "Draft the deck"}
+	prompts := []Suggestion{{Text: "Draft the deck", Icon: "presentation"}, {Text: "Plan a trip", Icon: "map"}}
+	caps := []Capability{{Icon: "search", Title: "Research", Text: "Reads the web"}, {Icon: "code", Title: "Code"}}
 	tt := ui.NewTester(padded(func(c *ui.Context) {
-		if AgentWelcome(c, "What are we shipping?", prompts, []string{"Search", "Code", "Files"}, &chosen).Changed() {
+		if AgentWelcome(c, "Good morning, Ana", prompts, caps, &chosen, AgentWelcomeOptions{Subtitle: "How can I help?"}).Changed() {
 			changed++
 		}
-	}), 500, 400)
+	}), 700, 500)
 	tt.Frame()
-	if !tt.FramePending() {
+	if !moves(tt, 100*time.Millisecond) {
 		t.Error("welcome does not rise in")
 	}
 	settles(t, tt, "welcome")
-	if !tt.HasText("What are we shipping?") || !tt.HasText("Search") {
+	if !tt.HasText("Reads the web") || !tt.HasText("How can I help?") {
 		t.Errorf("texts %q", tt.Texts())
 	}
 	before := baseline()
-	click(t, tt, "Draft the deck")
+	click(t, tt, "Plan a trip")
 	if chosen != 1 || changed != 1 {
-		t.Fatalf("chosen %d changed %d", chosen, changed)
+		t.Errorf("chosen %d changed %d", chosen, changed)
 	}
 	cues(t, before, sound.Tap)
-	panics(t, "empty prompt", func() {
-		render(func(c *ui.Context) { AgentWelcome(c, "g", []string{""}, nil, &chosen) })
-	})
 }

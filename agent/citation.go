@@ -22,7 +22,7 @@ func Citation(c *ui.Context, n int, src Source) ui.Element {
 	root.Background(root.AnimateColor("bg", t.Accent.Alpha(0.12).Mix(t.Accent, unit(root.Hovered())), ui.Snappy))
 	root.TextColor(root.AnimateColor("ink", t.Accent.Mix(t.AccentText, unit(root.Hovered())), ui.Snappy))
 	kit.Lift(root)
-	root.Children(func() { ui.Text(c, name).FontSize(t.Rem(0.7)).Bold().SingleLine() })
+	root.Children(func() { ui.Text(c, name).FontSize(t.Rem(0.7)).Bold().Shrink(0) })
 	if root.Clicked() {
 		if ui.SafeToOpen(src.URL) {
 			c.OpenURL(src.URL)

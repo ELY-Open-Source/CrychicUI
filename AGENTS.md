@@ -76,6 +76,8 @@ health, home, marketing, content, desktop, geo · 6 gallery · 7 cmd/gallery
 - Quality bar is the layout–chat categories (`chat.ConversationList`): real structure (icon, avatar via
   `display.Avatar`, status badge, meta line), hover and selected colors animated, staggered `kit.Arrive` on lists,
   empty state where a list can empty, every catalog clause implemented. A bordered box of plain text fails.
+- MyGo can shrink single-line text in an auto-width row by a fraction and ellipsize it: give such text
+  `Shrink(0)` (cap long copy with `MaxWidth` plus `Wrap`). Text that should truncate needs `Grow(1).MinWidth(0)`.
 - Panics name the component and caller label: `fmt.Sprintf("pkg: Name %q needs ...", label)`.
 
 ## Gallery entry

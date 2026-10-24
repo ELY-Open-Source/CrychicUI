@@ -33,15 +33,17 @@ func Suggestions(c *ui.Context, label string, prompts []Suggestion, draft *strin
 		for i, p := range prompts {
 			c.Key(p.Text)
 			on := *draft == p.Text
-			b := kit.Press(ui.ButtonBase(c).Label(p.Text).Row().Gap(t.Space(1.5)).AlignItems(ui.Center).
+			b := kit.Press(ui.ButtonBase(c).Label(p.Text).
 				Padding(t.Space(1.5), t.Space(3)).Radius(999).MaxWidthPercent(100).Checked(on))
 			kit.Lift(b)
 			b.Border(1, b.AnimateColor("ring", t.Border.Mix(t.Accent, unit(on || b.Hovered())), ui.Snappy))
 			b.Background(b.AnimateColor("bg", t.Background.Mix(t.Accent.Alpha(0.08), unit(on)), ui.Snappy))
 			kit.Arrive(b, ui.Pose{Y: t.Space(2), Fade: 1}, time.Duration(i)*40*time.Millisecond)
 			b.Children(func() {
-				ui.Icon(c, icon.Must(p.Icon)).Size(16, 16).TextColor(t.Accent)
-				ui.Text(c, p.Text).FontSize(t.Rem(0.9)).MinWidth(0).SingleLine()
+				ui.Row(c).Gap(t.Space(1.5)).AlignItems(ui.Center).Children(func() {
+					ui.Icon(c, icon.Must(p.Icon)).Size(16, 16).TextColor(t.Accent)
+					ui.Text(c, p.Text).FontSize(t.Rem(0.9)).Shrink(0).MaxWidth(t.Space(44)).Wrap()
+				})
 			})
 			if b.Clicked() && !on {
 				*draft = p.Text

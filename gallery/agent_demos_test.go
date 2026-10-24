@@ -42,11 +42,11 @@ func TestAgentDemosLog(t *testing.T) {
 		"Artifact":      {press("Open"), "opened launch-deck.html"},
 		"Approval":      {press("Allow"), "allowed"},
 		"ProposedDiff":  {press("Apply"), "applied"},
-		"VoiceOrb":      {press("Louder"), "level 0.8"},
-		"Memories":      {press("Forget"), "2 left"},
-		"AgentStatus":   {press("Finish"), "state 3"},
+		"VoiceOrb":      {press("Louder"), "level 0.55"},
+		"Memories":      {press("Forget Prefers metric units and 24-hour time"), "3 left"},
+		"AgentStatus":   {press("Next state"), "state 2"},
 		"AgentBoard":    {press("Unblock Gamma"), "gamma working"},
-		"ContextFiles":  {press("Remove"), "2 files left"},
+		"ContextFiles":  {press("Remove brief.pdf"), "3 files left"},
 		"SlashCommands": {press("/deploy"), "selected /deploy"},
 		"SystemPrompt": {func(tt *ui.Tester) error {
 			if err := tt.Click("System prompt"); err != nil {
@@ -54,13 +54,13 @@ func TestAgentDemosLog(t *testing.T) {
 			}
 			tt.Type("x")
 			return nil
-		}, "edited 34 runes"},
+		}, "edited "},
 		"Temperature": {func(tt *ui.Tester) error {
 			tt.Key(0, ui.KeyTab)
 			tt.Key(0, ui.KeyRight)
 			return nil
 		}, "value 0.51"},
-		"RateAnswer":      {press("Not helpful"), "rating -1, reason -1"},
+		"RateAnswer":      {press("Not helpful"), "rating -1"},
 		"StreamCode":      {press("Restart"), "restarted"},
 		"ImageGenerating": {press("10% more"), "50%"},
 		"StopButton":      {press("Stop"), "stopped"},

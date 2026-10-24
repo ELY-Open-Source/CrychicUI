@@ -66,10 +66,10 @@ func Approval(c *ui.Context, tool, action, reason string, decision *Decision, o 
 			ui.Row(c).FillWidth().Gap(t.Space(2)).Justify(ui.End).Children(func() {
 				deny = kit.Press(ui.ButtonBase(c).Label(o.Deny).Padding(t.Space(1.5), t.Space(4)).Radius(t.Radius).Border(1, t.Border))
 				deny.Background(deny.AnimateColor("bg", t.Background.Mix(t.SurfaceHover, unit(deny.Hovered())), ui.Snappy)).
-					Children(func() { ui.Text(c, o.Deny).SingleLine() })
+					Children(func() { ui.Text(c, o.Deny).Shrink(0) })
 				allow = kit.Press(ui.ButtonBase(c).Label(o.Allow).Padding(t.Space(1.5), t.Space(4)).Radius(t.Radius))
 				allow.Background(allow.AnimateColor("bg", t.Accent.Mix(t.AccentHover, unit(allow.Hovered())), ui.Snappy)).
-					TextColor(t.AccentText).Children(func() { ui.Text(c, o.Allow).Bold().SingleLine() })
+					TextColor(t.AccentText).Children(func() { ui.Text(c, o.Allow).Bold().Shrink(0) })
 			})
 		})
 	})

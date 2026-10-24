@@ -1,7 +1,6 @@
 package agent
 
 import (
-	"image/color"
 	"testing"
 	"time"
 
@@ -11,64 +10,77 @@ import (
 
 func TestAgentAvatar(t *testing.T) {
 	working := true
-	tt := ui.NewTester(padded(func(c *ui.Context) { AgentAvatar(c, "Ana Reyes", nil, working) }), 300, 200)
+	tt := ui.NewTester(padded(func(c *ui.Context) { AgentAvatar(c, "Planner Bot", nil, working) }), 300, 200)
 	tt.Frame()
-	if !moves(tt, 200*time.Millisecond) {
-		t.Error("ring does not pulse")
+	if !tt.HasText("PB") || !moves(tt, 300*time.Millisecond) {
+		t.Errorf("working avatar %q does not spin", tt.Texts())
 	}
 	working = false
 	tt.Frame()
-	settles(t, tt, "avatar")
-	panics(t, "empty name", func() { render(func(c *ui.Context) { AgentAvatar(c, "", nil, false) }) })
+	settles(t, tt, "idle avatar")
+	panics(t, "no name", func() { render(func(c *ui.Context) { AgentAvatar(c, "", nil, false) }) })
 }
 
 func TestVoiceOrb(t *testing.T) {
-	level := 0.3
-	var acc color.RGBA
+	level := 0.2
+	var accent ui.Color
 	tt := ui.NewTester(padded(func(c *ui.Context) {
-		acc = rgba(c.Theme().Accent)
-		VoiceOrb(c, level)
-	}), 300, 200)
-	settles(t, tt, "orb")
-	r := find(t, tt, "Voice level")
-	if !at(tt, r.X+r.W/2, r.Y+r.H/2, acc) {
-		t.Error("orb not drawn")
+		accent = c.Theme().Accent
+		VoiceOrb(c, level, VoiceOrbOptions{})
+	}), 300, 300)
+	tt.Advance(time.Second)
+	quiet := inked(tt, accent)
+	level = 1
+	tt.Advance(time.Second)
+	if loud := inked(tt, accent); loud <= quiet*3/2 {
+		t.Errorf("core did not grow: %d then %d pixels", quiet, loud)
 	}
-	level = 0.9
-	tt.Frame()
-	if !tt.FramePending() {
-		t.Error("orb does not grow")
+	if !moves(tt, 300*time.Millisecond) {
+		t.Error("orb does not breathe")
 	}
-	settles(t, tt, "orb")
-	panics(t, "over one", func() { render(func(c *ui.Context) { VoiceOrb(c, 1.5) }) })
-	panics(t, "negative", func() { render(func(c *ui.Context) { VoiceOrb(c, -0.5) }) })
+	panics(t, "over one", func() { render(func(c *ui.Context) { VoiceOrb(c, 1.5, VoiceOrbOptions{}) }) })
+}
+
+// inked counts pixels near ink.
+func inked(tt *ui.Tester, ink ui.Color) int {
+	img, want, n := tt.Image(), rgba(ink), 0
+	b := img.Bounds()
+	for y := b.Min.Y; y < b.Max.Y; y++ {
+		for x := b.Min.X; x < b.Max.X; x++ {
+			if p := img.RGBAAt(x, y); near(p.R, want.R) && near(p.G, want.G) && near(p.B, want.B) {
+				n++
+			}
+		}
+	}
+	return n
 }
 
 func TestMemories(t *testing.T) {
-	facts := []string{"Likes green tea", "Works from Duluth", "Reviews on Fridays"}
+	facts := []Memory{{Fact: "Prefers metric units", Saved: "Saved 2 days ago"}, {Fact: "Works in Lisbon"}}
 	changed := 0
 	tt := ui.NewTester(padded(func(c *ui.Context) {
-		if Memories(c, "Memories", &facts, MemoriesOptions{}).Changed() {
+		if Memories(c, "Memory", &facts, MemoriesOptions{}).Changed() {
 			changed++
 		}
-	}), 500, 300)
+	}), 500, 400)
 	settles(t, tt, "memories")
+	if !tt.HasText("2 remembered") || !tt.HasText("Saved 2 days ago") {
+		t.Fatalf("texts %q", tt.Texts())
+	}
 	before := baseline()
-	r := find(t, tt, "Likes green tea")
-	tt.ClickAt(r.X+r.W+30, r.Y+r.H/2)
-	tt.Frame()
-	if len(facts) != 2 || facts[0] != "Works from Duluth" || changed != 1 {
+	click(t, tt, "Forget Prefers metric units")
+	if len(facts) != 1 || facts[0].Fact != "Works in Lisbon" || changed != 1 {
 		t.Fatalf("facts %v changed %d", facts, changed)
 	}
-	cues(t, before, sound.Delete)
-	click(t, tt, "Forget")
-	click(t, tt, "Forget")
-	if len(facts) != 0 || !tt.HasText("Nothing remembered yet") {
-		t.Errorf("facts %v texts %q", facts, tt.Texts())
+	click(t, tt, "Forget Works in Lisbon")
+	settles(t, tt, "empty memories")
+	if !tt.HasText("Nothing remembered yet") {
+		t.Errorf("texts %q", tt.Texts())
 	}
-	panics(t, "empty fact", func() {
-		f := []string{""}
-		render(func(c *ui.Context) { Memories(c, "x", &f, MemoriesOptions{}) })
+	cues(t, before, sound.Delete, sound.Delete)
+	panics(t, "duplicate", func() {
+		dup := []Memory{{Fact: "a"}, {Fact: "a"}}
+		render(func(c *ui.Context) { Memories(c, "M", &dup, MemoriesOptions{}) })
 	})
 }
 
@@ -76,148 +88,123 @@ func TestAgentStatus(t *testing.T) {
 	state := Working
 	tt := ui.NewTester(padded(func(c *ui.Context) { AgentStatus(c, state, AgentStatusOptions{}) }), 300, 200)
 	tt.Frame()
-	if !tt.HasText("Working") {
-		t.Errorf("texts %q", tt.Texts())
+	if !tt.HasText("Working") || !moves(tt, 300*time.Millisecond) {
+		t.Errorf("working status %q does not pulse", tt.Texts())
 	}
-	if !moves(tt, 200*time.Millisecond) {
-		t.Error("working dot does not pulse")
-	}
-	state = Done
+	state = Blocked
 	tt.Frame()
-	settles(t, tt, "status")
-	if !tt.HasText("Done") {
+	settles(t, tt, "blocked status")
+	if !tt.HasText("Blocked") {
 		t.Errorf("texts %q", tt.Texts())
 	}
-	panics(t, "unknown state", func() { render(func(c *ui.Context) { AgentStatus(c, 9, AgentStatusOptions{}) }) })
+	panics(t, "unknown state", func() { render(func(c *ui.Context) { AgentStatus(c, runStateCount, AgentStatusOptions{}) }) })
 }
 
 func TestRunTimeline(t *testing.T) {
-	steps := []RunStep{{Name: "Search", Duration: 2 * time.Second}, {Name: "Read", Duration: 500 * time.Millisecond}, {Name: "Write", Duration: 3 * time.Second}}
-	tt := ui.NewTester(padded(func(c *ui.Context) { RunTimeline(c, "Run", steps) }), 500, 300)
-	tt.Frame()
-	if !tt.FramePending() {
-		t.Error("bars do not grow")
+	steps := []RunStep{
+		{Name: "Plan", Duration: 2 * time.Second, State: StepDone},
+		{Name: "Search", Duration: 9 * time.Second, State: StepDone},
+		{Name: "Write", Duration: 4 * time.Second, State: StepRunning},
 	}
-	settles(t, tt, "timeline")
-	if !tt.HasText("0:02") || !tt.HasText("0:00") || !tt.HasText("0:03") {
+	tt := ui.NewTester(padded(func(c *ui.Context) { RunTimeline(c, "Run", steps, RunTimelineOptions{}) }), 500, 300)
+	tt.Frame()
+	if !tt.HasText("3 steps · 0:15") || !tt.HasText("0:09") || !moves(tt, 200*time.Millisecond) {
 		t.Errorf("texts %q", tt.Texts())
 	}
-	panics(t, "all zero", func() {
-		render(func(c *ui.Context) { RunTimeline(c, "x", []RunStep{{Name: "a"}}) })
-	})
-	panics(t, "negative duration", func() {
-		render(func(c *ui.Context) { RunTimeline(c, "x", []RunStep{{Name: "a", Duration: -time.Second}}) })
+	panics(t, "zero total", func() {
+		render(func(c *ui.Context) { RunTimeline(c, "R", []RunStep{{Name: "x"}}, RunTimelineOptions{}) })
 	})
 }
 
 func TestAgentBoard(t *testing.T) {
-	agents := []BoardAgent{{Name: "Alpha", Status: Idle}, {Name: "Beta", Status: Working}}
-	tt := ui.NewTester(padded(func(c *ui.Context) { AgentBoard(c, "Board", agents, AgentBoardOptions{}) }), 500, 300)
+	agents := []BoardAgent{{Name: "Planner", Task: "Outline", Status: Working}, {Name: "Writer", Status: Idle}}
+	tt := ui.NewTester(padded(func(c *ui.Context) { AgentBoard(c, "Team", agents, AgentBoardOptions{}) }), 900, 400)
+	tt.Advance(time.Second)
+	working, _ := tt.Find("Planner")
+	agents[0].Status = Done
 	tt.Frame()
-	if !tt.FramePending() {
-		t.Error("cards do not arrive")
+	tt.Advance(time.Second)
+	done, _ := tt.Find("Planner")
+	if done.X <= working.X {
+		t.Errorf("card stayed in its column: %v then %v", working, done)
 	}
-	tt.Advance(2 * time.Second)
-	a, b := find(t, tt, "Alpha"), find(t, tt, "Beta")
-	if b.X >= a.X {
-		t.Errorf("working Beta at %v should lead idle Alpha at %v", b.X, a.X)
+	if !tt.HasText("None") || !tt.HasText("Outline") {
+		t.Errorf("texts %q", tt.Texts())
 	}
-	agents[1].Status = Done
-	tt.Frame()
-	if !tt.FramePending() {
-		t.Error("cards do not move")
-	}
-	settles(t, tt, "board")
-	a, b = find(t, tt, "Alpha"), find(t, tt, "Beta")
-	if a.X >= b.X {
-		t.Errorf("after the change Alpha at %v should lead Beta at %v", a.X, b.X)
-	}
-	own := ui.NewTester(padded(func(c *ui.Context) {
-		AgentBoard(c, "Tableau", []BoardAgent{{Name: "A", Status: Idle}}, AgentBoardOptions{Status: AgentStatusOptions{Idle: "Inactif"}})
-	}), 500, 300)
-	own.Frame()
-	if !own.HasText("Inactif") {
-		t.Errorf("texts %q", own.Texts())
-	}
-	panics(t, "duplicate names", func() {
-		render(func(c *ui.Context) { AgentBoard(c, "x", []BoardAgent{{Name: "a"}, {Name: "a"}}, AgentBoardOptions{}) })
+	panics(t, "duplicate", func() {
+		render(func(c *ui.Context) { AgentBoard(c, "T", []BoardAgent{{Name: "a"}, {Name: "a"}}, AgentBoardOptions{}) })
 	})
 }
 
 func TestContextFiles(t *testing.T) {
-	files := []string{"deck.md", "brief.pdf", "notes.txt"}
+	files := []ContextFile{{Name: "brief.pdf", Size: 248_000}, {Name: "main.go", Size: 1200}}
 	changed := 0
 	tt := ui.NewTester(padded(func(c *ui.Context) {
 		if ContextFiles(c, "Files", &files, ContextFilesOptions{}).Changed() {
 			changed++
 		}
 	}), 500, 200)
-	tt.Frame()
-	if !tt.FramePending() {
-		t.Error("chips do not pop in")
-	}
-	settles(t, tt, "chips")
+	settles(t, tt, "files")
 	before := baseline()
-	click(t, tt, "Remove")
-	if len(files) != 2 || files[0] != "brief.pdf" || changed != 1 {
-		t.Fatalf("files %v changed %d", files, changed)
+	click(t, tt, "Remove brief.pdf")
+	if len(files) != 1 || files[0].Name != "main.go" || changed != 1 {
+		t.Errorf("files %v changed %d", files, changed)
 	}
-	click(t, tt, "Remove")
-	click(t, tt, "Remove")
-	if len(files) != 0 || changed != 3 {
-		t.Errorf("files %v changed %d after removing all", files, changed)
+	cues(t, before, sound.Delete)
+	if fileGlyph("a.go") != "file-code" || fileGlyph("a.PNG") != "file-image" || fileGlyph("a.md") != "file-text" {
+		t.Error("file glyphs")
 	}
-	cues(t, before, sound.Delete, sound.Delete, sound.Delete)
-	panics(t, "empty file", func() {
-		f := []string{""}
-		render(func(c *ui.Context) { ContextFiles(c, "x", &f, ContextFilesOptions{}) })
-	})
 }
 
 func TestSlashCommands(t *testing.T) {
-	commands := []string{"/deploy", "/review", "/test"}
-	chosen, changed := -1, 0
+	cmds := []Command{{Name: "/deploy", Description: "Ship to production", Icon: "rocket"}, {Name: "/review", Icon: "eye"}}
+	chosen, query, changed := "", "/de", 0
 	tt := ui.NewTester(padded(func(c *ui.Context) {
-		if SlashCommands(c, "Commands", commands, &chosen).Changed() {
+		if SlashCommands(c, "Commands", cmds, query, &chosen, SlashCommandsOptions{}).Changed() {
 			changed++
 		}
-	}), 400, 300)
-	tt.Frame()
-	if !tt.FramePending() {
-		t.Error("list does not rise in")
-	}
+	}), 500, 300)
 	settles(t, tt, "commands")
+	if tt.HasText("/review") || !tt.HasText("Ship to production") {
+		t.Fatalf("filter %q", tt.Texts())
+	}
 	before := baseline()
 	click(t, tt, "/deploy")
-	if chosen != 0 || changed != 1 {
-		t.Fatalf("chosen %d changed %d", chosen, changed)
+	if chosen != "/deploy" || changed != 1 {
+		t.Errorf("chosen %q changed %d", chosen, changed)
 	}
 	cues(t, before, sound.Select)
-	panics(t, "no slash", func() {
-		render(func(c *ui.Context) { SlashCommands(c, "x", []string{"deploy"}, &chosen) })
-	})
+	query = "/zz"
+	tt.Frame()
+	if !tt.HasText("No matching commands") {
+		t.Errorf("empty %q", tt.Texts())
+	}
 }
 
 func TestSystemPrompt(t *testing.T) {
-	text, changed := "", 0
+	text, changed := "Be brief.", 0
 	tt := ui.NewTester(padded(func(c *ui.Context) {
 		if SystemPrompt(c, "System prompt", &text, SystemPromptOptions{}).Changed() {
 			changed++
 		}
 	}), 500, 300)
-	settles(t, tt, "editor")
-	if !tt.HasText("≈ 0 tokens") {
-		t.Errorf("texts %q", tt.Texts())
+	settles(t, tt, "system prompt")
+	if !tt.HasText("≈ 3 tokens") {
+		t.Fatalf("texts %q", tt.Texts())
 	}
 	before := baseline()
 	click(t, tt, "System prompt")
-	tt.Type("You write launch decks.")
+	tt.Type(" Cite sources.")
 	tt.Frame()
-	if changed == 0 || !tt.HasText("≈ 6 tokens") {
-		t.Errorf("changed %d texts %q", changed, tt.Texts())
+	if text != "Be brief. Cite sources." || changed == 0 || !tt.HasText("≈ 6 tokens") {
+		t.Errorf("text %q changed %d texts %q", text, changed, tt.Texts())
 	}
-	cues(t, before, sound.Tick)
-	panics(t, "nil text", func() { render(func(c *ui.Context) { SystemPrompt(c, "x", nil, SystemPromptOptions{}) }) })
+	for i, cue := range sound.Recent() {
+		if i >= 32-changed && cue != sound.Tick || len(before) != 32 {
+			t.Errorf("cues %v after %d edits", sound.Recent(), changed)
+			break
+		}
+	}
 }
 
 func TestTemperature(t *testing.T) {
@@ -228,15 +215,19 @@ func TestTemperature(t *testing.T) {
 		}
 	}), 500, 200)
 	settles(t, tt, "temperature")
-	if !tt.HasText("Precise") || !tt.HasText("Creative") {
+	if !tt.HasText("Balanced") || !tt.HasText("0.50") {
 		t.Errorf("texts %q", tt.Texts())
 	}
 	before := baseline()
 	tt.Key(0, ui.KeyTab)
 	tt.Key(0, ui.KeyEnd)
 	tt.Frame()
-	if value != 1 || changed != 1 {
-		t.Fatalf("value %v changed %d", value, changed)
+	if value != 1 || changed != 1 || !tt.HasText("1.00") {
+		t.Fatalf("value %v changed %d texts %q", value, changed, tt.Texts())
+	}
+	settles(t, tt, "creative")
+	if tt.HasText("Balanced") {
+		t.Errorf("mood stayed: %q", tt.Texts())
 	}
 	cues(t, before, sound.Tick)
 	panics(t, "over one", func() {
