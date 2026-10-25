@@ -185,12 +185,12 @@ func TestCategories(t *testing.T) {
 }
 
 func TestEveryEntry(t *testing.T) {
-	continuous := map[string]bool{"social/Live": true, "LessonPath": true, "DeadlineBadge": true, "PullRequest": true, "Checks": true, "LoadingDots": true, "ShimmerButton": true, "PulseButton": true, "Streak": true,
+	continuous := map[string]bool{"social/Live": true, "LessonPath": true, "HeartRate": true, "DeadlineBadge": true, "PullRequest": true, "Checks": true, "LoadingDots": true, "ShimmerButton": true, "PulseButton": true, "Streak": true,
 		"IndeterminateBar": true, "StripedProgress": true, "Spin": true, "DotsLoader": true, "PulseLoader": true,
 		"BarsLoader": true, "OrbitLoader": true, "Skeleton": true, "SkeletonText": true, "SkeletonCard": true, "SkeletonList": true, "LoadingTable": true,
 		"OfflineState": true, "Maintenance": true, "Attention": true, "Beacon": true, "LiveDot": true, "AnnouncementBar": true,
 		"Typewriter": true, "WaveText": true, "Marquee": true, "VerticalMarquee": true, "Bob": true,
-		"Breathe": true, "Beat": true, "Spinning": true, "Orbit": true, "motion/Rings": true, "KeyPath": true, "TextShimmer": true,
+		"motion/Breathe": true, "Beat": true, "Spinning": true, "Orbit": true, "motion/Rings": true, "KeyPath": true, "TextShimmer": true,
 		"GridBackdrop": true, "DotBackdrop": true, "GradientBackdrop": true, "Aurora": true, "Starfield": true, "Particles": true,
 		"Snowfall": true, "Rainfall": true, "Bubbles": true, "Meteors": true, "Sparkles": true, "BorderBeam": true,
 		"ConicBorder": true, "ShineBorder": true, "FlowingText": true, "ShinyText": true, "RetroGrid": true, "RippleBackdrop": true,
