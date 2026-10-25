@@ -6,44 +6,53 @@ import (
 	"github.com/egoist/mygo/ui"
 )
 
-// ContactCardOptions are the contact actions.
-type ContactCardOptions struct{ Call, Message string }
+// ContactCardOptions word the actions and field names.
+type ContactCardOptions struct{ Call, Message, Email, Phone string }
 
-// ContactCard shows contact details and actions.
+// ContactCard shows avatar, name, fields and actions; cue Tap.
 func ContactCard(c *ui.Context, person Contact, action *string, o ContactCardOptions) ui.Element {
-	validContact(person)
+	validContact("ContactCard", person)
 	if action == nil {
 		panic("mail: ContactCard needs action state")
 	}
 	def(&o.Call, "Call")
 	def(&o.Message, "Message")
+	def(&o.Email, "Email")
+	def(&o.Phone, "Phone")
 	t := c.Theme()
-	root := ui.Column(c).FillWidth().Gap(t.Space(2)).Padding(t.Space(3)).Radius(t.Radius).Border(1, t.Border)
-	kit.Arrive(root, ui.Pose{Y: t.Space(2), Fade: 1}, 0)
+	root := card(c)
 	root.Children(func() {
-		ui.Row(c).Gap(t.Space(2)).AlignItems(ui.Center).Children(func() {
-			ui.Box(c).Size(t.Space(10), t.Space(10)).Radius(999).Background(t.Accent.Alpha(0.15)).Center().Children(func() {
-				ui.Text(c, initial(person.Name)).TextColor(t.Accent)
-			})
-			ui.Column(c).Children(func() {
-				ui.Text(c, person.Name).Bold()
-				kit.Muted(c, person.Email)
-				kit.Muted(c, person.Phone)
-			})
+		ui.Column(c).FillWidth().Gap(t.Space(1)).AlignItems(ui.Center).Padding(t.Space(4), t.Space(3), t.Space(3), t.Space(3)).Children(func() {
+			avatar(c, person.Name, 16)
+			ui.Text(c, person.Name).FontSize(t.Rem(1)).Bold().Padding(t.Space(1), 0, 0, 0)
+			if person.Role != "" {
+				kit.Muted(c, person.Role).FontSize(t.Rem(0.78))
+			}
 		})
-		ui.Row(c).Gap(t.Space(2)).Children(func() {
-			actions := []struct {
-				label, id string
-			}{{o.Call, "call"}, {o.Message, "message"}}
-			for _, item := range actions {
-				b := button(c, item.label)
-				b.Children(func() { ui.Text(c, item.label) })
+		ui.Row(c).FillWidth().Gap(t.Space(6)).Justify(ui.Center).Padding(0, t.Space(3), t.Space(3), t.Space(3)).Children(func() {
+			for _, item := range []struct{ label, mark, id string }{{o.Call, "phone", "call"}, {o.Message, "message-square", "message"}} {
+				b := roundAction(c, item.label, item.mark, t.Accent.Alpha(0.12), t.Accent)
 				if b.Clicked() {
 					*action = item.id
 					root.SetChanged()
 					sound.Play(sound.Tap)
 					kit.Log("ContactCard", "action", "id", item.id)
 				}
+			}
+		})
+		fields := ui.Column(c).FillWidth().Padding(t.Space(1), 0).BorderWidth(1, 0, 0, 0).BorderColor(t.Border)
+		fields.Children(func() {
+			for _, f := range []struct{ name, mark, value string }{{o.Email, "mail", person.Email}, {o.Phone, "phone", person.Phone}} {
+				if f.value == "" {
+					continue
+				}
+				ui.Row(c).FillWidth().Gap(t.Space(2.5)).AlignItems(ui.Center).Padding(t.Space(2), t.Space(3)).Children(func() {
+					glyph(c, f.mark, 14).TextColor(t.TextMuted)
+					ui.Column(c).Grow(1).MinWidth(0).Gap(t.Space(0.25)).Children(func() {
+						kit.Muted(c, f.name).FontSize(t.Rem(0.68))
+						ui.Text(c, f.value).FontSize(t.Rem(0.82)).FillWidth().MinWidth(0).SingleLine()
+					})
+				})
 			}
 		})
 	})

@@ -3,7 +3,9 @@ package gallery
 import (
 	"fmt"
 	"time"
+	"unicode/utf8"
 
+	"github.com/ELY-Open-Source/CrychicUI/button"
 	"github.com/ELY-Open-Source/CrychicUI/mail"
 	"github.com/egoist/mygo/ui"
 )
@@ -41,49 +43,75 @@ var mailEntries = []Entry{
 	{ID: 1190, Name: "ReadingPane", Category: "mail", Summary: "Selected mail beside the list.", Demo: demoReadingPane},
 }
 
-func demoMail() mail.Mail {
-	return mail.Mail{ID: "m1", Sender: "Ana", Subject: "Release", Preview: "Notes", Body: "The release is ready.", Time: "10:00", Unread: true}
+// demoMails is one product team's inbox during a launch week.
+func demoMails() []mail.Mail {
+	return []mail.Mail{
+		{ID: "m1", Sender: "Maya Chen", Subject: "Atlas 2.0 launch checklist", Time: "9:42", Unread: true, Attached: true,
+			Preview: "Three items left before Thursday: screenshots, notes, support brief.",
+			Body:    "Three items left before Thursday: App Store screenshots, release notes and the support brief. I attached the checklist; tick yours off when done."},
+		{ID: "m2", Sender: "Daniel Okafor", Subject: "Crash fix is in review", Time: "9:10", Unread: true,
+			Preview: "The deep link guard is ready. Can you look before lunch?",
+			Body:    "The deep link guard is ready, with a test for cold starts. Can you look before lunch? It blocks the beta build."},
+		{ID: "m3", Sender: "Priya Nair", Subject: "Onboarding copy, final pass", Time: "Yesterday", Attached: true,
+			Preview: "I tightened the second screen and cut the jargon.",
+			Body:    "I tightened the second screen and cut the jargon. The new copy fits on small phones without wrapping."},
+		{ID: "m4", Sender: "Lucas Martin", Subject: "Android widget mockups", Time: "Yesterday",
+			Preview: "Two options attached. I lean toward the compact one.",
+			Body:    "Two options attached. I lean toward the compact one: it shows the next trip and its weather in one line."},
+		{ID: "m5", Sender: "Sofia Rossi", Subject: "Regression run: 214 passed", Time: "Mon",
+			Preview: "All green on iOS 18 and Android 15.",
+			Body:    "All green on iOS 18 and Android 15. Two flaky tests are quarantined until Friday."},
+	}
 }
 
 func demoInbox(c *ui.Context, log func(string)) {
-	root := ui.Column(c)
+	root := ui.Column(c).Width(440)
 	selected := textState(root, "selected", "")
 	root.Children(func() {
-		if mail.Inbox(c, []mail.Mail{demoMail()}, selected).Changed() {
+		if mail.Inbox(c, demoMails(), selected, mail.InboxOptions{}).Changed() {
 			log("selected " + *selected)
 		}
 	})
 }
 
 func demoMailRow(c *ui.Context, log func(string)) {
-	root := ui.Column(c).FillWidth()
+	root := ui.Column(c).Width(440)
 	archived := boolState(root, "archived", false)
 	root.Children(func() {
-		if mail.MailRow(c, demoMail(), archived).Changed() {
-			log("archived " + fmt.Sprint(*archived))
+		if !*archived {
+			c.Key("mail-row")
+			if mail.MailRow(c, demoMails()[1], archived).Changed() {
+				log("archived " + fmt.Sprint(*archived))
+			}
+			return
+		}
+		if button.Outline(c, "Undo archive").Clicked() {
+			*archived = false
+			log("restored")
 		}
 	})
 }
 
 func demoComposeWindow(c *ui.Context, log func(string)) {
-	root := ui.Column(c)
+	root := ui.Column(c).Width(440)
 	value := ui.Local(root, "value", func() mail.Compose {
-		return mail.Compose{To: "ana@example.com", Subject: "Release", Body: "Ready"}
+		return mail.Compose{To: "daniel.okafor@atlas.app", Subject: "Re: Crash fix is in review",
+			Body: "Looks good to me. Ship it after the regression run, then tag the beta build."}
 	})
 	root.Children(func() {
 		form, send := mail.ComposeWindow(c, value, mail.ComposeWindowOptions{})
 		if send.Changed() {
 			log("sent")
 		} else if form.Changed() {
-			log("edited " + fmt.Sprint(len([]rune(value.Body))))
+			log("edited " + fmt.Sprint(utf8.RuneCountInString(value.Body)))
 		}
 	})
 }
 
 func demoRecipients(c *ui.Context, log func(string)) {
-	root := ui.Column(c)
-	to := ui.Local(root, "to", func() []string { return []string{"ana@example.com", "ben@example.com"} })
-	cc := ui.Local(root, "cc", func() []string { return []string{} })
+	root := ui.Column(c).Width(440)
+	to := ui.Local(root, "to", func() []string { return []string{"maya.chen@atlas.app", "daniel.okafor@atlas.app"} })
+	cc := ui.Local(root, "cc", func() []string { return []string{"priya.nair@atlas.app"} })
 	bcc := ui.Local(root, "bcc", func() []string { return []string{} })
 	root.Children(func() {
 		if mail.Recipients(c, to, cc, bcc, mail.RecipientsOptions{}).Changed() {
@@ -93,9 +121,16 @@ func demoRecipients(c *ui.Context, log func(string)) {
 }
 
 func demoFolders(c *ui.Context, log func(string)) {
-	root := ui.Column(c)
+	root := ui.Column(c).Width(320)
 	selected := textState(root, "folder", "inbox")
-	folders := []mail.Folder{{ID: "inbox", Name: "Inbox", Count: 2}, {ID: "sent", Name: "Sent"}}
+	folders := []mail.Folder{
+		{ID: "inbox", Name: "Inbox", Icon: "inbox", Count: 12},
+		{ID: "starred", Name: "Starred", Icon: "star", Count: 3},
+		{ID: "sent", Name: "Sent", Icon: "send"},
+		{ID: "drafts", Name: "Drafts", Icon: "file-pen", Count: 2},
+		{ID: "archive", Name: "Archive", Icon: "archive"},
+		{ID: "trash", Name: "Trash", Icon: "trash-2"},
+	}
 	root.Children(func() {
 		if mail.Folders(c, folders, selected).Changed() {
 			log("folder " + *selected)
@@ -104,20 +139,34 @@ func demoFolders(c *ui.Context, log func(string)) {
 }
 
 func demoMailLabels(c *ui.Context, log func(string)) {
-	root := ui.Column(c)
-	selected := ui.Local(root, "labels", func() map[string]bool { return map[string]bool{} })
-	labels := []mail.MailLabel{{ID: "work", Name: "Work", Color: c.Theme().Accent}}
+	t := c.Theme()
+	root := ui.Column(c).Width(400)
+	selected := ui.Local(root, "labels", func() map[string]bool { return map[string]bool{"launch": true} })
+	labels := []mail.MailLabel{
+		{ID: "launch", Name: "Launch", Color: t.Accent}, {ID: "design", Name: "Design", Color: t.Success},
+		{ID: "bugs", Name: "Bugs", Color: t.Danger}, {ID: "follow", Name: "Follow up", Color: t.Warning},
+	}
 	root.Children(func() {
 		if mail.MailLabels(c, labels, selected).Changed() {
-			log("labels " + fmt.Sprint(len(*selected)))
+			on := 0
+			for _, v := range *selected {
+				if v {
+					on++
+				}
+			}
+			log("labels " + fmt.Sprint(on))
 		}
 	})
 }
 
 func demoMailThread(c *ui.Context, log func(string)) {
-	root := ui.Column(c)
-	open := ui.Local(root, "open", func() map[string]bool { return map[string]bool{"m2": true} })
-	messages := []mail.ThreadMessage{{ID: "m1", Sender: "Ana", Body: "First", Time: "09:00"}, {ID: "m2", Sender: "Ben", Body: "Last", Time: "10:00"}}
+	root := ui.Column(c).Width(440)
+	open := ui.Local(root, "open", func() map[string]bool { return map[string]bool{} })
+	messages := []mail.ThreadMessage{
+		{ID: "t1", Sender: "Daniel Okafor", Time: "09:02", Body: "Found the crash: the map router runs before the trip store loads on a cold start."},
+		{ID: "t2", Sender: "Maya Chen", Time: "09:15", Body: "Nice catch. Can we guard it and add a cold-start test so it stays fixed?"},
+		{ID: "t3", Sender: "Priya Nair", Time: "09:40", Body: "I checked the fix on my phone. Shared links open straight to the map now."},
+	}
 	root.Children(func() {
 		if mail.MailThread(c, messages, open).Changed() {
 			count := 0
@@ -132,11 +181,15 @@ func demoMailThread(c *ui.Context, log func(string)) {
 }
 
 func demoMailAttachments(c *ui.Context, log func(string)) {
-	mail.MailAttachments(c, []mail.Attachment{{Name: "notes.pdf", Size: 2048}})
+	files := []mail.Attachment{
+		{Name: "launch-checklist.pdf", Size: 248 << 10}, {Name: "store-screenshots.zip", Size: 18<<20 + 400<<10},
+		{Name: "widget-mockup.png", Size: 1200 << 10}, {Name: "launch-budget.xlsx", Size: 42 << 10},
+	}
+	ui.Column(c).Width(440).Children(func() { mail.MailAttachments(c, files, mail.MailAttachmentsOptions{}) })
 }
 
 func demoSnooze(c *ui.Context, log func(string)) {
-	root := ui.Column(c)
+	root := ui.Column(c).Width(380)
 	at := ui.Local(root, "at", func() time.Time { return c.Now() })
 	root.Children(func() {
 		if mail.Snooze(c, at, mail.SnoozeOptions{}).Changed() {
@@ -146,7 +199,7 @@ func demoSnooze(c *ui.Context, log func(string)) {
 }
 
 func demoSendLater(c *ui.Context, log func(string)) {
-	root := ui.Column(c)
+	root := ui.Column(c).Width(380)
 	at := ui.Local(root, "at", func() time.Time { return c.Now() })
 	root.Children(func() {
 		if mail.SendLater(c, at, mail.SendLaterOptions{}).Changed() {
@@ -156,201 +209,43 @@ func demoSendLater(c *ui.Context, log func(string)) {
 }
 
 func demoNotification(c *ui.Context, log func(string)) {
-	root := ui.Column(c)
-	opened := boolState(root, "opened", false)
-	notice := mail.Notice{ID: "n1", Text: "New reply", Time: "now"}
+	root := ui.Column(c).Width(420).Gap(8)
+	first, second := boolState(root, "first", false), boolState(root, "second", true)
+	reply := mail.Notice{ID: "n1", Icon: "reply", Time: "2m ago", Text: "Daniel Okafor replied to Crash fix is in review",
+		Detail: "The fix and its test are in review now."}
+	shared := mail.Notice{ID: "n2", Icon: "file-text", Time: "1h ago", Text: "Sofia Rossi shared Regression run: 214 passed"}
 	root.Children(func() {
-		if mail.Notification(c, notice, opened).Changed() {
-			log("opened " + fmt.Sprint(*opened))
+		a := mail.Notification(c, reply, first).Changed()
+		b := mail.Notification(c, shared, second).Changed()
+		if a || b {
+			opened := 0
+			for _, v := range []bool{*first, *second} {
+				if v {
+					opened++
+				}
+			}
+			log("opened " + fmt.Sprint(opened))
 		}
 	})
 }
 
 func demoNotificationSettings(c *ui.Context, log func(string)) {
-	root := ui.Column(c)
+	root := ui.Column(c).Width(420)
 	settings := ui.Local(root, "settings", func() []mail.NotificationSetting {
-		return []mail.NotificationSetting{{Event: "Replies", Email: true}}
+		return []mail.NotificationSetting{{Event: "Replies", Email: true, Push: true}, {Event: "Mentions", Push: true},
+			{Event: "Weekly digest", Email: true}, {Event: "Security alerts", Email: true, Push: true}}
 	})
 	root.Children(func() {
 		if mail.NotificationSettings(c, settings, mail.NotificationSettingsOptions{}).Changed() {
-			log(fmt.Sprintf("email %v push %v", (*settings)[0].Email, (*settings)[0].Push))
-		}
-	})
-}
-
-func demoSignature(c *ui.Context, log func(string)) {
-	root := ui.Column(c)
-	text := textState(root, "signature", "Ana")
-	root.Children(func() {
-		if mail.Signature(c, text, mail.SignatureOptions{}).Changed() {
-			log("runes " + fmt.Sprint(len([]rune(*text))))
-		}
-	})
-}
-
-func demoOutOfOffice(c *ui.Context, log func(string)) {
-	root := ui.Column(c)
-	value := ui.Local(root, "away", func() mail.AutoReply {
-		return mail.AutoReply{Start: c.Now(), End: c.Now().AddDate(0, 0, 1), Message: "Away"}
-	})
-	root.Children(func() {
-		if mail.OutOfOffice(c, value, mail.OutOfOfficeOptions{}).Changed() {
-			log("away " + fmt.Sprint(value.Enabled))
-		}
-	})
-}
-
-func demoContacts(c *ui.Context, log func(string)) {
-	root := ui.Column(c)
-	selected := textState(root, "contact", "")
-	people := []mail.Contact{{ID: "ana", Name: "Ana", Email: "ana@example.com"}}
-	root.Children(func() {
-		if mail.Contacts(c, people, selected).Changed() {
-			log("contact " + *selected)
-		}
-	})
-}
-
-func demoContactCard(c *ui.Context, log func(string)) {
-	root := ui.Column(c)
-	action := textState(root, "action", "")
-	person := mail.Contact{ID: "ana", Name: "Ana", Email: "ana@example.com", Phone: "123"}
-	root.Children(func() {
-		if mail.ContactCard(c, person, action, mail.ContactCardOptions{}).Changed() {
-			log("action " + *action)
-		}
-	})
-}
-
-func demoCallScreen(c *ui.Context, log func(string)) {
-	root := ui.Column(c)
-	ended := boolState(root, "ended", false)
-	started := ui.Local(root, "started", func() time.Time { return c.Now() })
-	root.Children(func() {
-		if mail.CallScreen(c, "Ana", *started, ended, mail.CallScreenOptions{}).Changed() {
-			log("ended " + fmt.Sprint(*ended))
-		}
-	})
-}
-
-func demoIncomingCall(c *ui.Context, log func(string)) {
-	root := ui.Column(c)
-	accepted, declined := boolState(root, "accepted", false), boolState(root, "declined", false)
-	root.Children(func() {
-		if mail.IncomingCall(c, "Ana", accepted, declined, mail.IncomingCallOptions{}).Changed() {
-			log(fmt.Sprintf("accepted %v declined %v", *accepted, *declined))
-		}
-	})
-}
-
-func demoCallControls(c *ui.Context, log func(string)) {
-	root := ui.Column(c)
-	state := ui.Local(root, "call", func() mail.CallState { return mail.CallState{Video: true} })
-	root.Children(func() {
-		if mail.CallControls(c, state, mail.CallControlsOptions{}).Changed() {
-			log(fmt.Sprintf("muted %v ended %v", state.Muted, state.Ended))
-		}
-	})
-}
-
-func demoVideoGrid(c *ui.Context, log func(string)) {
-	mail.VideoGrid(c, []mail.Participant{{ID: "ana", Name: "Ana", Speaking: true}})
-}
-
-func demoParticipants(c *ui.Context, log func(string)) {
-	mail.Participants(c, []mail.Participant{{ID: "ana", Name: "Ana", Muted: true}})
-}
-
-func demoScreenShare(c *ui.Context, log func(string)) {
-	root := ui.Column(c)
-	sharing := boolState(root, "sharing", true)
-	root.Children(func() {
-		if mail.ScreenShare(c, sharing, mail.ScreenShareOptions{}).Changed() {
-			log("sharing " + fmt.Sprint(*sharing))
-		}
-	})
-}
-
-func demoVoicemail(c *ui.Context, log func(string)) {
-	root := ui.Column(c)
-	playing := intState(root, "playing", -1)
-	messages := []mail.VoiceMessage{{ID: "v1", Sender: "Ana", Time: "1m", Transcript: "Call me"}}
-	root.Children(func() {
-		if mail.Voicemail(c, messages, playing, mail.VoicemailOptions{}).Changed() {
-			log("playing " + fmt.Sprint(*playing))
-		}
-	})
-}
-
-func demoMessageTemplates(c *ui.Context, log func(string)) {
-	root := ui.Column(c)
-	selected := intState(root, "reply", -1)
-	replies := []mail.SavedReply{{ID: "r1", Title: "Thanks", Body: "Thank you"}}
-	root.Children(func() {
-		if mail.MessageTemplates(c, replies, selected).Changed() {
-			log("reply " + fmt.Sprint(*selected))
-		}
-	})
-}
-
-func demoUnsubscribe(c *ui.Context, log func(string)) {
-	root := ui.Column(c)
-	reason := textState(root, "reason", "")
-	confirmed := boolState(root, "confirmed", false)
-	root.Children(func() {
-		form, confirm := mail.Unsubscribe(c, []string{"Too many"}, reason, confirmed, mail.UnsubscribeOptions{})
-		if confirm.Changed() {
-			log("confirmed")
-		} else if form.Changed() {
-			log("reason " + *reason)
-		}
-	})
-}
-
-func demoSpam(c *ui.Context, log func(string)) {
-	root := ui.Column(c)
-	spam := boolState(root, "spam", true)
-	root.Children(func() {
-		if mail.Spam(c, spam, mail.SpamOptions{}).Changed() {
-			log("spam " + fmt.Sprint(*spam))
-		}
-	})
-}
-
-func demoPriorityInbox(c *ui.Context, log func(string)) {
-	other := demoMail()
-	other.ID, other.Unread = "m2", false
-	mail.PriorityInbox(c, []mail.Mail{demoMail()}, []mail.Mail{other}, mail.PriorityInboxOptions{})
-}
-
-func demoMailSearch(c *ui.Context, log func(string)) {
-	root := ui.Column(c)
-	query := ui.Local(root, "query", func() mail.MailQuery { return mail.MailQuery{} })
-	root.Children(func() {
-		if mail.MailSearch(c, query, mail.MailSearchOptions{}).Changed() {
-			log(fmt.Sprintf("runes %d attachments %v", len([]rune(query.Text)), query.Attachments))
-		}
-	})
-}
-
-func demoUndoSend(c *ui.Context, log func(string)) {
-	root := ui.Column(c)
-	visible := boolState(root, "visible", true)
-	root.Children(func() {
-		if mail.UndoSend(c, visible, mail.UndoSendOptions{}).Changed() {
-			log("visible " + fmt.Sprint(*visible))
-		}
-	})
-}
-
-func demoReadingPane(c *ui.Context, log func(string)) {
-	root := ui.Column(c)
-	selected := textState(root, "reading", "m1")
-	second := demoMail()
-	second.ID, second.Subject, second.Body = "m2", "Second", "Second body"
-	root.Children(func() {
-		if mail.ReadingPane(c, []mail.Mail{demoMail(), second}, selected).Changed() {
-			log("reading " + *selected)
+			on := 0
+			for _, s := range *settings {
+				for _, v := range []bool{s.Email, s.Push} {
+					if v {
+						on++
+					}
+				}
+			}
+			log("channels " + fmt.Sprint(on))
 		}
 	})
 }

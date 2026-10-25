@@ -11,7 +11,7 @@ import (
 func TestContacts(t *testing.T) {
 	selected := ""
 	people := []Contact{{ID: "ana", Name: "Ana", Email: "ana@example.com"}}
-	tt := ui.NewTester(padded(func(c *ui.Context) { Contacts(c, people, &selected) }), 500, 180)
+	tt := ui.NewTester(padded(func(c *ui.Context) { Contacts(c, people, &selected, ContactsOptions{}) }), 500, 180)
 	settles(t, tt)
 	before := baseline()
 	click(t, tt, "Ana")
@@ -37,7 +37,7 @@ func TestContactCard(t *testing.T) {
 func TestCallScreen(t *testing.T) {
 	ended := false
 	started := time.Now().Add(-65 * time.Second)
-	tt := ui.NewTester(padded(func(c *ui.Context) { CallScreen(c, "Ana", started, &ended, CallScreenOptions{}) }), 500, 250)
+	tt := ui.NewTester(padded(func(c *ui.Context) { CallScreen(c, "Ana", started, &ended, CallScreenOptions{}) }), 500, 500)
 	tt.Advance(100 * time.Millisecond)
 	if !tt.HasText("01:05") {
 		t.Errorf("texts %q", tt.Texts())
@@ -88,7 +88,7 @@ func TestVideoGrid(t *testing.T) {
 
 func TestParticipants(t *testing.T) {
 	people := []Participant{{ID: "ana", Name: "Ana", Muted: true}}
-	tt := ui.NewTester(padded(func(c *ui.Context) { Participants(c, people) }), 500, 180)
+	tt := ui.NewTester(padded(func(c *ui.Context) { Participants(c, people, ParticipantsOptions{}) }), 500, 180)
 	settles(t, tt)
 	if !tt.HasText("Ana") {
 		t.Errorf("texts %q", tt.Texts())
@@ -123,7 +123,7 @@ func TestVoicemail(t *testing.T) {
 func TestMessageTemplates(t *testing.T) {
 	selected := -1
 	replies := []SavedReply{{ID: "r1", Title: "Thanks", Body: "Thank you"}}
-	tt := ui.NewTester(padded(func(c *ui.Context) { MessageTemplates(c, replies, &selected) }), 500, 220)
+	tt := ui.NewTester(padded(func(c *ui.Context) { MessageTemplates(c, replies, &selected, MessageTemplatesOptions{}) }), 500, 220)
 	settles(t, tt)
 	before := baseline()
 	click(t, tt, "Thanks")

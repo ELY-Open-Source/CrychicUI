@@ -1,7 +1,7 @@
 package mail
 
 import (
-	"math"
+	"fmt"
 	"time"
 
 	"github.com/ELY-Open-Source/CrychicUI/kit"
@@ -9,40 +9,63 @@ import (
 	"github.com/egoist/mygo/ui"
 )
 
-// IncomingCallOptions are the call answers.
-type IncomingCallOptions struct{ Accept, Decline string }
+// IncomingCallOptions word the answers and status lines.
+type IncomingCallOptions struct{ Accept, Decline, Calling, Accepted, Declined string }
 
 // IncomingCall accepts or declines a pulsing call; cue Notify.
 func IncomingCall(c *ui.Context, caller string, accepted, declined *bool, o IncomingCallOptions) ui.Element {
 	if caller == "" || accepted == nil || declined == nil {
-		panic("mail: IncomingCall needs caller and state")
+		panic(fmt.Sprintf("mail: IncomingCall %q needs caller and state", caller))
 	}
 	def(&o.Accept, "Accept")
 	def(&o.Decline, "Decline")
+	def(&o.Calling, "Incoming call")
+	def(&o.Accepted, "Call accepted")
+	def(&o.Declined, "Call declined")
 	t := c.Theme()
-	root := ui.Column(c).FillWidth().Gap(t.Space(3)).AlignItems(ui.Center).Padding(t.Space(4)).Radius(t.Radius).Border(1, t.Border)
+	root := card(c).Gap(t.Space(1.5)).AlignItems(ui.Center).Padding(t.Space(5), t.Space(4))
 	root.Children(func() {
 		done := *accepted || *declined
-		phase := 0.0
+		rings := ui.Box(c).Size(t.Space(30), t.Space(30)).Center()
+		phase := float32(0)
 		if !done {
-			phase = float64(root.Loop("ring", 1200*time.Millisecond, ui.Linear)) * 2 * math.Pi
+			phase = rings.Loop("ring", 1500*time.Millisecond, ui.Linear)
 		}
-		scale := 1 + 0.06*float32(math.Sin(phase))
-		ui.Box(c).Size(t.Space(12), t.Space(12)).Radius(999).Background(t.Accent.Alpha(0.2)).Scale(scale, scale).Center().Children(func() {
-			ui.Text(c, initial(caller)).TextColor(t.Accent)
-		})
-		ui.Text(c, caller).Bold()
-		ui.Row(c).Gap(t.Space(2)).Children(func() {
-			accept := button(c, o.Accept).Background(t.Success).TextColor(t.AccentText).Disabled(done)
-			accept.Children(func() { ui.Text(c, o.Accept) })
+		rings.Draw(kit.Inside(0, func(p *ui.Painter, r ui.Rect) {
+			if done {
+				return
+			}
+			cx, cy := r.X+r.W/2, r.Y+r.H/2
+			for _, lag := range []float32{0, 0.5} {
+				k := phase + lag
+				if k > 1 {
+					k--
+				}
+				rad := t.Space(8) + (r.W/2-t.Space(8))*k
+				var ring ui.Path
+				ring.Circle(cx, cy, rad)
+				p.StrokePath(&ring, 1.5, t.Accent.Alpha(0.6*(1-k)))
+			}
+		}))
+		rings.Children(func() { avatar(c, caller, 16) })
+		ui.Text(c, caller).FontSize(t.Rem(1.05)).Bold()
+		status := o.Calling
+		switch {
+		case *accepted:
+			status = o.Accepted
+		case *declined:
+			status = o.Declined
+		}
+		kit.Muted(c, status).FontSize(t.Rem(0.8)).ContentTransition(ui.ContentTransition{})
+		ui.Row(c).Gap(t.Space(12)).Padding(t.Space(3), 0, 0, 0).Children(func() {
+			decline := roundAction(c, o.Decline, "phone-off", t.Danger, t.AccentText).Disabled(done)
+			accept := roundAction(c, o.Accept, "phone", t.Success, t.AccentText).Disabled(done)
 			if accept.Clicked() && !done {
 				*accepted = true
 				root.SetChanged()
 				sound.Play(sound.Notify)
 				kit.Log("IncomingCall", "accepted")
 			}
-			decline := button(c, o.Decline).Background(t.Danger).TextColor(t.AccentText).Disabled(done)
-			decline.Children(func() { ui.Text(c, o.Decline) })
 			if decline.Clicked() && !done {
 				*declined = true
 				root.SetChanged()

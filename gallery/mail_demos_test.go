@@ -17,9 +17,9 @@ func TestMailDemosLog(t *testing.T) {
 		do   func(tt *ui.Tester) error
 		want string
 	}{
-		"Inbox": {press("Release"), "selected m1"},
+		"Inbox": {press("Atlas 2.0 launch checklist"), "selected m1"},
 		"MailRow": {func(tt *ui.Tester) error {
-			r, ok := tt.Find("Release")
+			r, ok := tt.Find("Crash fix is in review")
 			if !ok {
 				return fmt.Errorf("subject not found: %q", tt.Texts())
 			}
@@ -30,32 +30,32 @@ func TestMailDemosLog(t *testing.T) {
 			return nil
 		}, "archived true"},
 		"ComposeWindow":        {press("Send"), "sent"},
-		"Recipients":           {press("ana@example.com"), "recipients 1"},
+		"Recipients":           {press("maya.chen@atlas.app"), "recipients 2"},
 		"Folders":              {press("Sent"), "folder sent"},
-		"MailLabels":           {press("Work"), "labels 1"},
-		"MailThread":           {press("Ana"), "open 2"},
+		"MailLabels":           {press("Design"), "labels 2"},
+		"MailThread":           {press("Daniel Okafor"), "open 1"},
 		"Snooze":               {press("Tomorrow"), "snoozed"},
 		"SendLater":            {press("Tomorrow morning"), "scheduled"},
-		"Notification":         {press("New reply"), "opened true"},
-		"NotificationSettings": {press("Replies Push"), "push true"},
+		"Notification":         {press("Daniel Okafor replied to Crash fix is in review"), "opened 2"},
+		"NotificationSettings": {press("Mentions Email"), "channels 7"},
 		"Signature": {func(tt *ui.Tester) error {
 			if err := tt.Click("Signature"); err != nil {
 				return err
 			}
 			tt.Type("!")
 			return nil
-		}, "runes 4"},
-		"OutOfOffice":      {press("Out of office"), "away true"},
-		"Contacts":         {press("Ana"), "contact ana"},
+		}, "runes 50"},
+		"OutOfOffice":      {press("Out of office"), "away false"},
+		"Contacts":         {press("Lucas Martin"), "contact lucas"},
 		"ContactCard":      {press("Call"), "action call"},
 		"CallScreen":       {press("End"), "ended true"},
 		"IncomingCall":     {press("Accept"), "accepted true"},
 		"CallControls":     {press("Mute"), "muted true"},
 		"ScreenShare":      {press("Stop"), "sharing false"},
 		"Voicemail":        {press("Play"), "playing 0"},
-		"MessageTemplates": {press("Thanks"), "reply 0"},
+		"MessageTemplates": {press("Next week"), "reply 1"},
 		"Unsubscribe": {func(tt *ui.Tester) error {
-			if err := tt.Click("Too many"); err != nil {
+			if err := tt.Click("I never signed up"); err != nil {
 				return err
 			}
 			tt.Frame()
@@ -64,7 +64,7 @@ func TestMailDemosLog(t *testing.T) {
 		"Spam":        {press("Not spam"), "spam false"},
 		"MailSearch":  {press("Has attachment"), "attachments true"},
 		"UndoSend":    {press("Undo"), "visible false"},
-		"ReadingPane": {press("Second"), "reading m2"},
+		"ReadingPane": {press("Crash fix is in review"), "reading m2"},
 	}
 	quiet := map[string]bool{"MailAttachments": true, "VideoGrid": true, "Participants": true, "PriorityInbox": true}
 	seen := 0

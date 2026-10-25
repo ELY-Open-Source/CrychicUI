@@ -24,16 +24,29 @@ func CallControls(c *ui.Context, state *CallState, o CallControlsOptions) ui.Ele
 	def(&o.Share, "Share")
 	def(&o.End, "End")
 	t := c.Theme()
-	root := ui.Row(c).FillWidth().Wrap().Gap(t.Space(2)).Role(ui.RoleGroup)
+	root := card(c).Row().Gap(t.Space(5)).Justify(ui.Center).Padding(t.Space(3), t.Space(4))
 	root.Children(func() {
+		quiet := t.SurfaceHover
 		controls := []struct {
-			label string
-			value *bool
-		}{{o.Mute, &state.Muted}, {o.Video, &state.Video}, {o.Share, &state.Sharing}}
+			label, on, off string
+			value          *bool
+			ink            ui.Color
+			alarm          bool
+		}{
+			{o.Mute, "mic-off", "mic", &state.Muted, t.Danger, state.Muted},
+			{o.Video, "video", "video-off", &state.Video, t.Danger, !state.Video},
+			{o.Share, "monitor-up", "monitor-up", &state.Sharing, t.Accent, state.Sharing},
+		}
 		for i, control := range controls {
 			c.Key(i)
-			b := button(c, control.label).Checked(*control.value).Disabled(state.Ended)
-			b.Children(func() { ui.Text(c, control.label) })
+			mark, bg, ink := control.off, quiet, t.Text
+			if *control.value {
+				mark = control.on
+			}
+			if control.alarm {
+				bg, ink = control.ink.Alpha(0.14), control.ink
+			}
+			b := roundAction(c, control.label, mark, bg, ink).Checked(*control.value).Disabled(state.Ended)
 			if b.Clicked() && !state.Ended {
 				*control.value = !*control.value
 				root.SetChanged()
@@ -41,8 +54,7 @@ func CallControls(c *ui.Context, state *CallState, o CallControlsOptions) ui.Ele
 				kit.Log("CallControls", "toggled", "control", i, "on", *control.value)
 			}
 		}
-		end := button(c, o.End).Background(t.Danger).TextColor(t.AccentText).Disabled(state.Ended)
-		end.Children(func() { ui.Text(c, o.End) })
+		end := roundAction(c, o.End, "phone-off", t.Danger, t.AccentText).Disabled(state.Ended)
 		if end.Clicked() && !state.Ended {
 			state.Ended = true
 			root.SetChanged()

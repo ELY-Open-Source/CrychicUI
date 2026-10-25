@@ -10,7 +10,7 @@ import (
 
 func TestInbox(t *testing.T) {
 	selected := ""
-	tt := ui.NewTester(padded(func(c *ui.Context) { Inbox(c, []Mail{testMail()}, &selected) }), 500, 220)
+	tt := ui.NewTester(padded(func(c *ui.Context) { Inbox(c, []Mail{testMail()}, &selected, InboxOptions{}) }), 500, 220)
 	settles(t, tt)
 	before := baseline()
 	click(t, tt, "Release")
@@ -140,7 +140,7 @@ func TestMailThread(t *testing.T) {
 
 func TestMailAttachments(t *testing.T) {
 	tt := ui.NewTester(padded(func(c *ui.Context) {
-		MailAttachments(c, []Attachment{{Name: "notes.pdf", Size: 2048}})
+		MailAttachments(c, []Attachment{{Name: "notes.pdf", Size: 2048}}, MailAttachmentsOptions{})
 	}), 500, 180)
 	settles(t, tt)
 	if !tt.HasText("notes.pdf") || !tt.HasText("2.0 KB") {

@@ -1,6 +1,8 @@
 package mail
 
 import (
+	"fmt"
+
 	"github.com/ELY-Open-Source/CrychicUI/kit"
 	"github.com/ELY-Open-Source/CrychicUI/sound"
 	"github.com/egoist/mygo/ui"
@@ -11,41 +13,49 @@ func ReadingPane(c *ui.Context, mails []Mail, selected *string) ui.Element {
 	if len(mails) == 0 || selected == nil {
 		panic("mail: ReadingPane needs messages and selection")
 	}
-	t := c.Theme()
+	ids := make([]string, len(mails))
 	var current Mail
 	found := false
-	for _, m := range mails {
-		validMail(m)
+	for i, m := range mails {
+		validMail("ReadingPane", m)
+		ids[i] = m.ID
 		if m.ID == *selected {
 			current, found = m, true
 		}
 	}
+	unique("ReadingPane", ids)
 	if !found || current.Body == "" {
-		panic("mail: ReadingPane needs a selected body")
+		panic(fmt.Sprintf("mail: ReadingPane selection %q needs a message with a body", *selected))
 	}
-	root := ui.Row(c).FillWidth().Gap(t.Space(3)).Role(ui.RoleGroup)
+	t := c.Theme()
+	root := card(c).Row().AlignItems(ui.Stretch)
 	root.Children(func() {
-		ui.Column(c).Grow(1).Basis(0).Gap(t.Space(1)).Children(func() {
-			for _, m := range mails {
+		list := ui.Column(c).Grow(1).Basis(0).MinWidth(0).Gap(t.Space(0.5)).Padding(t.Space(1.5)).
+			BorderWidth(0, 1, 0, 0).BorderColor(t.Border).Role(ui.RoleList)
+		list.Children(func() {
+			for i, m := range mails {
 				c.Key(m.ID)
-				row := button(c, m.Subject).Column().FillWidth().AlignItems(ui.Start).Checked(m.ID == *selected)
-				row.Background(row.AnimateColor("selected", t.Surface.Mix(t.Accent.Alpha(0.12), unit(m.ID == *selected)), ui.Snappy))
-				row.Children(func() {
-					ui.Text(c, m.Sender).SingleLine()
-					ui.Text(c, m.Subject).SingleLine()
-				})
-				if row.Clicked() && *selected != m.ID {
+				r := row(c, m.Subject, m.ID == *selected).Role(ui.RoleRow)
+				kit.Stagger(c, list, r, i).Children(func() { mailFace(c, m) })
+				if r.Clicked() && *selected != m.ID {
 					*selected = m.ID
 					root.SetChanged()
 					sound.Play(sound.Select)
-					kit.Log("ReadingPane", "selected")
+					kit.Log("ReadingPane", "selected", "index", i)
 				}
 			}
 		})
-		ui.Column(c).Grow(2).Basis(0).Gap(t.Space(2)).Key(current.ID).Transition(kit.Enter).Children(func() {
-			ui.Text(c, current.Subject).Bold()
-			kit.Muted(c, current.Sender+" · "+current.Time)
-			ui.Text(c, current.Body).Wrap()
+		ui.Column(c).Grow(1.4).Basis(0).MinWidth(0).Padding(t.Space(3)).Children(func() {
+			pane := ui.Column(c).Key(current.ID).FillWidth().Gap(t.Space(2.5)).Transition(kit.Enter)
+			pane.Children(func() {
+				ui.Text(c, current.Subject).FontSize(t.Rem(1)).Bold().Wrap().FillWidth()
+				ui.Row(c).FillWidth().Gap(t.Space(2)).AlignItems(ui.Center).Children(func() {
+					avatar(c, current.Sender, 8)
+					ui.Text(c, current.Sender).FontSize(t.Rem(0.8)).Bold().Grow(1).MinWidth(0).SingleLine()
+					kit.Muted(c, current.Time).FontSize(t.Rem(0.72)).Shrink(0)
+				})
+				ui.Text(c, current.Body).FontSize(t.Rem(0.82)).Wrap().FillWidth().TextColor(t.Text.Mix(t.TextMuted, 0.25))
+			})
 		})
 	})
 	return root
