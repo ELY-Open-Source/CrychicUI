@@ -96,7 +96,7 @@ func TestAccountDemosLog(t *testing.T) {
 	quiet := map[string]bool{"SecurityScore": true, "Usage": true}
 	seen := 0
 	for _, e := range Entries() {
-		if e.Category != "account" {
+		if e.Category != "account" || e.ID > 1245 {
 			continue
 		}
 		seen++

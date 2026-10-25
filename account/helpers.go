@@ -153,6 +153,33 @@ func dot(c *ui.Context) {
 	ui.Box(c).Size(t.Space(0.75), t.Space(0.75)).Shrink(0).Radius(999).Background(t.TextMuted.Alpha(0.6))
 }
 
+// track is a switch drawing with a sliding knob.
+func track(c *ui.Context, on, hover bool) {
+	t := c.Theme()
+	b := ui.Box(c).Size(t.Space(9), t.Space(5)).Shrink(0).Radius(999)
+	b.Background(b.AnimateColor("track", t.SurfaceHover.Mix(t.Border, 0.6*unit(hover)).Mix(t.Accent, unit(on)), ui.Snappy))
+	x := b.AnimateTo("knob", unit(on), ui.Snappy)
+	pad := t.Space(0.5)
+	b.Draw(func(p *ui.Painter, r ui.Rect) {
+		d := r.H - 2*pad
+		p.Fill(ui.Rect{X: r.X + pad + x*(r.W-r.H), Y: r.Y + pad, W: d, H: d}, t.Background, d/2)
+	})
+}
+
+// tick is a checkbox square whose check pops in.
+func tick(c *ui.Context, on, hover bool) {
+	t := c.Theme()
+	box := ui.Box(c).Size(t.Space(5), t.Space(5)).Shrink(0).Center().Radius(t.Radius * 0.6)
+	box.Background(box.AnimateColor("bg", t.Background.Mix(t.Accent, unit(on)), ui.Snappy)).TextColor(t.AccentText)
+	box.Border(1, box.AnimateColor("line", t.Border.Mix(t.Accent, max(unit(on), unit(hover))), ui.Snappy))
+	box.Children(func() {
+		if on {
+			c.Key("check")
+			kit.Arrive(glyph(c, "check", 14), ui.Pose{Scale: 0.3, Fade: 1}, 0)
+		}
+	})
+}
+
 // unique panics when items repeat or are blank.
 func unique(component string, items []string) {
 	seen := map[string]bool{}

@@ -57,15 +57,7 @@ func SignUp(c *ui.Context, value *SignUpValue, o SignUpOptions) (root, submit ui
 		terms := kit.Press(ui.ButtonBase(c).Label(o.Terms).AlignSelf(ui.Start).Padding(t.Space(1), 0).Radius(t.Radius).Checked(value.Terms))
 		terms.Children(func() {
 			ui.Row(c).Gap(t.Space(2.5)).AlignItems(ui.Center).Children(func() {
-				box := ui.Box(c).Size(t.Space(5), t.Space(5)).Shrink(0).Center().Radius(t.Radius * 0.6)
-				box.Background(box.AnimateColor("bg", t.Background.Mix(t.Accent, unit(value.Terms)), ui.Snappy)).TextColor(t.AccentText)
-				box.Border(1, box.AnimateColor("line", t.Border.Mix(t.Accent, max(unit(value.Terms), unit(terms.Hovered()))), ui.Snappy))
-				box.Children(func() {
-					if value.Terms {
-						c.Key("check")
-						kit.Arrive(glyph(c, "check", 14), ui.Pose{Scale: 0.3, Fade: 1}, 0)
-					}
-				})
+				tick(c, value.Terms, terms.Hovered())
 				ui.Text(c, o.Terms).FontSize(t.Rem(0.82)).Shrink(0)
 			})
 		})
