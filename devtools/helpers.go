@@ -10,6 +10,7 @@ import (
 
 	"github.com/ELY-Open-Source/CrychicUI/icon"
 	"github.com/ELY-Open-Source/CrychicUI/kit"
+	"github.com/egoist/mygo/i18n"
 	"github.com/egoist/mygo/ui"
 )
 
@@ -161,6 +162,25 @@ func unique(component string, items []string) {
 	}
 }
 
+// HealthState is how a service or endpoint is doing.
+type HealthState int
+
+const (
+	HealthUp HealthState = iota
+	HealthDegraded
+	HealthDown
+)
+
+func healthInk(t *ui.Theme, h HealthState) ui.Color {
+	return [...]ui.Color{t.Success, t.Warning, t.Danger}[h]
+}
+
+func validHealth(component, label string, h HealthState) {
+	if h < HealthUp || h > HealthDown {
+		panic(fmt.Sprintf("devtools: %s %q state %d is not Up to Down", component, label, h))
+	}
+}
+
 // Level is a log level.
 type Level int
 
@@ -236,6 +256,55 @@ func spark(r ui.Rect, values []float64, lo, hi float64) *ui.Path {
 		}
 	}
 	return &p
+}
+
+// ring is a circle path starting at the top, clockwise.
+func ring(cx, cy, r float32) *ui.Path {
+	const k = 0.5522847498
+	var p ui.Path
+	p.MoveTo(cx, cy-r)
+	p.CubeTo(cx+r*k, cy-r, cx+r, cy-r*k, cx+r, cy)
+	p.CubeTo(cx+r, cy+r*k, cx+r*k, cy+r, cx, cy+r)
+	p.CubeTo(cx-r*k, cy+r, cx-r, cy+r*k, cx-r, cy)
+	p.CubeTo(cx-r, cy-r*k, cx-r*k, cy-r, cx, cy-r)
+	return p.Close()
+}
+
+// number groups an integer for the current locale.
+func number(c *ui.Context, n any) string {
+	return i18n.FormatNumber(c.Region().FormatLocale(c.Locale()), n, i18n.NumberOptions{Integer: true})
+}
+
+// countdown is whole seconds left; it wakes each second.
+func countdown(c *ui.Context, until time.Time) int64 {
+	now := c.Now()
+	// Unix seconds: Sub saturates past 292 years.
+	secs := until.Unix() - now.Unix()
+	if until.Nanosecond() > now.Nanosecond() {
+		secs++
+	}
+	if secs <= 0 {
+		return 0
+	}
+	frac := time.Duration((until.Nanosecond() - now.Nanosecond() + 1e9) % 1e9)
+	if frac == 0 {
+		frac = time.Second
+	}
+	c.After(frac + time.Millisecond)
+	return secs
+}
+
+// span formats seconds as its two largest units.
+func span(secs int64) string {
+	switch {
+	case secs >= 86400:
+		return fmt.Sprintf("%dd %dh", secs/86400, secs/3600%24)
+	case secs >= 3600:
+		return fmt.Sprintf("%dh %dm", secs/3600, secs/60%60)
+	case secs >= 60:
+		return fmt.Sprintf("%dm %ds", secs/60, secs%60)
+	}
+	return fmt.Sprintf("%ds", secs)
 }
 
 // bounds is the least and greatest of values.
