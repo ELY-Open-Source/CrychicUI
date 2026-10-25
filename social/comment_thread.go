@@ -1,7 +1,9 @@
 package social
 
 import (
+	"fmt"
 	"strings"
+	"unicode/utf8"
 
 	"github.com/ELY-Open-Source/CrychicUI/kit"
 	"github.com/ELY-Open-Source/CrychicUI/sound"
@@ -10,9 +12,9 @@ import (
 
 // Comment is one nested discussion comment.
 type Comment struct {
-	ID, Text string
-	Author   User
-	Replies  []Comment
+	ID, Text, Time string
+	Author         User
+	Replies        []Comment
 }
 
 // CommentThreadOptions are the reply labels.
@@ -23,48 +25,79 @@ func CommentThread(c *ui.Context, comments []Comment, draft *string, o CommentTh
 	if len(comments) == 0 || draft == nil {
 		panic("social: CommentThread needs comments and draft")
 	}
+	unique("CommentThread", commentIDs(comments, nil))
 	def(&o.Placeholder, "Write a reply")
 	def(&o.Reply, "Reply")
 	t := c.Theme()
-	root = ui.Column(c).FillWidth().Gap(t.Space(2)).Role(ui.RoleGroup)
+	root = ui.Column(c).FillWidth().Gap(t.Space(3)).Role(ui.RoleGroup)
 	root.Children(func() {
-		ui.Column(c).FillWidth().Gap(t.Space(2)).Children(func() {
-			for _, comment := range comments {
-				commentView(c, comment, 0)
+		list := ui.Column(c).FillWidth().Gap(t.Space(3))
+		list.Children(func() {
+			for i, comment := range comments {
+				commentView(c, list, comment, i)
 			}
 		})
-		ui.Column(c).FillWidth().Gap(t.Space(2)).Children(func() {
-			in := ui.TextArea(c, draft).Label(o.Placeholder).Placeholder(o.Placeholder).FillWidth().Lines(2, 5)
-			if in.Changed() {
-				root.SetChanged()
-			}
-			send = button(c, o.Reply).Background(t.Accent).TextColor(t.AccentText).Disabled(strings.TrimSpace(*draft) == "")
-			send.Children(func() { ui.Text(c, o.Reply) })
+		ui.Column(c).FillWidth().Children(func() {
+			field := ui.Row(c).FillWidth().Gap(t.Space(2)).AlignItems(ui.End).Padding(t.Space(2), t.Space(2), t.Space(2), t.Space(3)).
+				Radius(t.Radius).Background(t.Background)
+			field.Border(1, field.AnimateColor("ring", t.Border.Mix(t.Accent, unit(field.FocusWithin())), ui.Snappy))
+			field.Children(func() {
+				in := ui.TextAreaBase(c, draft).Label(o.Placeholder).Placeholder(o.Placeholder).Grow(1).MinWidth(0).Lines(1, 5).FontSize(t.Rem(0.85))
+				if in.Changed() {
+					root.SetChanged()
+				}
+				send = kit.Press(ui.ButtonBase(c).Label(o.Reply).Size(t.Space(8), t.Space(8)).Shrink(0).Radius(999).TextColor(t.AccentText).
+					Disabled(strings.TrimSpace(*draft) == ""))
+				send.Background(send.AnimateColor("bg", t.Accent.Mix(t.AccentHover, unit(send.Hovered())), ui.Snappy))
+				send.Children(func() { glyph(c, "send", 16) })
+			})
 		})
 	})
 	if send.Clicked() {
 		send.SetChanged()
 		root.SetChanged()
 		sound.Play(sound.Send)
-		kit.Log("CommentThread", "replied", "runes", len([]rune(*draft)))
+		kit.Log("CommentThread", "replied", "runes", utf8.RuneCountInString(*draft))
 	}
 	return root, send
 }
 
-func commentView(c *ui.Context, comment Comment, depth int) {
-	validUser(comment.Author)
+func commentView(c *ui.Context, list ui.Element, comment Comment, i int) {
+	validUser("CommentThread", comment.Author)
 	if comment.ID == "" || comment.Text == "" {
-		panic("social: invalid comment")
+		panic(fmt.Sprintf("social: CommentThread comment %q needs id and text", comment.ID))
 	}
 	t := c.Theme()
 	c.Key(comment.ID)
-	card := ui.Column(c).FillWidth().Gap(t.Space(1)).Padding(t.Space(2)).MarginStart(t.Space(float32(depth) * 3)).
-		Radius(t.Radius).Background(t.Surface)
-	card.Children(func() {
-		ui.Text(c, comment.Author.Name).Bold()
-		ui.Text(c, comment.Text).Wrap()
-		for _, reply := range comment.Replies {
-			commentView(c, reply, depth+1)
-		}
+	row := ui.Row(c).FillWidth().Gap(t.Space(2.5)).AlignItems(ui.Start)
+	kit.Stagger(c, list, row, i).Children(func() {
+		avatar(c, comment.Author, t.Space(8)).AlignSelf(ui.Start)
+		ui.Column(c).Grow(1).MinWidth(0).Gap(t.Space(1)).Children(func() {
+			ui.Column(c).Gap(t.Space(0.5)).Padding(t.Space(2), t.Space(3)).Radius(t.Radius * 1.5).Background(t.Surface).Children(func() {
+				ui.Text(c, comment.Author.Name).FontSize(t.Rem(0.8)).Bold().Shrink(0)
+				ui.Text(c, comment.Text).FontSize(t.Rem(0.85)).Wrap().FillWidth()
+			})
+			if comment.Time != "" {
+				kit.Muted(c, comment.Time).FontSize(t.Rem(0.7)).Padding(0, t.Space(3))
+			}
+			if len(comment.Replies) == 0 {
+				return
+			}
+			replies := ui.Column(c).FillWidth().Gap(t.Space(2.5)).Padding(t.Space(1), 0, 0, t.Space(3)).
+				BorderWidth(0, 0, 0, 1).BorderColor(t.Border)
+			replies.Children(func() {
+				for j, reply := range comment.Replies {
+					commentView(c, replies, reply, j)
+				}
+			})
+		})
 	})
+}
+
+// commentIDs collects every comment and reply id.
+func commentIDs(comments []Comment, ids []string) []string {
+	for _, comment := range comments {
+		ids = commentIDs(comment.Replies, append(ids, comment.ID))
+	}
+	return ids
 }

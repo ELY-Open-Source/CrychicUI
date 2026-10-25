@@ -17,7 +17,7 @@ type ReviewData struct {
 
 // Review shows a star review with photos.
 func Review(c *ui.Context, review ReviewData) ui.Element {
-	validUser(review.Author)
+	validUser("Review", review.Author)
 	if review.ID == "" || review.Rating < 1 || review.Rating > 5 || review.Text == "" {
 		panic("social: invalid review")
 	}

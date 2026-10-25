@@ -108,7 +108,7 @@ func TestProfileHeader(t *testing.T) {
 func TestProfileStats(t *testing.T) {
 	tt := ui.NewTester(padded(func(c *ui.Context) { ProfileStats(c, 12, 1200, 40, ProfileStatsOptions{}) }), 500, 180)
 	settles(t, tt)
-	if !tt.HasText("1200") || !tt.HasText("Followers") {
+	if !tt.HasText("1,200") || !tt.HasText("Followers") {
 		t.Errorf("texts %q", tt.Texts())
 	}
 }
@@ -120,7 +120,7 @@ func TestWhoToFollow(t *testing.T) {
 	}), 500, 180)
 	settles(t, tt)
 	before := baseline()
-	click(t, tt, "ana Follow")
+	click(t, tt, "Follow Ana")
 	if !following["ana"] {
 		t.Errorf("following %v", following)
 	}
@@ -218,7 +218,7 @@ func TestFollowers(t *testing.T) {
 	tt := ui.NewTester(padded(func(c *ui.Context) { Followers(c, []User{testUser()}, &following, FollowersOptions{}) }), 500, 180)
 	settles(t, tt)
 	before := baseline()
-	click(t, tt, "ana Follow back")
+	click(t, tt, "Follow back Ana")
 	if !following["ana"] {
 		t.Errorf("following %v", following)
 	}

@@ -12,7 +12,7 @@ import (
 func TestPostCopyOverrides(t *testing.T) {
 	state := PostState{}
 	tt := ui.NewTester(padded(func(c *ui.Context) {
-		Post(c, testPost(), &state, PostOptions{Likes: "%d appreciations"})
+		Post(c, testPost(), &state, PostOptions{Likes: "%s appreciations"})
 	}), 500, 400)
 	settles(t, tt)
 	if !tt.HasText("2 appreciations") {

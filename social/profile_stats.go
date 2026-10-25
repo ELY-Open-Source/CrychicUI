@@ -1,7 +1,7 @@
 package social
 
 import (
-	"fmt"
+	"time"
 
 	"github.com/ELY-Open-Source/CrychicUI/kit"
 	"github.com/egoist/mygo/ui"
@@ -19,7 +19,7 @@ func ProfileStats(c *ui.Context, posts, followers, following int, o ProfileStats
 	def(&o.Followers, "Followers")
 	def(&o.Following, "Following")
 	t := c.Theme()
-	root := ui.Row(c).FillWidth().Gap(t.Space(4)).Justify(ui.Center).Role(ui.RoleGroup)
+	root := card(c).Row().Role(ui.RoleGroup)
 	root.Children(func() {
 		stats := []struct {
 			label string
@@ -27,9 +27,13 @@ func ProfileStats(c *ui.Context, posts, followers, following int, o ProfileStats
 		}{{o.Posts, posts}, {o.Followers, followers}, {o.Following, following}}
 		for i, stat := range stats {
 			c.Key(i)
-			ui.Column(c).AlignItems(ui.Center).Children(func() {
-				kit.Numeric(c, fmt.Sprint(stat.value)).Bold()
-				kit.Muted(c, stat.label).FontSize(t.Rem(0.75))
+			cell := ui.Column(c).Grow(1).Basis(0).MinWidth(0).AlignItems(ui.Center).Gap(t.Space(0.5)).Padding(t.Space(3), t.Space(2))
+			if i > 0 {
+				cell.BorderWidth(0, 0, 0, 1).BorderColor(t.Border)
+			}
+			kit.Arrive(cell, ui.Pose{Y: t.Space(1), Fade: 1}, time.Duration(i)*60*time.Millisecond).Children(func() {
+				kit.Numeric(c, number(c, stat.value)).FontSize(t.Rem(1.2)).Bold().FillWidth().Wrap().TextAlign(ui.Center)
+				kit.Muted(c, stat.label).FontSize(t.Rem(0.75)).MaxWidth(t.Space(30)).SingleLine()
 			})
 		}
 	})

@@ -39,7 +39,7 @@ func Invite(c *ui.Context, link string, contacts []User, invited *map[string]boo
 			}
 		})
 		for _, user := range contacts {
-			validUser(user)
+			validUser("Invite", user)
 			c.Key(user.ID)
 			ui.Row(c).FillWidth().Gap(t.Space(2)).AlignItems(ui.Center).Children(func() {
 				avatar(c, user, t.Space(7))

@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"math"
 
-	"github.com/ELY-Open-Source/CrychicUI/icon"
 	"github.com/ELY-Open-Source/CrychicUI/kit"
 	"github.com/ELY-Open-Source/CrychicUI/sound"
 	"github.com/egoist/mygo/ui"
@@ -22,24 +21,37 @@ func ReactionBar(c *ui.Context, reactions *[]Reaction) ui.Element {
 	if reactions == nil || len(*reactions) == 0 {
 		panic("social: ReactionBar needs reactions")
 	}
+	ids := make([]string, len(*reactions))
+	for i, reaction := range *reactions {
+		if reaction.Name == "" || reaction.Icon == "" || reaction.Count < 0 || reaction.Active && reaction.Count == 0 {
+			panic(fmt.Sprintf("social: ReactionBar reaction %q is invalid", reaction.ID))
+		}
+		ids[i] = reaction.ID
+	}
+	unique("ReactionBar", ids)
 	t := c.Theme()
-	root := ui.Row(c).FillWidth().Wrap().Gap(t.Space(1)).Role(ui.RoleGroup)
+	root := ui.Row(c).FillWidth().Wrap().Gap(t.Space(1.5)).Role(ui.RoleGroup)
 	root.Children(func() {
 		for i, reaction := range *reactions {
-			if reaction.ID == "" || reaction.Name == "" || reaction.Icon == "" || reaction.Count < 0 || reaction.Active && reaction.Count == 0 {
-				panic("social: invalid reaction")
-			}
 			c.Key(reaction.ID)
-			b := button(c, reaction.Name).Row().Gap(t.Space(1)).AlignItems(ui.Center).Radius(999).
-				Checked(reaction.Active).Disabled(!reaction.Active && reaction.Count == math.MaxInt)
-			b.Background(b.AnimateColor("reaction", t.Surface.Mix(t.Accent.Alpha(0.15), unit(reaction.Active)), ui.Snappy))
-			b.Children(func() {
-				ui.Icon(c, icon.Must(reaction.Icon)).Size(16, 16).TextColor(t.Accent)
-				kit.Numeric(c, fmt.Sprint(reaction.Count))
+			on := reaction.Active
+			b := kit.Press(ui.ButtonBase(c).Label(reaction.Name).Row().Gap(t.Space(1.5)).AlignItems(ui.Center).Shrink(0).
+				Padding(t.Space(1), t.Space(2.5)).Radius(999).Checked(on).Disabled(!on && reaction.Count == math.MaxInt))
+			hover := unit(b.Hovered())
+			b.Background(b.AnimateColor("bg", t.Surface.Mix(t.SurfaceHover, hover).Mix(t.Accent.Alpha(0.14), unit(on)), ui.Snappy))
+			b.Border(1, b.AnimateColor("line", t.Border.Alpha(0).Mix(t.Accent, unit(on)), ui.Snappy))
+			b.TextColor(b.AnimateColor("ink", t.Text.Mix(t.Accent, unit(on)), ui.Snappy))
+			kit.Stagger(c, root, b, i).Children(func() {
+				c.Key(on)
+				mark := glyph(c, reaction.Icon, 16)
+				if on {
+					kit.Arrive(mark, ui.Pose{Scale: 1.6, Rotate: -15}, 0)
+				}
+				kit.Numeric(c, number(c, reaction.Count)).FontSize(t.Rem(0.8)).Bold().Shrink(0)
 			})
-			if b.Clicked() && (reaction.Active || reaction.Count < math.MaxInt) {
-				(*reactions)[i].Active = !reaction.Active
-				if reaction.Active {
+			if b.Clicked() && (on || reaction.Count < math.MaxInt) {
+				(*reactions)[i].Active = !on
+				if on {
 					(*reactions)[i].Count--
 				} else {
 					(*reactions)[i].Count++

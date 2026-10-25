@@ -19,16 +19,34 @@ func PostActions(c *ui.Context, state *PostState, o PostActionsOptions) ui.Eleme
 	def(&o.Share, "Share")
 	def(&o.Save, "Save")
 	t := c.Theme()
-	root := ui.Row(c).FillWidth().Wrap().Gap(t.Space(1)).Role(ui.RoleGroup)
+	root := ui.Row(c).FillWidth().Gap(t.Space(1)).Justify(ui.SpaceBetween).Role(ui.RoleGroup)
 	root.Children(func() {
 		actions := []struct {
-			id, label string
-			checked   bool
-		}{{"like", o.Like, state.Liked}, {"comment", o.Comment, false}, {"share", o.Share, false}, {"save", o.Save, state.Saved}}
+			id, label, mark string
+			on              bool
+			ink             ui.Color
+		}{
+			{"like", o.Like, "heart", state.Liked, t.Danger},
+			{"comment", o.Comment, "message-circle", false, t.Accent},
+			{"share", o.Share, "repeat-2", false, t.Success},
+			{"save", o.Save, "bookmark", state.Saved, t.Accent},
+		}
 		for _, action := range actions {
 			c.Key(action.id)
-			b := button(c, action.label).Checked(action.checked)
-			b.Children(func() { ui.Text(c, action.label) })
+			b := kit.Press(ui.ButtonBase(c).Label(action.label).Padding(t.Space(1.5), t.Space(2.5)).Radius(999).Shrink(0).Checked(action.on))
+			hover := unit(b.Hovered())
+			b.Background(b.AnimateColor("bg", t.Background.Mix(action.ink.Alpha(0.1), max(hover, unit(action.on))), ui.Snappy))
+			b.TextColor(b.AnimateColor("ink", t.TextMuted.Mix(action.ink, max(hover*0.7, unit(action.on))), ui.Snappy))
+			b.Children(func() {
+				ui.Row(c).Gap(t.Space(1.5)).AlignItems(ui.Center).Children(func() {
+					c.Key(action.on)
+					mark := glyph(c, action.mark, 16)
+					if action.on {
+						kit.Arrive(mark, ui.Pose{Scale: 1.5, Fade: 0.5}, 0)
+					}
+					ui.Text(c, action.label).FontSize(t.Rem(0.8)).Bold().Shrink(0)
+				})
+			})
 			if b.Clicked() {
 				switch action.id {
 				case "like":

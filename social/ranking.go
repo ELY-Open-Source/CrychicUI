@@ -27,7 +27,7 @@ func Ranking(c *ui.Context, users []RankedUser, o RankingOptions) ui.Element {
 	kit.Arrive(root, ui.Pose{Y: t.Space(2), Fade: 1}, 0)
 	root.Children(func() {
 		for i, row := range users {
-			validUser(row.User)
+			validUser("Ranking", row.User)
 			if row.Score < 0 {
 				panic("social: ranking score must not be negative")
 			}
