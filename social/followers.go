@@ -52,7 +52,7 @@ func Followers(c *ui.Context, users []User, following *map[string]bool, o Follow
 					if on {
 						text = o.Following
 					}
-					b := follow(c, fmt.Sprintf(o.Label, text, user.Name), text, on)
+					b := follow(c, fmt.Sprintf(o.Label, text, user.Name), text, "user-plus", on)
 					if b.Clicked() {
 						(*following)[user.ID] = !on
 						root.SetChanged()

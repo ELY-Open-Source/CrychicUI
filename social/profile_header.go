@@ -42,7 +42,7 @@ func ProfileHeader(c *ui.Context, user User, following *bool, o ProfileHeaderOpt
 				if *following {
 					text = o.Following
 				}
-				b := follow(c, text, text, *following)
+				b := follow(c, text, text, "user-plus", *following)
 				if b.Clicked() {
 					*following = !*following
 					root.SetChanged()

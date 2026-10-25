@@ -30,14 +30,6 @@ var socialEntries = []Entry{
 	{ID: 1208, Name: "ReactionBar", Category: "social", Summary: "Several reactions with counts; cue Pop.", Demo: demoReactionBar},
 }
 
-func demoSocialUser() social.User {
-	return social.User{ID: "ana", Name: "Ana", Handle: "@ana", Bio: "Designer", Avatar: photos()[0], Cover: photos()[1]}
-}
-
-func demoSocialPost() social.PostData {
-	return social.PostData{ID: "p1", Text: "Shipping today", Author: demoSocialUser(), Media: photos()[2], Likes: 3, Comments: 1, Shares: 2}
-}
-
 // studio is the ceramics studio cast the 1191–1208 demos share.
 func studio() []social.User {
 	return []social.User{

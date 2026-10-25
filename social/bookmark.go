@@ -1,7 +1,6 @@
 package social
 
 import (
-	"github.com/ELY-Open-Source/CrychicUI/icon"
 	"github.com/ELY-Open-Source/CrychicUI/kit"
 	"github.com/ELY-Open-Source/CrychicUI/sound"
 	"github.com/egoist/mygo/ui"
@@ -17,14 +16,24 @@ func Bookmark(c *ui.Context, saved *bool, o BookmarkOptions) ui.Element {
 	}
 	def(&o.Save, "Save")
 	def(&o.Saved, "Saved")
-	label := o.Save
+	t := c.Theme()
+	label, mark := o.Save, "bookmark"
 	if *saved {
-		label = o.Saved
+		label, mark = o.Saved, "bookmark-check"
 	}
-	root := button(c, label).Row().Gap(c.Theme().Space(1)).AlignItems(ui.Center).Radius(999).Checked(*saved)
+	root := kit.Press(ui.ButtonBase(c).Label(label).Row().Gap(t.Space(1.5)).AlignItems(ui.Center).AlignSelf(ui.Start).
+		Padding(t.Space(1.5), t.Space(3)).Radius(999).Checked(*saved))
+	hover := unit(root.Hovered())
+	root.Background(root.AnimateColor("bg", t.Background.Mix(t.SurfaceHover, hover).Mix(t.Accent.Alpha(0.12), unit(*saved)), ui.Snappy))
+	root.Border(1, root.AnimateColor("line", t.Border.Mix(t.Accent.Alpha(0.5), unit(*saved)), ui.Snappy))
+	root.TextColor(root.AnimateColor("ink", t.Text.Mix(t.Accent, unit(*saved)), ui.Snappy))
 	root.Children(func() {
-		ui.Icon(c, icon.Must("bookmark")).Size(16, 16)
-		ui.Text(c, label).ContentTransition(ui.ContentTransition{})
+		c.Key(*saved)
+		icon := glyph(c, mark, 16)
+		if *saved {
+			kit.Arrive(icon, ui.Pose{Y: -t.Space(2), Scale: 1.4, Fade: 1}, 0)
+		}
+		ui.Text(c, label).FontSize(t.Rem(0.82)).Bold().Shrink(0).ContentTransition(ui.ContentTransition{})
 	})
 	if root.Clicked() {
 		*saved = !*saved

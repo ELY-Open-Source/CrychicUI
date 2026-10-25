@@ -3,6 +3,8 @@ package social
 
 import (
 	"fmt"
+	"math"
+	"time"
 
 	"github.com/ELY-Open-Source/CrychicUI/display"
 	"github.com/ELY-Open-Source/CrychicUI/icon"
@@ -113,8 +115,8 @@ func number(c *ui.Context, n any) string {
 	return i18n.FormatNumber(c.Region().FormatLocale(c.Locale()), n, i18n.NumberOptions{Integer: true})
 }
 
-// follow is a pill: filled to follow, outlined once following.
-func follow(c *ui.Context, label, text string, on bool) ui.Element {
+// follow is a filled pill, outlined and checked once on.
+func follow(c *ui.Context, label, text, mark string, on bool) ui.Element {
 	t := c.Theme()
 	b := kit.Press(ui.ButtonBase(c).Label(label).Padding(t.Space(1), t.Space(3)).Radius(999).Shrink(0).Checked(on))
 	hover := unit(b.Hovered())
@@ -127,7 +129,7 @@ func follow(c *ui.Context, label, text string, on bool) ui.Element {
 			if on {
 				kit.Arrive(glyph(c, "check", 14), ui.Pose{Scale: 0.4, Fade: 1}, 0)
 			} else {
-				glyph(c, "user-plus", 14)
+				glyph(c, mark, 14)
 			}
 			ui.Text(c, text).FontSize(t.Rem(0.8)).Bold().Shrink(0)
 		})
@@ -149,5 +151,43 @@ func byline(c *ui.Context, u User, when string, size float32) {
 				}
 			})
 		})
+	})
+}
+
+// star is a five-pointed star path inside r.
+func star(r ui.Rect) *ui.Path {
+	var p ui.Path
+	cx, cy, outer := r.X+r.W/2, r.Y+r.H*0.53, r.W/2
+	for i := range 10 {
+		rad := outer
+		if i%2 == 1 {
+			rad = outer * 0.45
+		}
+		a := float64(i)*math.Pi/5 - math.Pi/2
+		x, y := cx+rad*float32(math.Cos(a)), cy+rad*float32(math.Sin(a))
+		if i == 0 {
+			p.MoveTo(x, y)
+		} else {
+			p.LineTo(x, y)
+		}
+	}
+	return p.Close()
+}
+
+// stars draws five stars, rating of them filled.
+func stars(c *ui.Context, rating int, size float32) ui.Element {
+	t := c.Theme()
+	row := ui.Row(c).Gap(t.Space(0.5)).Shrink(0)
+	return row.Children(func() {
+		for i := range 5 {
+			c.Key(i)
+			box := ui.Box(c).Size(size, size).Shrink(0)
+			ink := t.Border
+			if i < rating {
+				ink = t.Warning
+			}
+			box.Draw(kit.Inside(0, func(p *ui.Painter, r ui.Rect) { p.FillPath(star(r), ink) }))
+			kit.Arrive(box, ui.Pose{Scale: 0.4, Fade: 1}, time.Duration(i)*50*time.Millisecond)
+		}
 	})
 }

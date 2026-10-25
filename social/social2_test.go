@@ -81,7 +81,7 @@ func TestInvite(t *testing.T) {
 	if !tt.HasText("Copy link") || tt.HasText("Copied") {
 		t.Errorf("stale copy state: %q", tt.Texts())
 	}
-	click(t, tt, "ana Invite")
+	click(t, tt, "Invite Ana")
 	if !invited["ana"] {
 		t.Errorf("invited %v", invited)
 	}
@@ -198,7 +198,7 @@ func TestLive(t *testing.T) {
 	live := LiveData{ID: "l1", Title: "UI review", Streamer: "Ana", Viewers: 42, Cover: img}
 	tt := ui.NewTester(padded(func(c *ui.Context) { Live(c, live, LiveOptions{}) }), 500, 400)
 	settles(t, tt)
-	if !tt.HasText("42 viewers") || !tt.HasText("LIVE") {
+	if !tt.HasText("42 watching") || !tt.HasText("LIVE") {
 		t.Errorf("texts %q", tt.Texts())
 	}
 }

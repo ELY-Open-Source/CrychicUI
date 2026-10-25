@@ -1,10 +1,8 @@
 package social
 
 import (
-	"fmt"
 	"math"
 
-	"github.com/ELY-Open-Source/CrychicUI/icon"
 	"github.com/ELY-Open-Source/CrychicUI/kit"
 	"github.com/ELY-Open-Source/CrychicUI/sound"
 	"github.com/egoist/mygo/ui"
@@ -21,29 +19,38 @@ func VoteArrows(c *ui.Context, score, vote *int, o VoteArrowsOptions) ui.Element
 	def(&o.Up, "Upvote")
 	def(&o.Down, "Downvote")
 	t := c.Theme()
-	root := ui.Row(c).Gap(t.Space(1)).AlignItems(ui.Center).Role(ui.RoleGroup)
-	root.Children(func() {
-		for _, item := range []struct {
-			delta int
-			label string
-			icon  string
-		}{{1, o.Up, "chevron-up"}, {-1, o.Down, "chevron-down"}} {
-			next := item.delta
-			if *vote == item.delta {
-				next = 0
-			}
-			value, ok := votedScore(*score, *vote, next)
-			c.Key(item.delta)
-			b := button(c, item.label).Checked(*vote == item.delta).Disabled(!ok)
-			b.Children(func() { ui.Icon(c, icon.Must(item.icon)).Size(16, 16) })
-			if b.Clicked() && ok {
-				*score, *vote = value, next
-				root.SetChanged()
-				sound.Play(sound.Tick)
-				kit.Log("VoteArrows", "voted", "vote", next, "score", value)
-			}
+	root := ui.Column(c).Gap(t.Space(0.5)).AlignItems(ui.Center).AlignSelf(ui.Start).Padding(t.Space(1)).Radius(999).Shrink(0).Role(ui.RoleGroup)
+	root.Background(root.AnimateColor("bg", t.Surface.Mix(t.Accent.Alpha(0.1), unit(*vote == 1)).Mix(t.Danger.Alpha(0.1), unit(*vote == -1)), ui.Snappy))
+	arrow := func(delta int, label, mark string, ink ui.Color) {
+		next := delta
+		if *vote == delta {
+			next = 0
 		}
-		kit.Numeric(c, fmt.Sprint(*score))
+		value, ok := votedScore(*score, *vote, next)
+		on := *vote == delta
+		c.Key(delta)
+		b := kit.Press(ui.ButtonBase(c).Label(label).Size(t.Space(8), t.Space(8)).Radius(999).Checked(on).Disabled(!ok))
+		b.Background(b.AnimateColor("bg", ink.Alpha(0).Mix(ink.Alpha(0.14), unit(b.Hovered())), ui.Snappy))
+		b.TextColor(b.AnimateColor("ink", t.TextMuted.Mix(ink, max(unit(on), unit(b.Hovered())*0.7)), ui.Snappy))
+		b.Children(func() {
+			c.Key(on)
+			icon := glyph(c, mark, 20)
+			if on {
+				kit.Arrive(icon, ui.Pose{Y: float32(delta) * t.Space(2), Scale: 1.3}, 0)
+			}
+		})
+		if b.Clicked() && ok {
+			*score, *vote = value, next
+			root.SetChanged()
+			sound.Play(sound.Tick)
+			kit.Log("VoteArrows", "voted", "vote", next, "score", value)
+		}
+	}
+	root.Children(func() {
+		arrow(1, o.Up, "arrow-big-up", t.Accent)
+		count := kit.Numeric(c, number(c, *score)).FontSize(t.Rem(0.9)).Bold().Shrink(0)
+		count.TextColor(count.AnimateColor("ink", t.Text.Mix(t.Accent, unit(*vote == 1)).Mix(t.Danger, unit(*vote == -1)), ui.Snappy))
+		arrow(-1, o.Down, "arrow-big-down", t.Danger)
 	})
 	return root
 }

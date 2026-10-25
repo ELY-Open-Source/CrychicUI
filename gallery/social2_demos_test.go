@@ -25,11 +25,11 @@ func TestSocial2DemosLog(t *testing.T) {
 		}, "action quote"},
 		"Bookmark":    {press("Save"), "saved true"},
 		"Community":   {press("Join"), "joined true"},
-		"Invite":      {press("ana Invite"), "invited true"},
-		"Question":    {press("Upvote"), "votes 1"},
-		"VoteArrows":  {press("Upvote"), "score 1"},
-		"SocialLinks": {press("GitHub"), "opened https://github.com"},
-		"Gift":        {press("Flower"), "count 1"},
+		"Invite":      {press("Invite Priya Nair"), "invited 2"},
+		"Question":    {press("Upvote"), "votes 42"},
+		"VoteArrows":  {press("Upvote"), "score 1285"},
+		"SocialLinks": {press("Photos"), "opened https://photos.kiln.co"},
+		"Gift":        {press("Flower"), "flower 18"},
 	}
 	quiet := map[string]bool{"GroupCard": true, "Ranking": true, "Review": true, "Testimonial": true,
 		"NotificationsFeed": true, "ProfileComplete": true, "Verified": true, "Live": true, "ShareCount": true}
@@ -62,4 +62,24 @@ func TestSocial2DemosLog(t *testing.T) {
 	if seen != 17 {
 		t.Errorf("checked %d second social demos", seen)
 	}
+}
+
+func TestInviteDemoLogsCopy(t *testing.T) {
+	for _, e := range Entries() {
+		if e.Category != "social" || e.Name != "Invite" {
+			continue
+		}
+		var logs []string
+		tt := ui.NewTester(func(c *ui.Context) { e.Demo(c, func(s string) { logs = append(logs, s) }) }, 900, 700)
+		tt.Advance(2 * time.Second)
+		if err := tt.Click("Copy link"); err != nil {
+			t.Fatal(err)
+		}
+		tt.Frame()
+		if all := strings.Join(logs, "\n"); !strings.Contains(all, "copied link") || strings.Contains(all, "invited") {
+			t.Errorf("copy logs %q", logs)
+		}
+		return
+	}
+	t.Fatal("no Invite demo")
 }
