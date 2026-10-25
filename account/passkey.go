@@ -1,12 +1,14 @@
 package account
 
 import (
+	"time"
+
 	"github.com/ELY-Open-Source/CrychicUI/kit"
 	"github.com/ELY-Open-Source/CrychicUI/sound"
 	"github.com/egoist/mygo/ui"
 )
 
-// PasskeyOptions are the passkey prompt labels.
+// PasskeyOptions word the prompt.
 type PasskeyOptions struct{ Title, Description, Add, Added string }
 
 // Passkey adds a passkey; cue Success.
@@ -15,21 +17,35 @@ func Passkey(c *ui.Context, added *bool, o PasskeyOptions) ui.Element {
 		panic("account: Passkey needs state")
 	}
 	def(&o.Title, "Add a passkey")
-	def(&o.Description, "Use this device to sign in")
+	def(&o.Description, "Sign in with your fingerprint, face or screen lock. No password to remember.")
 	def(&o.Add, "Add passkey")
 	def(&o.Added, "Added")
 	t := c.Theme()
-	root := ui.Column(c).FillWidth().Gap(t.Space(2)).Padding(t.Space(3)).Radius(t.Radius).Border(1, t.Border)
-	kit.Arrive(root, ui.Pose{Y: t.Space(2), Fade: 1}, 0)
+	root := card(c).Gap(t.Space(3)).Padding(t.Space(6), t.Space(5)).AlignItems(ui.Center)
 	root.Children(func() {
-		ui.Text(c, o.Title).Bold()
-		ui.Text(c, o.Description).Wrap()
-		label := o.Add
+		ink := t.Accent
 		if *added {
-			label = o.Added
+			ink = t.Success
 		}
-		b := primary(c, label).Disabled(*added)
-		b.Children(func() { ui.Text(c, label) })
+		c.Key(*added)
+		halo := ui.Box(c).Size(t.Space(18), t.Space(18)).Center().Radius(999).Background(ink.Alpha(0.08))
+		kit.Arrive(halo, ui.Pose{Scale: 0.7, Fade: 1}, 0).Children(func() {
+			disc := ui.Box(c).Size(t.Space(12), t.Space(12)).Center().Radius(999).Background(ink.Alpha(0.16)).TextColor(ink)
+			kit.Arrive(disc, ui.Pose{Scale: 0.5}, 120*time.Millisecond).Children(func() {
+				mark := "fingerprint"
+				if *added {
+					mark = "circle-check"
+				}
+				glyph(c, mark, 28)
+			})
+		})
+		ui.Text(c, o.Title).FontSize(t.Rem(1.1)).Bold().Shrink(0)
+		kit.Muted(c, o.Description).FontSize(t.Rem(0.85)).Wrap().TextAlign(ui.Center).MaxWidth(t.Space(80))
+		label, mark := o.Add, "key-round"
+		if *added {
+			label, mark = o.Added, "check"
+		}
+		b := primary(c, label, mark).Disabled(*added)
 		if b.Clicked() && !*added {
 			*added = true
 			root.SetChanged()

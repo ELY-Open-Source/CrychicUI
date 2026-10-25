@@ -2,6 +2,7 @@ package account
 
 import (
 	"unicode"
+	"unicode/utf8"
 
 	"github.com/ELY-Open-Source/CrychicUI/kit"
 	"github.com/ELY-Open-Source/CrychicUI/sound"
@@ -13,42 +14,59 @@ type ResetValue struct {
 	Password, Confirm string
 }
 
-// ResetPasswordOptions are the reset labels.
-type ResetPasswordOptions struct{ Password, Confirm, Submit, Weak, Strong string }
+// ResetPasswordOptions word the reset form.
+type ResetPasswordOptions struct{ Title, Subtitle, Password, Confirm, Submit, Weak, Strong, Mismatch string }
 
 // ResetPassword resets with strength and confirmation; cue Success.
 func ResetPassword(c *ui.Context, value *ResetValue, o ResetPasswordOptions) (root, submit ui.Element) {
 	if value == nil {
 		panic("account: ResetPassword needs a value")
 	}
+	def(&o.Title, "Choose a new password")
+	def(&o.Subtitle, "Mix letters, numbers and symbols.")
 	def(&o.Password, "New password")
 	def(&o.Confirm, "Confirm password")
 	def(&o.Submit, "Reset password")
 	def(&o.Weak, "Weak")
 	def(&o.Strong, "Strong")
+	def(&o.Mismatch, "Passwords do not match")
 	t := c.Theme()
-	root = ui.Column(c).FillWidth().Gap(t.Space(2)).Role(ui.RoleGroup)
+	root = card(c).Gap(t.Space(4)).Padding(t.Space(5)).Role(ui.RoleGroup)
 	root.Children(func() {
-		password := ui.TextInput(c, &value.Password).Label(o.Password).Placeholder(o.Password).Password().FillWidth()
-		confirm := ui.TextInput(c, &value.Confirm).Label(o.Confirm).Placeholder(o.Confirm).Password().FillWidth()
-		if password.Changed() || confirm.Changed() {
-			root.SetChanged()
-		}
+		head(c, "shield-check", o.Title, o.Subtitle)
+		ui.Column(c).FillWidth().Gap(t.Space(3)).Children(func() {
+			password := field(c, o.Password, "lock", &value.Password, true)
+			score := passwordStrength(value.Password)
+			long := utf8.RuneCountInString(value.Password) >= 8
+			label, ink := o.Weak, t.Danger
+			if score >= 2 {
+				ink = t.Warning
+			}
+			if long && score >= 3 {
+				label, ink = o.Strong, t.Success
+			}
+			ui.Row(c).FillWidth().Gap(t.Space(2)).AlignItems(ui.Center).Children(func() {
+				ui.Row(c).Grow(1).Gap(t.Space(1)).Children(func() {
+					for i := range 4 {
+						seg := ui.Box(c).Grow(1).Height(t.Space(1.25)).Radius(999)
+						seg.Background(seg.AnimateColor("ink", t.SurfaceHover.Mix(ink, unit(i < score)), ui.Snappy))
+					}
+				})
+				text := ui.Text(c, label).FontSize(t.Rem(0.75)).Bold().Shrink(0)
+				text.TextColor(text.AnimateColor("ink", ink, ui.Snappy))
+			})
+			confirm := field(c, o.Confirm, "lock-keyhole", &value.Confirm, true)
+			if password.Changed() || confirm.Changed() {
+				root.SetChanged()
+			}
+			if value.Confirm != "" && value.Confirm != value.Password {
+				c.Key("mismatch")
+				note(c, "circle-alert", o.Mismatch, t.Danger)
+			}
+		})
 		score := passwordStrength(value.Password)
-		longEnough := len([]rune(value.Password)) >= 8
-		label, color := o.Weak, t.Warning
-		if longEnough && score >= 3 {
-			label, color = o.Strong, t.Success
-		}
-		ui.Text(c, label).TextColor(color)
-		bar := ui.Box(c).FillWidth().Height(t.Space(1)).Radius(999).Clip().Background(t.SurfaceHover)
-		w := bar.AnimateTo("strength", float32(score)/4, ui.Smooth)
-		bar.Draw(kit.Inside(999, func(p *ui.Painter, r ui.Rect) {
-			p.Fill(ui.Rect{X: r.X, Y: r.Y, W: r.W * w, H: r.H}, color, 999)
-		}))
-		valid := longEnough && score >= 2 && value.Password == value.Confirm
-		submit = primary(c, o.Submit).Disabled(!valid)
-		submit.Children(func() { ui.Text(c, o.Submit) })
+		valid := utf8.RuneCountInString(value.Password) >= 8 && score >= 2 && value.Password == value.Confirm
+		submit = primary(c, o.Submit, "").FillWidth().Disabled(!valid)
 		if submit.Clicked() && valid {
 			submit.SetChanged()
 			root.SetChanged()
@@ -61,7 +79,7 @@ func ResetPassword(c *ui.Context, value *ResetValue, o ResetPasswordOptions) (ro
 
 func passwordStrength(s string) int {
 	score := 0
-	if len([]rune(s)) >= 8 {
+	if utf8.RuneCountInString(s) >= 8 {
 		score++
 	}
 	classes := [4]bool{}

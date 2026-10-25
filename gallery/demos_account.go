@@ -31,13 +31,14 @@ var accountEntries = []Entry{
 }
 
 func demoAccountSignIn(c *ui.Context, log func(string)) {
-	root := ui.Column(c)
+	root := ui.Column(c).Width(400)
 	value := ui.Local(root, "credentials", func() account.Credentials {
-		return account.Credentials{Email: "ana@example.com", Password: "password"}
+		return account.Credentials{Email: "maya.chen@kiln.co", Password: "glaze-firing-24"}
 	})
 	action := textState(root, "action", "")
 	root.Children(func() {
-		form, submit := account.SignIn(c, value, []string{"Google"}, action, account.SignInOptions{})
+		form, submit := account.SignIn(c, value, []string{"Google", "Apple"}, action, account.SignInOptions{
+			Subtitle: "Sign in to Kiln & Co."})
 		if submit.Changed() {
 			log("signin")
 		} else if form.Changed() {
@@ -51,23 +52,28 @@ func demoAccountSignIn(c *ui.Context, log func(string)) {
 }
 
 func demoAccountSignUp(c *ui.Context, log func(string)) {
-	root := ui.Column(c)
+	root := ui.Column(c).Width(400)
 	value := ui.Local(root, "signup", func() account.SignUpValue {
-		return account.SignUpValue{Name: "Ana", Email: "ana@example.com", Password: "password", Terms: true}
+		return account.SignUpValue{Name: "Maya Chen", Email: "maya.chen@kiln.co", Password: "spring-glaze-24", Terms: true}
 	})
 	root.Children(func() {
+		terms := value.Terms
 		form, submit := account.SignUp(c, value, account.SignUpOptions{})
-		if submit.Changed() {
+		switch {
+		case submit.Changed():
 			log("created")
-		} else if form.Changed() {
+		case form.Changed() && terms != value.Terms:
 			log("terms " + fmt.Sprint(value.Terms))
+		case form.Changed():
+			log(fmt.Sprintf("nameRunes %d emailRunes %d passwordRunes %d",
+				len([]rune(value.Name)), len([]rune(value.Email)), len([]rune(value.Password))))
 		}
 	})
 }
 
 func demoAccountForgotPassword(c *ui.Context, log func(string)) {
-	root := ui.Column(c)
-	email := textState(root, "email", "ana@example.com")
+	root := ui.Column(c).Width(400)
+	email := textState(root, "email", "maya.chen@kiln.co")
 	root.Children(func() {
 		form, send := account.ForgotPassword(c, email, account.ForgotPasswordOptions{})
 		if send.Changed() {
@@ -79,9 +85,9 @@ func demoAccountForgotPassword(c *ui.Context, log func(string)) {
 }
 
 func demoAccountResetPassword(c *ui.Context, log func(string)) {
-	root := ui.Column(c)
+	root := ui.Column(c).Width(400)
 	value := ui.Local(root, "reset", func() account.ResetValue {
-		return account.ResetValue{Password: "Password1!", Confirm: "Password1!"}
+		return account.ResetValue{Password: "Cone6&Oxide", Confirm: "Cone6&Oxide"}
 	})
 	root.Children(func() {
 		form, submit := account.ResetPassword(c, value, account.ResetPasswordOptions{})
@@ -94,51 +100,57 @@ func demoAccountResetPassword(c *ui.Context, log func(string)) {
 }
 
 func demoAccountProviders(c *ui.Context, log func(string)) {
-	root := ui.Column(c)
+	root := ui.Column(c).Width(360)
 	chosen := textState(root, "provider", "")
 	root.Children(func() {
-		if account.Providers(c, []string{"Google"}, chosen).Changed() {
+		providers := []string{"Google", "GitHub", "Apple", "Microsoft"}
+		if account.Providers(c, providers, chosen, account.ProvidersOptions{}).Changed() {
 			log("provider " + *chosen)
 		}
 	})
 }
 
 func demoAccountMagicLink(c *ui.Context, log func(string)) {
-	root := ui.Column(c)
+	root := ui.Column(c).Width(380)
 	resent := intState(root, "resent", 0)
 	root.Children(func() {
-		if account.MagicLink(c, "ana@example.com", resent, account.MagicLinkOptions{}).Changed() {
+		if account.MagicLink(c, "maya.chen@kiln.co", resent, account.MagicLinkOptions{}).Changed() {
 			log("resent " + fmt.Sprint(*resent))
 		}
 	})
 }
 
 func demoAccountTwoFactor(c *ui.Context, log func(string)) {
-	root := ui.Column(c)
-	code := textState(root, "code", "123456")
+	root := ui.Column(c).Width(400)
+	code := textState(root, "code", "482915")
 	resent, verified := intState(root, "resent", 0), boolState(root, "verified", false)
 	root.Children(func() {
+		sent := *resent
 		form, verify := account.TwoFactor(c, code, resent, verified, account.TwoFactorOptions{})
-		if verify.Changed() {
+		switch {
+		case verify.Changed():
 			log("verified")
-		} else if form.Changed() {
+		case form.Changed() && sent != *resent:
 			log("resent " + fmt.Sprint(*resent))
+		case form.Changed():
+			log("codeRunes " + fmt.Sprint(len([]rune(*code))))
 		}
 	})
 }
 
 func demoAccountBackupCodes(c *ui.Context, log func(string)) {
-	root := ui.Column(c)
+	root := ui.Column(c).Width(420)
 	copied := intState(root, "copied", -1)
+	codes := []string{"7KQ2-M9XD", "P4WT-8LNC", "B6HR-2ZQF", "XN3V-K7MJ", "T9FD-4CWE", "H2LY-6RPA"}
 	root.Children(func() {
-		if account.BackupCodes(c, []string{"ABCD-1234"}, copied, account.BackupCodesOptions{}).Changed() {
+		if account.BackupCodes(c, codes, copied, account.BackupCodesOptions{}).Changed() {
 			log("copied " + fmt.Sprint(*copied))
 		}
 	})
 }
 
 func demoAccountPasskey(c *ui.Context, log func(string)) {
-	root := ui.Column(c)
+	root := ui.Column(c).Width(380)
 	added := boolState(root, "added", false)
 	root.Children(func() {
 		if account.Passkey(c, added, account.PasskeyOptions{}).Changed() {
@@ -148,9 +160,14 @@ func demoAccountPasskey(c *ui.Context, log func(string)) {
 }
 
 func demoAccountSessions(c *ui.Context, log func(string)) {
-	root := ui.Column(c)
+	root := ui.Column(c).Width(440)
 	sessions := ui.Local(root, "sessions", func() []account.Session {
-		return []account.Session{{ID: "s1", Device: "Laptop", Location: "Home", Last: "now", Current: true}}
+		return []account.Session{
+			{ID: "mac", Device: "MacBook Pro", Location: "Portland, OR", Last: "Active now", Icon: "laptop", Current: true},
+			{ID: "iphone", Device: "iPhone 15", Location: "Portland, OR", Last: "2 hours ago", Icon: "smartphone"},
+			{ID: "ipad", Device: "iPad Air", Location: "Seattle, WA", Last: "Yesterday", Icon: "tablet"},
+			{ID: "pc", Device: "Windows PC", Location: "Chicago, IL", Last: "3 days ago", Icon: "monitor"},
+		}
 	})
 	root.Children(func() {
 		if account.Sessions(c, sessions, account.SessionsOptions{}).Changed() {
@@ -160,9 +177,14 @@ func demoAccountSessions(c *ui.Context, log func(string)) {
 }
 
 func demoAccountDevicesList(c *ui.Context, log func(string)) {
-	root := ui.Column(c)
+	root := ui.Column(c).Width(420)
 	devices := ui.Local(root, "devices", func() []account.Device {
-		return []account.Device{{ID: "d1", Name: "Laptop", Last: "now"}}
+		return []account.Device{
+			{ID: "imac", Name: "Studio iMac", Last: "today, 09:12", Icon: "monitor"},
+			{ID: "air", Name: "MacBook Air", Last: "yesterday", Icon: "laptop"},
+			{ID: "pixel", Name: "Pixel 8", Last: "Oct 19", Icon: "smartphone"},
+			{ID: "ipad", Name: "Kiln room iPad", Last: "Sep 30", Icon: "tablet"},
+		}
 	})
 	root.Children(func() {
 		if account.DevicesList(c, devices, account.DevicesListOptions{}).Changed() {
@@ -172,9 +194,9 @@ func demoAccountDevicesList(c *ui.Context, log func(string)) {
 }
 
 func demoAccountProfileSettings(c *ui.Context, log func(string)) {
-	root := ui.Column(c)
+	root := ui.Column(c).Width(420)
 	profile := ui.Local(root, "profile", func() account.Profile {
-		return account.Profile{Name: "Ana", Handle: "@ana", Bio: "Designer"}
+		return account.Profile{Name: "Maya Chen", Handle: "@mayachen", Bio: "Product designer at Kiln & Co. Lamps, mugs and slow mornings."}
 	})
 	root.Children(func() {
 		form, save := account.ProfileSettings(c, profile, account.ProfileSettingsOptions{})
@@ -187,7 +209,7 @@ func demoAccountProfileSettings(c *ui.Context, log func(string)) {
 }
 
 func demoAccountAvatarEditor(c *ui.Context, log func(string)) {
-	root := ui.Column(c)
+	root := ui.Column(c).Width(420)
 	image := ui.Local(root, "image", func() ui.ImageSource { return photos()[0] })
 	change := boolState(root, "change", false)
 	root.Children(func() {
@@ -198,10 +220,10 @@ func demoAccountAvatarEditor(c *ui.Context, log func(string)) {
 }
 
 func demoAccountChangeEmail(c *ui.Context, log func(string)) {
-	root := ui.Column(c)
-	email := textState(root, "email", "ana@example.com")
+	root := ui.Column(c).Width(420)
+	email := textState(root, "email", "maya@kiln.studio")
 	root.Children(func() {
-		form, verify := account.ChangeEmail(c, email, account.ChangeEmailOptions{})
+		form, verify := account.ChangeEmail(c, email, account.ChangeEmailOptions{Current: "Now maya.chen@kiln.co"})
 		if verify.Changed() {
 			log("verify")
 		} else if form.Changed() {
@@ -211,9 +233,9 @@ func demoAccountChangeEmail(c *ui.Context, log func(string)) {
 }
 
 func demoAccountChangePassword(c *ui.Context, log func(string)) {
-	root := ui.Column(c)
+	root := ui.Column(c).Width(400)
 	value := ui.Local(root, "change", func() account.PasswordChange {
-		return account.PasswordChange{Current: "oldpassword", New: "newpassword"}
+		return account.PasswordChange{Current: "glaze-firing-24", New: "cone6-oxidation"}
 	})
 	root.Children(func() {
 		form, submit := account.ChangePassword(c, value, account.ChangePasswordOptions{})
@@ -226,26 +248,46 @@ func demoAccountChangePassword(c *ui.Context, log func(string)) {
 }
 
 func demoAccountSecurityScore(c *ui.Context, log func(string)) {
-	steps := []account.SecurityStep{{Title: "Add passkey"}, {Title: "Email verified", Done: true}}
-	account.SecurityScore(c, 80, steps, account.SecurityScoreOptions{})
+	steps := []account.SecurityStep{{Title: "Use a strong password", Done: true}, {Title: "Verify your email", Done: true},
+		{Title: "Turn on two-step verification", Done: true}, {Title: "Add a passkey"}, {Title: "Review signed-in devices"}}
+	ui.Column(c).Width(420).Children(func() { account.SecurityScore(c, 72, steps, account.SecurityScoreOptions{}) })
 }
 
 func demoAccountAPIKeys(c *ui.Context, log func(string)) {
-	root := ui.Column(c)
+	root := ui.Column(c).Width(440)
 	keys := ui.Local(root, "keys", func() []account.APIKey {
-		return []account.APIKey{{ID: "k1", Name: "CI", Prefix: "ck_live_", Secret: "secret"}}
+		return []account.APIKey{
+			{ID: "prod", Name: "Production", Prefix: "ck_live_", Secret: "ck_live_9fQ2xLm7", Created: "Created Mar 4"},
+			{ID: "stage", Name: "Staging", Prefix: "ck_test_", Secret: "ck_test_4hN8pRw1", Created: "Created Jun 18"},
+			{ID: "ci", Name: "CI pipeline", Prefix: "ck_live_", Secret: "ck_live_2bV6tKs3", Created: "Created Jan 9", Revoked: true},
+		}
 	})
+	revoked := func() int {
+		n := 0
+		for _, k := range *keys {
+			if k.Revoked {
+				n++
+			}
+		}
+		return n
+	}
 	root.Children(func() {
+		before := revoked()
 		if account.APIKeys(c, keys, account.APIKeysOptions{}).Changed() {
-			log("revoked " + fmt.Sprint((*keys)[0].Revoked))
+			if after := revoked(); after != before {
+				log("revoked " + fmt.Sprint(after))
+			} else {
+				log("copied")
+			}
 		}
 	})
 }
 
 func demoAccountPlanCard(c *ui.Context, log func(string)) {
-	root := ui.Column(c)
+	root := ui.Column(c).Width(380)
 	change := boolState(root, "change", false)
-	plan := account.Plan{Name: "Pro", Price: "$10/month", Features: []string{"1500 components"}}
+	plan := account.Plan{Name: "Studio", Price: "$24", Period: "/ month", Note: "Renews Nov 12, 2026",
+		Features: []string{"5 team seats", "50 GB of storage", "Custom domain for your shop", "Priority support"}}
 	root.Children(func() {
 		if account.PlanCard(c, plan, true, change, account.PlanCardOptions{}).Changed() {
 			log("change " + fmt.Sprint(*change))
@@ -254,13 +296,25 @@ func demoAccountPlanCard(c *ui.Context, log func(string)) {
 }
 
 func demoAccountUsage(c *ui.Context, log func(string)) {
-	account.Usage(c, []account.Resource{{Name: "Storage", Unit: "GB", Used: 8, Limit: 10}}, account.UsageOptions{})
+	resources := []account.Resource{
+		{Name: "Storage", Unit: "GB", Icon: "hard-drive", Used: 42.6, Limit: 50},
+		{Name: "Bandwidth", Unit: "GB", Icon: "cloud", Used: 312, Limit: 500},
+		{Name: "Team seats", Unit: "seats", Icon: "users", Used: 5, Limit: 5},
+		{Name: "Product listings", Unit: "items", Icon: "package", Used: 86, Limit: 250},
+	}
+	ui.Column(c).Width(420).Children(func() { account.Usage(c, resources, account.UsageOptions{}) })
 }
 
 func demoAccountInvoiceList(c *ui.Context, log func(string)) {
-	root := ui.Column(c)
+	root := ui.Column(c).Width(440)
 	downloaded := textState(root, "downloaded", "")
-	invoices := []account.Invoice{{ID: "i1", Number: "INV-1", Date: "Oct 1", Amount: "$10", URL: "https://example.test/invoice"}}
+	invoice := func(n int, date string, paid bool) account.Invoice {
+		number := fmt.Sprintf("INV-2026-%03d", n)
+		return account.Invoice{ID: number, Number: number, Date: date, Amount: "$24.00", Paid: paid,
+			URL: "https://billing.kiln.co/invoices/" + number + ".pdf"}
+	}
+	invoices := []account.Invoice{invoice(10, "Oct 1, 2026", false), invoice(9, "Sep 1, 2026", true),
+		invoice(8, "Aug 1, 2026", true), invoice(7, "Jul 1, 2026", true)}
 	root.Children(func() {
 		if account.InvoiceList(c, invoices, downloaded, account.InvoiceListOptions{}).Changed() {
 			log("downloaded " + *downloaded)

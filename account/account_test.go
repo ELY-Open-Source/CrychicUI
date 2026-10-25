@@ -91,7 +91,7 @@ func TestResetPassword(t *testing.T) {
 
 func TestProviders(t *testing.T) {
 	chosen := ""
-	tt := ui.NewTester(padded(func(c *ui.Context) { Providers(c, []string{"Google"}, &chosen) }), 500, 180)
+	tt := ui.NewTester(padded(func(c *ui.Context) { Providers(c, []string{"Google"}, &chosen, ProvidersOptions{}) }), 500, 180)
 	settles(t, tt)
 	before := baseline()
 	click(t, tt, "Google")
@@ -153,12 +153,13 @@ func TestPasskey(t *testing.T) {
 }
 
 func TestSessions(t *testing.T) {
-	sessions := []Session{{ID: "s1", Device: "Laptop", Last: "now", Current: true}}
+	sessions := []Session{{ID: "s1", Device: "Laptop", Last: "now"}}
 	tt := ui.NewTester(padded(func(c *ui.Context) { Sessions(c, &sessions, SessionsOptions{}) }), 500, 220)
 	settles(t, tt)
 	before := baseline()
-	click(t, tt, "s1 Sign out")
-	if len(sessions) != 0 || !tt.HasText("No sessions") {
+	click(t, tt, "Sign out Laptop")
+	settles(t, tt)
+	if len(sessions) != 0 || !tt.HasText("No other sessions") {
 		t.Errorf("sessions %v texts %q", sessions, tt.Texts())
 	}
 	cues(t, before, sound.Close)
@@ -169,7 +170,7 @@ func TestDevicesList(t *testing.T) {
 	tt := ui.NewTester(padded(func(c *ui.Context) { DevicesList(c, &devices, DevicesListOptions{}) }), 500, 220)
 	settles(t, tt)
 	before := baseline()
-	click(t, tt, "d1 Remove")
+	click(t, tt, "Remove Laptop")
 	if len(devices) != 0 {
 		t.Errorf("devices %v", devices)
 	}
@@ -228,7 +229,7 @@ func TestChangePassword(t *testing.T) {
 	}), 500, 300)
 	settles(t, tt)
 	before := baseline()
-	click(t, tt, "Change password")
+	click(t, tt, "Update password")
 	if !sent {
 		t.Error("password not changed")
 	}
@@ -249,11 +250,11 @@ func TestAPIKeys(t *testing.T) {
 	tt := ui.NewTester(padded(func(c *ui.Context) { APIKeys(c, &keys, APIKeysOptions{}) }), 500, 250)
 	settles(t, tt)
 	before := baseline()
-	click(t, tt, "k1 Copy")
+	click(t, tt, "Copy CI")
 	if tt.Clipboard() != "secret" || strings.Contains(strings.Join(tt.Texts(), "\n"), "secret") {
 		t.Errorf("clipboard or texts leaked: %q", tt.Texts())
 	}
-	click(t, tt, "k1 Revoke")
+	click(t, tt, "Revoke CI")
 	if !keys[0].Revoked {
 		t.Error("key not revoked")
 	}
@@ -277,7 +278,7 @@ func TestUsage(t *testing.T) {
 	resources := []Resource{{Name: "Storage", Unit: "GB", Used: 8, Limit: 10}}
 	tt := ui.NewTester(padded(func(c *ui.Context) { Usage(c, resources, UsageOptions{}) }), 500, 220)
 	settles(t, tt)
-	if !tt.HasText("8/10 GB") {
+	if !tt.HasText("8 of 10 GB") {
 		t.Errorf("texts %q", tt.Texts())
 	}
 }
@@ -288,7 +289,7 @@ func TestInvoiceList(t *testing.T) {
 	tt := ui.NewTester(padded(func(c *ui.Context) { InvoiceList(c, invoices, &downloaded, InvoiceListOptions{}) }), 500, 220)
 	settles(t, tt)
 	before := baseline()
-	click(t, tt, "i1 Download")
+	click(t, tt, "Download INV-1")
 	if downloaded != "i1" {
 		t.Errorf("downloaded %q", downloaded)
 	}

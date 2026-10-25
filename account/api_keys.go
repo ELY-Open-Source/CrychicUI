@@ -1,72 +1,113 @@
 package account
 
 import (
+	"fmt"
+
 	"github.com/ELY-Open-Source/CrychicUI/kit"
 	"github.com/ELY-Open-Source/CrychicUI/sound"
 	"github.com/egoist/mygo/ui"
 )
 
-// APIKey is one masked account API key.
+// APIKey is one masked account API key; Created is optional.
 type APIKey struct {
-	ID, Name, Prefix, Secret string
-	Revoked                  bool
+	ID, Name, Prefix, Secret, Created string
+	Revoked                           bool
 }
 
-// APIKeysOptions are the API key labels.
-type APIKeysOptions struct{ Copy, Copied, Revoke, Revoked string }
+// APIKeysOptions word the card; Label takes action and key name.
+type APIKeysOptions struct{ Title, Copy, Copied, Revoke, Revoked, Label string }
 
 // APIKeys copies and revokes masked keys; cue Pop, Delete.
 func APIKeys(c *ui.Context, keys *[]APIKey, o APIKeysOptions) ui.Element {
 	if keys == nil || len(*keys) == 0 {
 		panic("account: APIKeys needs keys")
 	}
+	ids := make([]string, len(*keys))
+	for i, key := range *keys {
+		if key.Name == "" || key.Prefix == "" || key.Secret == "" {
+			panic(fmt.Sprintf("account: APIKeys %q needs a name, prefix and secret", key.ID))
+		}
+		ids[i] = key.ID
+	}
+	unique("APIKeys", ids)
+	def(&o.Title, "API keys")
 	def(&o.Copy, "Copy")
 	def(&o.Copied, "Copied")
 	def(&o.Revoke, "Revoke")
 	def(&o.Revoked, "Revoked")
+	def(&o.Label, "%s %s")
 	t := c.Theme()
-	root := ui.Column(c).FillWidth().Gap(t.Space(2)).Role(ui.RoleList)
+	root := card(c).Role(ui.RoleList)
 	copied := ui.Local(root, "copied", func() string { return "" })
 	copiedSecret := ui.Local(root, "copiedSecret", func() string { return "" })
 	root.Children(func() {
-		for i, key := range *keys {
-			if key.ID == "" || key.Name == "" || key.Prefix == "" || key.Secret == "" {
-				panic("account: invalid API key")
+		live := 0
+		for _, key := range *keys {
+			if !key.Revoked {
+				live++
 			}
-			c.Key(key.ID)
-			ui.Row(c).FillWidth().Wrap().Gap(t.Space(2)).AlignItems(ui.Center).Children(func() {
-				ui.Column(c).Grow(1).Children(func() {
-					ui.Text(c, key.Name)
-					kit.Muted(c, key.Prefix+"••••").Font("monospace")
-				})
-				copyLabel := o.Copy
-				if *copied == key.ID && *copiedSecret == key.Secret {
-					copyLabel = o.Copied
-				}
-				copyButton := button(c, key.ID+" "+copyLabel).Disabled(key.Revoked)
-				copyButton.Children(func() { ui.Text(c, copyLabel) })
-				if copyButton.Clicked() && !key.Revoked {
-					c.WriteClipboard(key.Secret)
-					*copied = key.ID
-					*copiedSecret = key.Secret
-					root.SetChanged()
-					sound.Play(sound.Pop)
-					kit.Log("APIKeys", "copied", "index", i)
-				}
-				revokeLabel := o.Revoke
-				if key.Revoked {
-					revokeLabel = o.Revoked
-				}
-				revoke := button(c, key.ID+" "+revokeLabel).Disabled(key.Revoked)
-				revoke.Children(func() { ui.Text(c, revokeLabel) })
-				if revoke.Clicked() && !key.Revoked {
-					(*keys)[i].Revoked = true
-					root.SetChanged()
-					sound.Play(sound.Delete)
-					kit.Log("APIKeys", "revoked", "index", i)
-				}
-			})
 		}
+		kit.CardHead(c, "key", o.Title, func() { kit.Chip(c, fmt.Sprint(live), t.Accent) })
+		list := ui.Column(c).FillWidth().Gap(t.Space(0.5)).Padding(t.Space(1.5))
+		list.Children(func() {
+			for i, key := range *keys {
+				c.Key(key.ID)
+				row := ui.Row(c).FillWidth().Gap(t.Space(2.5)).AlignItems(ui.Center).Padding(t.Space(2)).Radius(t.Radius)
+				row.Background(row.AnimateColor("bg", t.Background.Mix(t.SurfaceHover, unit(row.Hovered())), ui.Snappy))
+				kit.Stagger(c, list, row, i).Children(func() {
+					ink := t.Accent
+					if key.Revoked {
+						ink = t.TextMuted
+					}
+					tile(c, "key", ink, t.Space(9))
+					ui.Column(c).Grow(1).MinWidth(0).Gap(t.Space(0.5)).Children(func() {
+						name := ui.Text(c, key.Name).FontSize(t.Rem(0.85)).Bold().FillWidth().MinWidth(0).SingleLine()
+						if key.Revoked {
+							name.TextColor(t.TextMuted).Strikethrough()
+						}
+						ui.Row(c).FillWidth().Gap(t.Space(1.5)).AlignItems(ui.Center).Children(func() {
+							kit.Muted(c, key.Prefix+"••••••••").Font("monospace").FontSize(t.Rem(0.75)).MinWidth(0).SingleLine()
+							if key.Created != "" {
+								dot(c)
+								kit.Muted(c, key.Created).FontSize(t.Rem(0.75)).MinWidth(0).SingleLine()
+							}
+						})
+					})
+					if key.Revoked {
+						kit.Chip(c, o.Revoked, t.Danger)
+						return
+					}
+					done := *copied == key.ID && *copiedSecret == key.Secret
+					text, mark := o.Copy, "copy"
+					if done {
+						text, mark = o.Copied, "check"
+					}
+					copyButton := kit.Press(ui.ButtonBase(c).Label(fmt.Sprintf(o.Label, text, key.Name)).Size(t.Space(8), t.Space(8)).
+						Shrink(0).Center().Radius(999))
+					copyButton.Background(copyButton.AnimateColor("bg", t.Background.Mix(t.SurfaceHover, unit(copyButton.Hovered())), ui.Snappy))
+					copyButton.TextColor(copyButton.AnimateColor("ink", t.TextMuted.Mix(t.Success, unit(done)), ui.Snappy))
+					copyButton.Children(func() {
+						c.Key(done)
+						kit.Arrive(glyph(c, mark, 16), ui.Pose{Scale: 0.5, Fade: 1}, 0)
+					})
+					if copyButton.Clicked() {
+						c.WriteClipboard(key.Secret)
+						*copied = key.ID
+						*copiedSecret = key.Secret
+						root.SetChanged()
+						sound.Play(sound.Pop)
+						kit.Log("APIKeys", "copied", "index", i)
+					}
+					revoke := outline(c, fmt.Sprintf(o.Label, o.Revoke, key.Name), o.Revoke, "", t.Danger)
+					if revoke.Clicked() {
+						(*keys)[i].Revoked = true
+						root.SetChanged()
+						sound.Play(sound.Delete)
+						kit.Log("APIKeys", "revoked", "index", i)
+					}
+				})
+			}
+		})
 	})
 	return root
 }

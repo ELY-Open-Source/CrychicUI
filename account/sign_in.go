@@ -1,8 +1,6 @@
 package account
 
 import (
-	"strings"
-
 	"github.com/ELY-Open-Source/CrychicUI/kit"
 	"github.com/ELY-Open-Source/CrychicUI/sound"
 	"github.com/egoist/mygo/ui"
@@ -13,10 +11,10 @@ type Credentials struct {
 	Email, Password string
 }
 
-// SignInOptions are the sign-in labels and error.
+// SignInOptions word the form; Error shows a failed attempt.
 type SignInOptions struct {
-	Email, Password, Forgot, Submit string
-	Error                           string
+	Title, Subtitle, Email, Password, Forgot, Submit, Or, Continue string
+	Error                                                          string
 }
 
 // SignIn signs in with providers and forgot; cue Tap, Error.
@@ -24,13 +22,19 @@ func SignIn(c *ui.Context, value *Credentials, providers []string, action *strin
 	if value == nil || action == nil {
 		panic("account: SignIn needs value and action")
 	}
+	if len(providers) > 0 {
+		unique("SignIn", providers)
+	}
+	def(&o.Title, "Welcome back")
+	def(&o.Subtitle, "Sign in to your account")
 	def(&o.Email, "Email")
 	def(&o.Password, "Password")
 	def(&o.Forgot, "Forgot password")
 	def(&o.Submit, "Sign in")
+	def(&o.Or, "or")
+	def(&o.Continue, "Continue with %s")
 	t := c.Theme()
-	root = ui.Column(c).FillWidth().Gap(t.Space(2)).Padding(t.Space(3)).Radius(t.Radius).Border(1, t.Border)
-	kit.Arrive(root, ui.Pose{Y: t.Space(2), Fade: 1}, 0)
+	root = card(c).Gap(t.Space(4)).Padding(t.Space(5))
 	shown := ui.Local(root, "error", func() string { return o.Error })
 	if o.Error != *shown {
 		if *shown = o.Error; o.Error != "" {
@@ -40,44 +44,52 @@ func SignIn(c *ui.Context, value *Credentials, providers []string, action *strin
 	}
 	valid := false
 	root.Children(func() {
-		ui.Column(c).FillWidth().Gap(t.Space(2)).Children(func() {
-			email := ui.TextInput(c, &value.Email).Label(o.Email).Placeholder(o.Email).FillWidth()
-			password := ui.TextInput(c, &value.Password).Label(o.Password).Placeholder(o.Password).Password().FillWidth()
+		head(c, "log-in", o.Title, o.Subtitle)
+		ui.Column(c).FillWidth().Gap(t.Space(3)).Children(func() {
+			email := field(c, o.Email, "mail", &value.Email, false)
+			password := field(c, o.Password, "lock", &value.Password, true)
 			if email.Changed() || password.Changed() {
 				*action = ""
 				root.SetChanged()
 			}
+			forgot := kit.Press(ui.ButtonBase(c).Label(o.Forgot).AlignSelf(ui.End).Padding(t.Space(0.5), t.Space(1)).Radius(t.Radius))
+			forgot.TextColor(forgot.AnimateColor("ink", t.Accent.Mix(t.AccentHover, unit(forgot.Hovered())), ui.Snappy))
+			forgot.Children(func() { ui.Text(c, o.Forgot).FontSize(t.Rem(0.78)).Bold().Shrink(0) })
+			if forgot.Clicked() {
+				*action = "forgot"
+				root.SetChanged()
+				sound.Play(sound.Tap)
+				kit.Log("SignIn", "forgot")
+			}
 			if o.Error != "" {
-				ui.Text(c, o.Error).TextColor(t.Danger).Wrap()
+				c.Key(o.Error)
+				note(c, "circle-alert", o.Error, t.Danger)
 			}
 		})
 		valid = validEmail(value.Email) && value.Password != ""
-		submit = primary(c, o.Submit).FillWidth().Disabled(!valid)
-		submit.Children(func() { ui.Text(c, o.Submit) })
-		ui.Column(c).FillWidth().Gap(t.Space(2)).Children(func() {
-			for _, provider := range providers {
-				if strings.TrimSpace(provider) == "" {
-					panic("account: provider must not be empty")
-				}
+		submit = primary(c, o.Submit, "").FillWidth().Disabled(!valid)
+		if len(providers) == 0 {
+			return
+		}
+		ui.Row(c).FillWidth().Gap(t.Space(3)).AlignItems(ui.Center).Children(func() {
+			ui.Box(c).Grow(1).Height(1).Background(t.Border)
+			kit.Muted(c, o.Or).FontSize(t.Rem(0.75)).Shrink(0)
+			ui.Box(c).Grow(1).Height(1).Background(t.Border)
+		})
+		list := ui.Column(c).FillWidth().Gap(t.Space(2))
+		list.Children(func() {
+			for i, provider := range providers {
 				c.Key(provider)
-				b := button(c, provider).FillWidth()
-				b.Children(func() { ui.Text(c, provider) })
+				b := providerButton(c, provider, o.Continue, *action == provider)
+				kit.Stagger(c, list, b, i)
 				if b.Clicked() {
 					*action = provider
 					root.SetChanged()
 					sound.Play(sound.Tap)
-					kit.Log("SignIn", "provider")
+					kit.Log("SignIn", "provider", "index", i)
 				}
 			}
 		})
-		forgot := button(c, o.Forgot)
-		forgot.Children(func() { ui.Text(c, o.Forgot) })
-		if forgot.Clicked() {
-			*action = "forgot"
-			root.SetChanged()
-			sound.Play(sound.Tap)
-			kit.Log("SignIn", "forgot")
-		}
 	})
 	if submit.Clicked() && valid {
 		*action = "signin"

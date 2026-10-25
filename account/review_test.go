@@ -27,7 +27,7 @@ func TestUsageFractions(t *testing.T) {
 	resources := []Resource{{Name: "Storage", Unit: "GB", Used: 0.1, Limit: 0.2}}
 	tt := ui.NewTester(padded(func(c *ui.Context) { Usage(c, resources, UsageOptions{}) }), 500, 220)
 	settles(t, tt)
-	if !tt.HasText("0.1/0.2 GB") {
+	if !tt.HasText("0.1 of 0.2 GB") {
 		t.Errorf("texts %q", tt.Texts())
 	}
 }
@@ -36,7 +36,7 @@ func TestAPIKeyCopyTracksSecret(t *testing.T) {
 	keys := []APIKey{{ID: "k1", Name: "CI", Prefix: "ck_", Secret: "first"}}
 	tt := ui.NewTester(padded(func(c *ui.Context) { APIKeys(c, &keys, APIKeysOptions{}) }), 500, 250)
 	settles(t, tt)
-	click(t, tt, "k1 Copy")
+	click(t, tt, "Copy CI")
 	keys[0].Secret = "second"
 	tt.Frame()
 	if !tt.HasText("Copy") || tt.HasText("Copied") || tt.Clipboard() != "first" {

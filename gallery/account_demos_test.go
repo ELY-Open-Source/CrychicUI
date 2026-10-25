@@ -50,7 +50,7 @@ func TestAccountDemoTextEdits(t *testing.T) {
 			if !strings.Contains(joined, tc.want) {
 				t.Errorf("logs %q, want %q", logs, tc.want)
 			}
-			if strings.Contains(joined, "example.com") || strings.Contains(joined, "Password1!") {
+			if strings.Contains(joined, "kiln.co") || strings.Contains(joined, "Cone6&Oxide") {
 				t.Errorf("typed text logged: %q", logs)
 			}
 		})
@@ -78,20 +78,20 @@ func TestAccountDemosLog(t *testing.T) {
 		"SignUp":          {press("Create account"), "created"},
 		"ForgotPassword":  {press("Send link"), "sent"},
 		"ResetPassword":   {press("Reset password"), "reset"},
-		"Providers":       {press("Google"), "provider Google"},
+		"Providers":       {press("GitHub"), "provider GitHub"},
 		"MagicLink":       {press("Resend"), "resent 1"},
 		"TwoFactor":       {press("Verify"), "verified"},
-		"BackupCodes":     {press("ABCD-1234"), "copied 0"},
+		"BackupCodes":     {press("7KQ2-M9XD"), "copied 0"},
 		"Passkey":         {press("Add passkey"), "added true"},
-		"Sessions":        {press("s1 Sign out"), "sessions 0"},
-		"DevicesList":     {press("d1 Remove"), "devices 0"},
+		"Sessions":        {press("Sign out iPad Air"), "sessions 3"},
+		"DevicesList":     {press("Remove Pixel 8"), "devices 3"},
 		"ProfileSettings": {press("Save"), "saved"},
 		"AvatarEditor":    {press("Remove"), "image false"},
 		"ChangeEmail":     {press("Verify"), "verify"},
-		"ChangePassword":  {press("Change password"), "changed"},
-		"APIKeys":         {press("k1 Revoke"), "revoked true"},
+		"ChangePassword":  {press("Update password"), "changed"},
+		"APIKeys":         {press("Revoke Staging"), "revoked 2"},
 		"PlanCard":        {press("Change plan"), "change true"},
-		"InvoiceList":     {press("i1 Download"), "downloaded i1"},
+		"InvoiceList":     {press("Download INV-2026-010"), "downloaded INV-2026-010"},
 	}
 	quiet := map[string]bool{"SecurityScore": true, "Usage": true}
 	seen := 0
@@ -122,5 +122,33 @@ func TestAccountDemosLog(t *testing.T) {
 	}
 	if seen != 20 {
 		t.Errorf("checked %d account demos", seen)
+	}
+}
+
+func TestAccountDemoEventsMatch(t *testing.T) {
+	cases := []struct {
+		name, action string
+		typed        bool
+		want, never  string
+	}{{"APIKeys", "Copy Staging", false, "copied", "revoked"}, {"SignUp", "Name", true, "nameRunes", "terms"},
+		{"TwoFactor", "Six-digit code", true, "codeRunes", "resent"}}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			e := Entries()[tcIndex(tc.name)]
+			var logs []string
+			tt := ui.NewTester(func(c *ui.Context) { e.Demo(c, func(s string) { logs = append(logs, s) }) }, 900, 700)
+			tt.Advance(2 * time.Second)
+			if err := tt.Click(tc.action); err != nil {
+				t.Fatal(err)
+			}
+			if tc.typed {
+				tt.Type("x")
+			}
+			tt.Frame()
+			all := strings.Join(logs, "\n")
+			if !strings.Contains(all, tc.want) || strings.Contains(all, tc.never) {
+				t.Errorf("logs %q, want %q without %q", logs, tc.want, tc.never)
+			}
+		})
 	}
 }
