@@ -197,7 +197,7 @@ func TestEveryEntry(t *testing.T) {
 		"Waves": true, "Blob": true, "OrbitRings": true, "DotGlobe": true, "Beam": true, "ShimmerSurface": true, "Grain": true,
 		"Vignette": true, "Frosted": true, "Scanlines": true, "Halftone": true, "Pattern": true, "MatrixRain": true, "Caret": true,
 		"LightRays": true, "ConicSpin": true, "Plasma": true, "Flicker": true, "Mesh": true, "AnalogClock": true, "Slideshow": true, "Stories": true, "Typing": true, "ChatEmpty": true, "CallBanner": true, "StreamText": true, "Thinking": true, "ToolCall": true, "Plan": true, "TaskProgress": true, "VoiceOrb": true, "RunTimeline": true, "AgentAvatar": true, "AgentStatus": true, "AgentBoard": true, "SearchSteps": true, "StopButton": true, "ImageGenerating": true, "StreamCode": true, "code/Terminal": true, "files/SyncRow": true, "finance/TickerTape": true, "dashboard/Anomaly": true, "mail/IncomingCall": true, "mail/ScreenShare": true}
-	updating := map[string]bool{"LiveClock": true, "CountdownTo": true, "WordRotate": true, "DigitalClock": true, "FlashSale": true, "MarketStatus": true, "Realtime": true, "ServerLoad": true, "NextEvent": true, "NowLine": true, "CallScreen": true, "Lockout": true, "Cron": true, "RateLimit": true, "Ping": true}
+	updating := map[string]bool{"LiveClock": true, "CountdownTo": true, "WordRotate": true, "DigitalClock": true, "FlashSale": true, "MarketStatus": true, "Realtime": true, "ServerLoad": true, "NextEvent": true, "NowLine": true, "CallScreen": true, "Lockout": true, "Cron": true, "RateLimit": true, "Ping": true, "TurnTimer": true}
 	for i, e := range Entries() {
 		// Repeated names key by category.
 		loops := continuous[e.Name] || continuous[e.Category+"/"+e.Name]
