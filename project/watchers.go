@@ -1,46 +1,68 @@
 package project
 
 import (
-	"unicode/utf8"
+	"fmt"
 
+	"github.com/ELY-Open-Source/CrychicUI/display"
 	"github.com/ELY-Open-Source/CrychicUI/kit"
 	"github.com/ELY-Open-Source/CrychicUI/sound"
 	"github.com/egoist/mygo/ui"
 )
 
-// WatchersOptions are the watcher labels.
-type WatchersOptions struct{ Watch, Watching string }
+// WatchersOptions word the toggle; You joins the avatars while watching.
+type WatchersOptions struct{ Watch, Watching, You, One, Many, None string }
 
 // Watchers toggles watching and shows avatars; cue Toggle.
 func Watchers(c *ui.Context, people []string, watching *bool, o WatchersOptions) ui.Element {
-	if len(people) == 0 || watching == nil {
-		panic("project: Watchers needs people and state")
+	if watching == nil {
+		panic("project: Watchers needs watching state")
 	}
 	def(&o.Watch, "Watch")
 	def(&o.Watching, "Watching")
+	def(&o.You, "You")
+	def(&o.One, "1 watcher")
+	def(&o.Many, "%d watchers")
+	def(&o.None, "No watchers yet")
+	unique("Watchers", append([]string{o.You}, people...))
 	t := c.Theme()
-	root := ui.Row(c).FillWidth().Gap(t.Space(2)).AlignItems(ui.Center).Role(ui.RoleGroup)
+	names := people
+	if *watching {
+		names = append([]string{o.You}, people...)
+	}
+	count := o.None
+	switch {
+	case len(names) == 1:
+		count = o.One
+	case len(names) > 1:
+		count = fmt.Sprintf(o.Many, len(names))
+	}
+	root := card(c).Row().Gap(t.Space(2.5)).AlignItems(ui.Center).Padding(t.Space(2.5), t.Space(3))
 	root.Children(func() {
-		name := o.Watch
-		if *watching {
-			name = o.Watching
+		if len(names) > 0 {
+			display.AvatarGroup(c, names, display.AvatarGroupOptions{Max: 4})
 		}
-		b := kit.Press(ui.ButtonBase(c).Label(name).Padding(t.Space(1), t.Space(2)).Radius(999).Checked(*watching))
-		b.Children(func() { ui.Text(c, name).SingleLine() })
+		kit.Muted(c, count).FontSize(t.Rem(0.8)).Grow(1).MinWidth(0).SingleLine().ContentTransition(ui.ContentTransition{})
+		name, mark := o.Watch, "eye"
+		if *watching {
+			name, mark = o.Watching, "eye-off"
+		}
+		c.Key("toggle")
+		b := kit.Press(ui.ButtonBase(c).Label(name).Padding(t.Space(1.5), t.Space(3)).Radius(999).Shrink(0).Checked(*watching))
+		b.Background(b.AnimateColor("bg", t.Background.Mix(t.SurfaceHover, unit(b.Hovered())).Mix(t.Accent.Alpha(0.14), unit(*watching)), ui.Snappy))
+		b.Border(1, b.AnimateColor("line", t.Border.Mix(t.Accent, unit(*watching)), ui.Snappy))
+		b.TextColor(b.AnimateColor("ink", t.Text.Mix(t.Accent, unit(*watching)), ui.Snappy))
+		b.Children(func() {
+			ui.Row(c).Gap(t.Space(1.5)).AlignItems(ui.Center).Children(func() {
+				c.Key(*watching)
+				kit.Arrive(glyph(c, mark, 14), ui.Pose{Scale: 0.6, Fade: 1}, 0)
+				ui.Text(c, name).FontSize(t.Rem(0.8)).Bold().Shrink(0)
+			})
+		})
 		if b.Clicked() {
 			*watching = !*watching
 			root.SetChanged()
 			sound.Play(sound.Toggle)
 			kit.Log("Watchers", "toggled", "watching", *watching)
-		}
-		for _, person := range people {
-			if person == "" {
-				panic("project: Watchers person must not be empty")
-			}
-			ui.Box(c).Size(t.Space(7), t.Space(7)).Radius(999).Background(t.Accent.Alpha(0.15)).Center().Children(func() {
-				first, _ := utf8.DecodeRuneInString(person)
-				ui.Text(c, string(first)).TextColor(t.Accent)
-			})
 		}
 	})
 	return root

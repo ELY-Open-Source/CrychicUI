@@ -12,7 +12,7 @@ func TestEpic(t *testing.T) {
 	children := []Task{{ID: "a", Title: "A", Done: true}, {ID: "b", Title: "B"}}
 	tt := ui.NewTester(padded(func(c *ui.Context) { Epic(c, "Epic", children, EpicOptions{}) }), 500, 220)
 	settles(t, tt)
-	if !tt.HasText("1/2 done") {
+	if !tt.HasText("1 of 2 done") {
 		t.Errorf("texts %q", tt.Texts())
 	}
 }
@@ -20,12 +20,12 @@ func TestEpic(t *testing.T) {
 func TestDependencies(t *testing.T) {
 	opened := ""
 	tt := ui.NewTester(padded(func(c *ui.Context) {
-		Dependencies(c, []string{"A"}, []string{"B"}, &opened, DependenciesOptions{})
+		Dependencies(c, []Link{{Key: "ATL-1", Title: "Auth"}}, []Link{{Key: "ATL-2", Title: "Billing"}}, &opened, DependenciesOptions{})
 	}), 500, 220)
 	settles(t, tt)
 	before := baseline()
-	click(t, tt, "A")
-	if opened != "A" {
+	click(t, tt, "ATL-1")
+	if opened != "ATL-1" {
 		t.Errorf("opened %q", opened)
 	}
 	cues(t, before, sound.Open)
@@ -45,7 +45,7 @@ func TestWatchers(t *testing.T) {
 
 func TestWorkload(t *testing.T) {
 	people := []WorkloadPerson{{Name: "Ana", Load: 0.8}}
-	tt := ui.NewTester(padded(func(c *ui.Context) { Workload(c, people) }), 500, 180)
+	tt := ui.NewTester(padded(func(c *ui.Context) { Workload(c, people, WorkloadOptions{}) }), 500, 180)
 	settles(t, tt)
 	if !tt.HasText("Ana") || !tt.HasText("80%") {
 		t.Errorf("texts %q", tt.Texts())
@@ -55,7 +55,7 @@ func TestWorkload(t *testing.T) {
 func TestProjectCard(t *testing.T) {
 	tt := ui.NewTester(padded(func(c *ui.Context) { ProjectCard(c, "Crychic", []string{"Ana"}, 0.5, ProjectCardOptions{}) }), 500, 220)
 	settles(t, tt)
-	if !tt.HasText("Crychic") || !tt.HasText("1 members") {
+	if !tt.HasText("Crychic") || !tt.HasText("1 member") {
 		t.Errorf("texts %q", tt.Texts())
 	}
 }
@@ -75,11 +75,11 @@ func TestProjectHeader(t *testing.T) {
 }
 
 func TestChecklist(t *testing.T) {
-	items := []ChecklistItem{{Title: "One"}}
+	items := []ChecklistItem{{ID: "a", Title: "One"}}
 	tt := ui.NewTester(padded(func(c *ui.Context) { Checklist(c, &items, ChecklistOptions{}) }), 500, 250)
 	settles(t, tt)
 	before := baseline()
-	click(t, tt, "Toggle")
+	click(t, tt, "Toggle One")
 	click(t, tt, "Add item")
 	if !items[0].Done || len(items) != 2 {
 		t.Errorf("items %v", items)
@@ -104,7 +104,7 @@ func TestVote(t *testing.T) {
 	tt := ui.NewTester(padded(func(c *ui.Context) { Vote(c, []string{"Idea"}, &votes, VoteOptions{}) }), 500, 180)
 	settles(t, tt)
 	before := baseline()
-	click(t, tt, "Vote")
+	click(t, tt, "Vote for Idea")
 	if votes[0] != 1 {
 		t.Errorf("votes %v", votes)
 	}
@@ -115,7 +115,7 @@ func TestStandUp(t *testing.T) {
 	people := []StandUpPerson{{Name: "Ana", Yesterday: "Review", Today: "Build", Blockers: "None"}}
 	tt := ui.NewTester(padded(func(c *ui.Context) { StandUp(c, people, StandUpOptions{}) }), 500, 220)
 	settles(t, tt)
-	if !tt.HasText("Ana") || !tt.HasText("Today: Build") {
+	if !tt.HasText("Ana") || !tt.HasText("Build") {
 		t.Errorf("texts %q", tt.Texts())
 	}
 }
@@ -148,7 +148,7 @@ func TestWhiteboard(t *testing.T) {
 
 func TestMindMap(t *testing.T) {
 	added := -1
-	tt := ui.NewTester(padded(func(c *ui.Context) { MindMap(c, "Center", []string{"Branch"}, &added, MindMapOptions{}) }), 500, 250)
+	tt := ui.NewTester(padded(func(c *ui.Context) { MindMap(c, "Center", []string{"Branch"}, &added, MindMapOptions{}) }), 500, 450)
 	settles(t, tt)
 	before := baseline()
 	click(t, tt, "Add branch")
@@ -160,7 +160,7 @@ func TestMindMap(t *testing.T) {
 
 func TestOKR(t *testing.T) {
 	results := []KeyResult{{Title: "Grow", Current: 50, Target: 100}}
-	tt := ui.NewTester(padded(func(c *ui.Context) { OKR(c, "Objective", results) }), 500, 220)
+	tt := ui.NewTester(padded(func(c *ui.Context) { OKR(c, "Objective", results, OKROptions{}) }), 500, 220)
 	settles(t, tt)
 	if !tt.HasText("Objective") || !tt.HasText("50/100") {
 		t.Errorf("texts %q", tt.Texts())
@@ -169,7 +169,7 @@ func TestOKR(t *testing.T) {
 
 func TestRisks(t *testing.T) {
 	risks := []Risk{{Title: "Delay", Likelihood: 2, Impact: 3}}
-	tt := ui.NewTester(padded(func(c *ui.Context) { Risks(c, risks) }), 500, 180)
+	tt := ui.NewTester(padded(func(c *ui.Context) { Risks(c, risks, RisksOptions{}) }), 500, 180)
 	settles(t, tt)
 	if !tt.HasText("Delay") {
 		t.Errorf("texts %q", tt.Texts())
@@ -178,7 +178,7 @@ func TestRisks(t *testing.T) {
 
 func TestChanges(t *testing.T) {
 	entries := []Change{{Text: "Updated", Time: "10:00"}}
-	tt := ui.NewTester(padded(func(c *ui.Context) { Changes(c, entries) }), 500, 180)
+	tt := ui.NewTester(padded(func(c *ui.Context) { Changes(c, entries, ChangesOptions{}) }), 500, 180)
 	settles(t, tt)
 	if !tt.HasText("Updated") || !tt.HasText("10:00") {
 		t.Errorf("texts %q", tt.Texts())
@@ -187,7 +187,7 @@ func TestChanges(t *testing.T) {
 
 func TestRelease(t *testing.T) {
 	shipped := false
-	tt := ui.NewTester(padded(func(c *ui.Context) { Release(c, "v1.0", []string{"Feature"}, &shipped, ReleaseOptions{}) }), 500, 220)
+	tt := ui.NewTester(padded(func(c *ui.Context) { Release(c, "v1.0", []ReleaseItem{{Text: "Feature"}}, &shipped, ReleaseOptions{}) }), 500, 220)
 	settles(t, tt)
 	before := baseline()
 	click(t, tt, "Ship")
@@ -199,7 +199,7 @@ func TestRelease(t *testing.T) {
 
 func TestTeamLoad(t *testing.T) {
 	weeks := []TeamWeek{{Person: "Ana", Loads: []float64{0.5, 0.6, 0.7, 0.8}}}
-	tt := ui.NewTester(padded(func(c *ui.Context) { TeamLoad(c, weeks) }), 500, 220)
+	tt := ui.NewTester(padded(func(c *ui.Context) { TeamLoad(c, weeks, TeamLoadOptions{}) }), 500, 220)
 	settles(t, tt)
 	if !tt.HasText("Ana") || !tt.HasText("80%") {
 		t.Errorf("texts %q", tt.Texts())

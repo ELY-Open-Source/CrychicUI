@@ -52,6 +52,14 @@ func unit(v bool) float32 {
 
 func finite(v float64) bool { return !math.IsNaN(v) && !math.IsInf(v, 0) }
 
+// percent rounds a share; 100 only when full.
+func percent(v float64) int {
+	if v < 1 {
+		return min(99, int(math.Round(v*100)))
+	}
+	return int(math.Round(v * 100))
+}
+
 func validTask(component string, task Task) {
 	if task.ID == "" || task.Title == "" {
 		panic(fmt.Sprintf("project: %s has a task %q without ID or title", component, task.ID))

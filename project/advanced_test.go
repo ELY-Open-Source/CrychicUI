@@ -34,13 +34,13 @@ func TestEpicCompletion(t *testing.T) {
 	children := []Task{{ID: "a", Title: "A", Done: true}, {ID: "b", Title: "B"}}
 	tt := ui.NewTester(padded(func(c *ui.Context) { Epic(c, "Epic", children, EpicOptions{}) }), 500, 220)
 	settles(t, tt)
-	if !tt.HasText("1/2 done") {
+	if !tt.HasText("1 of 2 done") {
 		t.Errorf("texts %q", tt.Texts())
 	}
 }
 
 func TestChecklistEdit(t *testing.T) {
-	items := []ChecklistItem{{Title: "Old", Done: true}}
+	items := []ChecklistItem{{ID: "a", Title: "Old", Done: true}}
 	tt := ui.NewTester(padded(func(c *ui.Context) { Checklist(c, &items, ChecklistOptions{}) }), 500, 220)
 	settles(t, tt)
 	r, _ := tt.Find("Old")
@@ -56,7 +56,7 @@ func TestChecklistEdit(t *testing.T) {
 
 func TestRisksPosition(t *testing.T) {
 	risks := []Risk{{Title: "Delay", Likelihood: 1, Impact: 5}}
-	tt := ui.NewTester(padded(func(c *ui.Context) { Risks(c, risks) }), 500, 400)
+	tt := ui.NewTester(padded(func(c *ui.Context) { Risks(c, risks, RisksOptions{}) }), 500, 400)
 	settles(t, tt)
 	first, _ := tt.Find("Delay")
 	risks[0].Likelihood, risks[0].Impact = 5, 1
@@ -94,14 +94,16 @@ func TestStaticMotion(t *testing.T) {
 	for name, fn := range map[string]func(c *ui.Context){
 		"dependencies": func(c *ui.Context) {
 			opened := ""
-			Dependencies(c, []string{"A"}, nil, &opened, DependenciesOptions{})
+			Dependencies(c, []Link{{Key: "ATL-1", Title: "Auth"}}, nil, &opened, DependenciesOptions{})
 		},
 		"standup": func(c *ui.Context) {
 			StandUp(c, []StandUpPerson{{Name: "Ana", Yesterday: "A", Today: "B"}}, StandUpOptions{})
 		},
-		"risks":    func(c *ui.Context) { Risks(c, []Risk{{Title: "Delay", Likelihood: 2, Impact: 3}}) },
-		"changes":  func(c *ui.Context) { Changes(c, []Change{{Text: "Updated", Time: "now"}}) },
-		"teamload": func(c *ui.Context) { TeamLoad(c, []TeamWeek{{Person: "Ana", Loads: []float64{0.5, 0.5, 0.5, 0.5}}}) },
+		"risks":   func(c *ui.Context) { Risks(c, []Risk{{Title: "Delay", Likelihood: 2, Impact: 3}}, RisksOptions{}) },
+		"changes": func(c *ui.Context) { Changes(c, []Change{{Text: "Updated", Time: "now"}}, ChangesOptions{}) },
+		"teamload": func(c *ui.Context) {
+			TeamLoad(c, []TeamWeek{{Person: "Ana", Loads: []float64{0.5, 0.5, 0.5, 0.5}}}, TeamLoadOptions{})
+		},
 	} {
 		t.Run(name, func(t *testing.T) {
 			tt := ui.NewTester(padded(func(c *ui.Context) { fn(c) }), 500, 250)
@@ -159,7 +161,7 @@ func TestMindMapRequestsNewBranch(t *testing.T) {
 	added := -1
 	tt := ui.NewTester(padded(func(c *ui.Context) {
 		MindMap(c, "Center", []string{"Branch"}, &added, MindMapOptions{})
-	}), 500, 250)
+	}), 500, 450)
 	settles(t, tt)
 	click(t, tt, "Add branch")
 	if added != 1 {
@@ -177,7 +179,7 @@ func TestQuickAddDateUsesClockLocation(t *testing.T) {
 
 func TestOKRFractionalValues(t *testing.T) {
 	results := []KeyResult{{Title: "Grow", Current: 0.1, Target: 0.2}}
-	tt := ui.NewTester(padded(func(c *ui.Context) { OKR(c, "Objective", results) }), 500, 220)
+	tt := ui.NewTester(padded(func(c *ui.Context) { OKR(c, "Objective", results, OKROptions{}) }), 500, 220)
 	settles(t, tt)
 	if !tt.HasText("0.1/0.2") {
 		t.Errorf("texts %q", tt.Texts())
@@ -191,14 +193,14 @@ func TestC50CopyOverrides(t *testing.T) {
 		t.Errorf("texts %q", tt.Texts())
 	}
 	card := ui.NewTester(padded(func(c *ui.Context) {
-		ProjectCard(c, "Crychic", []string{"Ana"}, 0.5, ProjectCardOptions{Members: "%d people"})
+		ProjectCard(c, "Crychic", []string{"Ana", "Ben"}, 0.5, ProjectCardOptions{Members: "%d people"})
 	}), 500, 220)
-	if !card.HasText("1 people") {
+	if !card.HasText("2 people") {
 		t.Errorf("texts %q", card.Texts())
 	}
 	people := []StandUpPerson{{Name: "Ana", Yesterday: "A", Today: "B", Blockers: "C"}}
 	stand := ui.NewTester(padded(func(c *ui.Context) { StandUp(c, people, StandUpOptions{Yesterday: "Y", Today: "T", Blockers: "B"}) }), 500, 220)
-	if !stand.HasText("Y: A") || !stand.HasText("T: B") || !stand.HasText("B: C") {
+	if !stand.HasText("Y") || !stand.HasText("T") || !stand.HasText("C") || stand.HasText("Yesterday") {
 		t.Errorf("texts %q", stand.Texts())
 	}
 }

@@ -123,7 +123,7 @@ func TestEstimate(t *testing.T) {
 
 func TestSprintHeader(t *testing.T) {
 	start := time.Now()
-	end := start.Add(10 * 24 * time.Hour)
+	end := start.AddDate(0, 0, 10)
 	tt := ui.NewTester(padded(func(c *ui.Context) { SprintHeader(c, "Sprint 1", start, end, SprintHeaderOptions{}) }), 500, 180)
 	settles(t, tt)
 	if !tt.HasText("Sprint 1") || !tt.HasText("10 days left") {

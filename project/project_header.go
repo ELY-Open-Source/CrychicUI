@@ -1,44 +1,59 @@
 package project
 
 import (
-	"github.com/ELY-Open-Source/CrychicUI/icon"
+	"fmt"
+	"slices"
+
 	"github.com/ELY-Open-Source/CrychicUI/kit"
 	"github.com/ELY-Open-Source/CrychicUI/sound"
 	"github.com/egoist/mygo/ui"
 )
 
-// ProjectHeaderOptions are the project header labels.
-type ProjectHeaderOptions struct{ Icon string }
+// ProjectHeaderOptions set the icon; Subtitle is optional.
+type ProjectHeaderOptions struct{ Icon, Subtitle string }
 
 // ProjectHeader shows icon, name, and tabs; cue Select.
 func ProjectHeader(c *ui.Context, name string, tab *string, tabs []string, o ProjectHeaderOptions) ui.Element {
 	if name == "" || tab == nil || len(tabs) == 0 {
-		panic("project: ProjectHeader has invalid data")
+		panic(fmt.Sprintf("project: ProjectHeader %q needs tabs and state", name))
 	}
-	def(&o.Icon, "folder")
+	unique("ProjectHeader", tabs)
+	if !slices.Contains(tabs, *tab) {
+		panic(fmt.Sprintf("project: ProjectHeader %q has no tab %q", name, *tab))
+	}
+	def(&o.Icon, "folder-kanban")
 	t := c.Theme()
-	root := ui.Column(c).FillWidth().Gap(t.Space(2)).Role(ui.RoleGroup)
+	root := card(c)
 	root.Children(func() {
-		ui.Row(c).Gap(t.Space(2)).AlignItems(ui.Center).Children(func() {
-			ui.Icon(c, icon.Must(o.Icon)).Size(t.Space(6), t.Space(6)).TextColor(t.Accent)
-			ui.Text(c, name).Bold()
+		ui.Row(c).FillWidth().Gap(t.Space(3)).AlignItems(ui.Center).Padding(t.Space(3), t.Space(3), t.Space(2), t.Space(3)).Children(func() {
+			tile(c, o.Icon, t.Accent)
+			ui.Column(c).Grow(1).MinWidth(0).Gap(t.Space(0.5)).Children(func() {
+				ui.Text(c, name).FontSize(t.Rem(1.05)).Bold().Wrap().FillWidth()
+				if o.Subtitle != "" {
+					kit.Muted(c, o.Subtitle).FontSize(t.Rem(0.75)).Wrap().FillWidth()
+				}
+			})
 		})
-		ui.Row(c).Wrap().Gap(t.Space(1)).Children(func() {
-			for _, item := range tabs {
-				if item == "" {
-					panic("project: ProjectHeader tab must not be empty")
+		ui.ScrollHorizontal(c).FillWidth().BorderWidth(1, 0, 0, 0).BorderColor(t.Border).Children(func() {
+			ui.Row(c).Padding(0, t.Space(1.5)).Children(func() {
+				for _, item := range tabs {
+					c.Key(item)
+					on := *tab == item
+					b := kit.Press(ui.ButtonBase(c).Label(item).Column().AlignItems(ui.Stretch).Shrink(0).Checked(on))
+					b.TextColor(b.AnimateColor("ink", t.TextMuted.Mix(t.Text, unit(b.Hovered())).Mix(t.Accent, unit(on)), ui.Snappy))
+					line := b.AnimateColor("line", t.Accent.Alpha(0).Mix(t.Accent, unit(on)), ui.Snappy)
+					b.Children(func() {
+						ui.Text(c, item).FontSize(t.Rem(0.8)).Bold().Shrink(0).Padding(t.Space(2), t.Space(2.5))
+						ui.Box(c).FillWidth().Height(t.Space(0.5)).Radius(999).Background(line)
+					})
+					if b.Clicked() && !on {
+						*tab = item
+						root.SetChanged()
+						sound.Play(sound.Select)
+						kit.Log("ProjectHeader", "tab", "tab", *tab)
+					}
 				}
-				b := kit.Press(ui.ButtonBase(c).Label(item).Padding(t.Space(1), t.Space(2)).Radius(999).
-					Border(1, t.Border).Checked(*tab == item))
-				b.Background(b.AnimateColor("bg", t.Surface.Mix(t.Accent.Alpha(0.12), unit(*tab == item)), ui.Snappy))
-				b.Children(func() { ui.Text(c, item).FontSize(t.Rem(0.75)) })
-				if b.Clicked() && *tab != item {
-					*tab = item
-					root.SetChanged()
-					sound.Play(sound.Select)
-					kit.Log("ProjectHeader", "tab", "tab", *tab)
-				}
-			}
+			})
 		})
 	})
 	return root

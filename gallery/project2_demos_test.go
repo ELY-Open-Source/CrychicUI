@@ -17,22 +17,22 @@ func TestProject2DemosLog(t *testing.T) {
 		want string
 	}{
 		"Watchers":      {press("Watch"), "watching true"},
-		"Dependencies":  {press("A"), "opened A"},
-		"ProjectHeader": {press("Docs"), "tab Docs"},
-		"Checklist":     {press("Add item"), "items 2"},
-		"Retro":         {press("Add card"), "Add card 1"},
-		"Vote":          {press("Vote"), "1"},
+		"Dependencies":  {press("ATL-151"), "opened ATL-151"},
+		"ProjectHeader": {press("Timeline"), "tab Timeline"},
+		"Checklist":     {press("Toggle Write release notes"), "items 5, 3 done"},
+		"Retro":         {press("Add card"), "cards [3 1 1]"},
+		"Vote":          {press("Vote for Ship dark mode first"), "votes [4 3 1 0]"},
 		"Whiteboard": {func(tt *ui.Tester) error {
-			r, _ := tt.Find("Idea")
+			r, _ := tt.Find("Map loads slowly on 3G")
 			x, y := r.X+r.W/2, r.Y+r.H/2
 			tt.Press(x, y)
 			tt.Move(x+40, y+20)
 			tt.Release(x+40, y+20)
 			return nil
-		}, "moved"},
-		"MindMap":   {press("Add branch"), "branches 2"},
+		}, "notes moved"},
+		"MindMap":   {press("Add branch"), "branches 6"},
 		"Release":   {press("Ship"), "shipped"},
-		"Templates": {press("Kanban"), "selected 0"},
+		"Templates": {press("Product launch"), "selected 2"},
 		"QuickAdd":  {press("Add"), "created"},
 	}
 	quiet := map[string]bool{"Epic": true, "Workload": true, "ProjectCard": true,
