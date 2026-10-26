@@ -1,0 +1,61 @@
+package gallery
+
+import (
+	"go/ast"
+	"go/parser"
+	"go/token"
+	"os"
+	"path/filepath"
+	"strings"
+	"testing"
+)
+
+func TestCatalogComplete(t *testing.T) {
+	es := Entries()
+	if len(es) != 1500 {
+		t.Errorf("entries = %d, want 1500", len(es))
+	}
+	for i, e := range es {
+		if e.ID != i+1 {
+			t.Fatalf("entry %d (%s) has ID %d", i+1, e.Name, e.ID)
+		}
+	}
+	shown := map[string]int{}
+	for _, e := range es {
+		shown[e.Category+"/"+e.Name]++
+	}
+	built := map[string]bool{}
+	for _, k := range Categories {
+		files, err := os.ReadDir(filepath.Join("..", k.Key))
+		if err != nil {
+			t.Fatalf("category %s: %v", k.Key, err)
+		}
+		for _, f := range files {
+			if !strings.HasSuffix(f.Name(), ".go") || strings.HasSuffix(f.Name(), "_test.go") {
+				continue
+			}
+			src, err := parser.ParseFile(token.NewFileSet(), filepath.Join("..", k.Key, f.Name()), nil, parser.SkipObjectResolution)
+			if err != nil {
+				t.Fatal(err)
+			}
+			for _, d := range src.Decls {
+				if fn, ok := d.(*ast.FuncDecl); ok && fn.Recv == nil && fn.Name.IsExported() {
+					built[k.Key+"/"+fn.Name.Name] = true
+				}
+			}
+		}
+	}
+	for name := range built {
+		if shown[name] != 1 {
+			t.Errorf("%s has %d gallery entries, want 1", name, shown[name])
+		}
+	}
+	for name := range shown {
+		if !built[name] {
+			t.Errorf("entry %s names no exported component", name)
+		}
+	}
+	if len(built) != 1500 {
+		t.Errorf("exported components = %d, want 1500", len(built))
+	}
+}
