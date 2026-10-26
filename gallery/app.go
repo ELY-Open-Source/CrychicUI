@@ -17,6 +17,7 @@ type App struct {
 	query  string
 	mode   int
 	events []string
+	shown  string
 	codes  map[string]*editor.State
 
 	mu   sync.Mutex
@@ -27,6 +28,10 @@ type App struct {
 type Snapshot struct {
 	Page  string
 	Built bool
+	// Shown is the rendered page's path; empty when not found.
+	Shown string
+	// Demo bounds the demo card; zero off entry pages.
+	Demo ui.Rect
 }
 
 // New opens the gallery at path.
@@ -42,6 +47,7 @@ func (a *App) Snapshot() Snapshot {
 }
 
 func (a *App) View(c *ui.Context) {
+	a.shown = ""
 	switch a.mode {
 	case 1:
 		c.SetTheme(ui.LightTheme())
@@ -65,7 +71,7 @@ func (a *App) View(c *ui.Context) {
 		a.statusBar(c)
 	})
 	a.mu.Lock()
-	a.snap = Snapshot{Page: a.router.Location(), Built: true}
+	a.snap = Snapshot{Page: a.router.Location(), Built: true, Shown: a.shown}
 	a.mu.Unlock()
 }
 

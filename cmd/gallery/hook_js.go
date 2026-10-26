@@ -16,8 +16,13 @@ func hook(app *gallery.App) {
 		"get": js.FuncOf(func(js.Value, []js.Value) any { return app.Snapshot().Built }),
 	})
 	obj.Set("page", js.FuncOf(func(js.Value, []js.Value) any { return app.Snapshot().Page }))
+	obj.Set("shown", js.FuncOf(func(js.Value, []js.Value) any { return app.Snapshot().Shown }))
 	obj.Set("stats", js.FuncOf(func(js.Value, []js.Value) any {
 		return map[string]any{"components": len(gallery.Entries()), "categories": len(gallery.Categories)}
+	}))
+	obj.Set("demo", js.FuncOf(func(js.Value, []js.Value) any {
+		d := app.Snapshot().Demo
+		return map[string]any{"x": d.X, "y": d.Y, "w": d.W, "h": d.H}
 	}))
 	obj.Set("recent", js.FuncOf(func(js.Value, []js.Value) any {
 		var out []any

@@ -59,3 +59,14 @@ func TestCatalogComplete(t *testing.T) {
 		t.Errorf("exported components = %d, want 1500", len(built))
 	}
 }
+
+func TestShownPage(t *testing.T) {
+	for path, want := range map[string]string{"/": "/", "/c/layout": "/c/layout", "/c/game/dice": "/c/game/dice",
+		"/c/not-a-category": "", "/c/game/no-such": ""} {
+		a, tt := open(path)
+		tt.Frame()
+		if got := a.Snapshot().Shown; got != want {
+			t.Errorf("%s shows %q, want %q", path, got, want)
+		}
+	}
+}

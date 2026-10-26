@@ -15,6 +15,7 @@ func (a *App) pages(c *ui.Context) {
 		switch {
 		case r.Match("/"):
 			r.Title("CrychicUI")
+			a.shown = "/"
 			a.home(c)
 		case r.Match("/c/{cat}"):
 			k, ok := category(r.Param("cat"))
@@ -23,11 +24,13 @@ func (a *App) pages(c *ui.Context) {
 				return
 			}
 			r.Title(k.Name)
+			a.shown = "/c/" + k.Key
 			a.categoryPage(c, k)
 		case r.Match("/c/{cat}/{slug}"):
 			for _, e := range inCategory(r.Param("cat")) {
 				if e.Slug() == r.Param("slug") {
 					r.Title(e.Name)
+					a.shown = e.Path()
 					a.entryPage(c, e)
 					return
 				}
@@ -110,8 +113,14 @@ func (a *App) entryPage(c *ui.Context, e Entry) {
 		kit.Muted(c, fmt.Sprintf("%04d · %s", e.ID, e.Category))
 		ui.Text(c, e.Name).Bold().FontSize(t.Rem(1.5))
 		kit.Muted(c, e.Summary)
-		kit.Card(c).Key(e.ID).FillWidth().Padding(t.Space(6)).Children(func() {
+		demo := kit.Card(c).Key(e.ID).FillWidth().Padding(t.Space(6))
+		demo.Children(func() {
 			e.Demo(c, a.logger(e))
+		})
+		demo.DrawOver(func(_ *ui.Painter, r ui.Rect) {
+			a.mu.Lock()
+			a.snap.Demo = r
+			a.mu.Unlock()
 		})
 		ui.Text(c, "Code").Bold()
 		editor.View(c, a.code(e)).FillWidth().Height(t.Rem(22))
