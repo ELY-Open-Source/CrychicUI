@@ -46,11 +46,6 @@ func unit(v bool) float32 {
 	return 0
 }
 
-func button(c *ui.Context, label string) ui.Element {
-	t := c.Theme()
-	return kit.Press(ui.ButtonBase(c).Label(label).Padding(t.Space(1), t.Space(2)).Radius(t.Radius))
-}
-
 func validUser(component string, u User) {
 	if u.ID == "" || u.Name == "" {
 		panic(fmt.Sprintf("social: %s user %q (%q) needs id and name", component, u.Name, u.ID))

@@ -321,10 +321,6 @@ func frames(component string, list []StackFrame) {
 
 var (
 	iconChevron     = icon.Must("chevron-right")
-	iconPR          = icon.Must("git-pull-request")
-	iconCheck       = icon.Must("check")
-	iconX           = icon.Must("x")
-	iconClock       = icon.Must("clock-3")
 	iconSpin        = icon.Must("rotate-cw")
 	iconCheckCircle = icon.Must("circle-check")
 	iconXCircle     = icon.Must("circle-x")
@@ -340,22 +336,6 @@ func kindBadge(c *ui.Context, kind SymbolKind) ui.Element {
 	badge := ui.Box(c).Size(t.Space(5.5), t.Space(5.5)).Shrink(0).Center().Radius(t.Radius).
 		Background(inks[kind].Alpha(0.14)).TextColor(inks[kind])
 	return badge.Children(func() { ui.Icon(c, icon.Must(glyphs[kind])).Size(14, 14) })
-}
-
-// avatarChip is a small initials circle.
-func avatarChip(c *ui.Context, name string) ui.Element {
-	t := c.Theme()
-	initials := ""
-	for _, r := range name {
-		initials += string(r)
-		if len(initials) == 2 {
-			break
-		}
-	}
-	e := ui.Box(c).Size(t.Space(8), t.Space(8)).Radius(999).Background(t.SurfaceHover).Center().Label(name)
-	return e.Children(func() {
-		ui.Text(c, initials).FontSize(t.Rem(0.7)).Bold().TextColor(t.TextMuted)
-	})
 }
 
 // copyButton copies text; it plays Pop.

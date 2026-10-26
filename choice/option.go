@@ -1,6 +1,8 @@
 package choice
 
 import (
+	"fmt"
+
 	"github.com/ELY-Open-Source/CrychicUI/kit"
 	"github.com/ELY-Open-Source/CrychicUI/sound"
 	"github.com/egoist/mygo/ui"
@@ -9,7 +11,7 @@ import (
 // Option is a radio whose dot scales in.
 func Option(c *ui.Context, label, value string, selected *string) ui.Element {
 	if selected == nil || label == "" {
-		panic("choice: Option needs a label and selection")
+		panic(fmt.Sprintf("choice: Option %q needs a label and selection", label))
 	}
 	t := c.Theme()
 	root := ui.RadioBase(c, selected, value).Label(label).Gap(t.Space(2))

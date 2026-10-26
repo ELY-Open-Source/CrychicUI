@@ -3,7 +3,6 @@ package agent
 
 import (
 	"fmt"
-	"math"
 	"time"
 	"unicode"
 	"unicode/utf8"
@@ -27,19 +26,6 @@ func unit(b bool) float32 {
 		return 1
 	}
 	return 0
-}
-
-// finite reports whether v is a usable size.
-func finite(v float32) bool { return !math.IsNaN(float64(v)) && !math.IsInf(float64(v), 0) }
-
-// size panics on a bad size; zero becomes d.
-func size(component string, v *float32, d float32) {
-	if *v < 0 || !finite(*v) {
-		panic(fmt.Sprintf("agent: %s sizes must be finite and not negative", component))
-	}
-	if *v == 0 {
-		*v = d
-	}
 }
 
 // StepState is the state of a step or tool call.

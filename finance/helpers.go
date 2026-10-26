@@ -49,19 +49,6 @@ func money(c *ui.Context, value float64, currency string) ui.Element {
 	return typography.Money(c, value, currency)
 }
 
-func progress(c *ui.Context, value float64, color ui.Color) ui.Element {
-	if value < 0 || value > 1 || !finite(value) {
-		panic("finance: progress must be in [0,1]")
-	}
-	t := c.Theme()
-	bar := ui.Box(c).FillWidth().Height(t.Space(1)).Radius(999).Clip().Background(t.SurfaceHover)
-	w := bar.AnimateTo("progress", float32(value), ui.Smooth)
-	bar.Draw(kit.Inside(999, func(p *ui.Painter, r ui.Rect) {
-		p.Fill(ui.Rect{X: r.X, Y: r.Y, W: r.W * w, H: r.H}, color, 999)
-	}))
-	return bar
-}
-
 // tile is a rounded square holding a tinted icon.
 func tile(c *ui.Context, glyph string, ink ui.Color) ui.Element {
 	t := c.Theme()

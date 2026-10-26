@@ -24,19 +24,28 @@ func TestCatalogComplete(t *testing.T) {
 	for _, e := range es {
 		shown[e.Category+"/"+e.Name]++
 	}
-	built := map[string]bool{}
+	built, tested := map[string]bool{}, map[string]bool{}
 	for _, k := range Categories {
 		files, err := os.ReadDir(filepath.Join("..", k.Key))
 		if err != nil {
 			t.Fatalf("category %s: %v", k.Key, err)
 		}
 		for _, f := range files {
-			if !strings.HasSuffix(f.Name(), ".go") || strings.HasSuffix(f.Name(), "_test.go") {
+			if !strings.HasSuffix(f.Name(), ".go") {
 				continue
 			}
 			src, err := parser.ParseFile(token.NewFileSet(), filepath.Join("..", k.Key, f.Name()), nil, parser.SkipObjectResolution)
 			if err != nil {
 				t.Fatal(err)
+			}
+			if strings.HasSuffix(f.Name(), "_test.go") {
+				ast.Inspect(src, func(n ast.Node) bool {
+					if id, ok := n.(*ast.Ident); ok {
+						tested[k.Key+"/"+id.Name] = true
+					}
+					return true
+				})
+				continue
 			}
 			for _, d := range src.Decls {
 				if fn, ok := d.(*ast.FuncDecl); ok && fn.Recv == nil && fn.Name.IsExported() {
@@ -48,6 +57,9 @@ func TestCatalogComplete(t *testing.T) {
 	for name := range built {
 		if shown[name] != 1 {
 			t.Errorf("%s has %d gallery entries, want 1", name, shown[name])
+		}
+		if !tested[name] {
+			t.Errorf("%s is never named in its package's tests", name)
 		}
 	}
 	for name := range shown {
