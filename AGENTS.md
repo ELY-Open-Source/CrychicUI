@@ -94,8 +94,14 @@ Filler such as "A", "Item", "Notes" fails review.
 - Behavior tests drive `ui.NewTester` and assert values; interactive tests assert the cue in `sound.Recent()`.
   Test binaries start muted, so tests make no sound.
   Advance the tester's clock; never sleep.
-- Web: `npm install && npm test` in `web/` builds `web/dist` and runs Playwright on a local server;
-  `BASE_URL=<url> npx playwright test` checks a deployed site. Tests read `window.__crychic`.
+- `gallery` `TestCatalogComplete` holds the catalog at 1500 entries, IDs 1–1500, one entry per exported component;
+  `TestEveryEntry` opens every entry in light and dark and checks it settles.
+- Web: `npm install && npm test` in `web/` builds `web/dist` and runs Playwright on a local server. It needs Node 22+
+  (Wrangler), `python3` on PATH (the test server) and `npx playwright install chromium` once;
+  `BASE_URL=<url> npx playwright test` checks a deployed site. Tests read `window.__crychic`: `page()`, `shown()`
+  (the rendered page, empty when not found), `demo()` (the demo card's bounds), `recent()`, `stats()`.
+- `web/tests/gallery.spec.js` clicks one point per category inside a demo card. The points were found with
+  `ui.NewTester` at 1280×820 and hold ±6 DIP; when a listed demo's layout changes, pick its point again.
 
 ## Deploy
 
