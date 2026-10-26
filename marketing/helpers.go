@@ -35,10 +35,13 @@ func glyph(c *ui.Context, name string, size float32) ui.Element {
 
 // card is the shared arriving card surface.
 func card(c *ui.Context) ui.Element {
+	return kit.Arrive(surface(c), ui.Pose{Y: c.Theme().Space(2), Fade: 1}, 0)
+}
+
+// surface is a card that leaves arrival to its caller.
+func surface(c *ui.Context) ui.Element {
 	t := c.Theme()
-	root := ui.Column(c).FillWidth().Radius(t.Radius*1.5).Border(1, t.Border).Background(t.Background).
-		Shadow(0, 1, 3, 0, t.Text.Alpha(0.06))
-	return kit.Arrive(root, ui.Pose{Y: t.Space(2), Fade: 1}, 0)
+	return ui.Column(c).FillWidth().Radius(t.Radius*1.5).Border(1, t.Border).Background(t.Background).Shadow(0, 1, 3, 0, t.Text.Alpha(0.06))
 }
 
 // tile is a tinted icon square.
@@ -98,14 +101,18 @@ func validEmail(s string) bool {
 
 // emailField is a bordered email input; it returns the input.
 func emailField(c *ui.Context, label string, email *string) ui.Element {
+	return fieldIn(c, ui.Row(c).Grow(1).Basis(c.Theme().Space(40)).MinWidth(0), label, "mail", email)
+}
+
+// fieldIn fills frame with a mark and an input.
+func fieldIn(c *ui.Context, frame ui.Element, label, mark string, value *string) ui.Element {
 	t := c.Theme()
 	var in ui.Element
-	frame := ui.Row(c).Grow(1).Basis(t.Space(40)).MinWidth(0).Gap(t.Space(2)).AlignItems(ui.Center).Padding(t.Space(2), t.Space(3)).
-		Radius(999).Background(t.Background)
+	frame.Gap(t.Space(2)).AlignItems(ui.Center).Padding(t.Space(2), t.Space(3)).Radius(999).Background(t.Background)
 	frame.Border(1, frame.AnimateColor("ring", t.Border.Mix(t.Accent, unit(frame.FocusWithin())), ui.Snappy))
 	frame.Children(func() {
-		glyph(c, "mail", 16).TextColor(t.TextMuted)
-		in = ui.TextInputBase(c, email).Label(label).Placeholder(label).FontSize(t.Rem(0.86)).Grow(1).MinWidth(0)
+		glyph(c, mark, 16).TextColor(t.TextMuted)
+		in = ui.TextInputBase(c, value).Label(label).Placeholder(label).FontSize(t.Rem(0.86)).Grow(1).MinWidth(0)
 	})
 	return in
 }
@@ -246,4 +253,129 @@ func circle(cx, cy, r float32) *ui.Path {
 	p.CubeTo(cx-r*k, cy+r, cx-r, cy+r*k, cx-r, cy)
 	p.CubeTo(cx-r, cy-r*k, cx-r*k, cy-r, cx, cy-r)
 	return p.Close()
+}
+
+// star is a filled five-point star inside r.
+func star(r ui.Rect) *ui.Path {
+	var p ui.Path
+	cx, cy := r.X+r.W/2, r.Y+r.H*0.54
+	outer, inner := min(r.W, r.H)/2, min(r.W, r.H)/5
+	for i := range 10 {
+		rad := outer
+		if i%2 == 1 {
+			rad = inner
+		}
+		th := float64(i) * math.Pi / 5
+		x, y := cx+rad*float32(math.Sin(th)), cy-rad*float32(math.Cos(th))
+		if i == 0 {
+			p.MoveTo(x, y)
+		} else {
+			p.LineTo(x, y)
+		}
+	}
+	return p.Close()
+}
+
+// rating draws five stars filled to score of 5.
+func rating(c *ui.Context, score float64, size float32) {
+	t := c.Theme()
+	ui.Row(c).Gap(size * 0.15).Shrink(0).Children(func() {
+		for i := range 5 {
+			fill := float32(max(0, min(1, score-float64(i))))
+			ui.Box(c).Size(size, size).Shrink(0).Draw(func(p *ui.Painter, r ui.Rect) {
+				p.FillPath(star(r), t.TextMuted.Alpha(0.25))
+				if fill > 0 {
+					p.Clip(ui.Rect{X: r.X, Y: r.Y, W: r.W * fill, H: r.H}, 0, func() { p.FillPath(star(r), t.Warning) })
+				}
+			})
+		}
+	})
+}
+
+// countdown is whole seconds left; it wakes each second.
+func countdown(c *ui.Context, until time.Time) int64 {
+	now := c.Now()
+	// Unix seconds: Sub saturates past 292 years.
+	secs := until.Unix() - now.Unix()
+	if until.Nanosecond() > now.Nanosecond() {
+		secs++
+	}
+	if secs <= 0 {
+		return 0
+	}
+	frac := time.Duration((until.Nanosecond() - now.Nanosecond() + 1e9) % 1e9)
+	if frac == 0 {
+		frac = time.Second
+	}
+	c.After(frac + time.Millisecond)
+	return secs
+}
+
+// counted picks one or many by n.
+func counted(n int, one, many string) string {
+	if n == 1 {
+		return fmt.Sprintf(one, n)
+	}
+	return fmt.Sprintf(many, n)
+}
+
+// dot joins two meta texts with a drawn dot.
+func dot(c *ui.Context) {
+	t := c.Theme()
+	ui.Box(c).Size(t.Space(0.75), t.Space(0.75)).Shrink(0).Radius(999).Background(t.TextMuted.Alpha(0.6))
+}
+
+// track is a switch drawing with a sliding knob.
+func track(c *ui.Context, on, hover bool) {
+	t := c.Theme()
+	b := ui.Box(c).Size(t.Space(9), t.Space(5)).Shrink(0).Radius(999)
+	b.Background(b.AnimateColor("track", t.SurfaceHover.Mix(t.Border, 0.6*unit(hover)).Mix(t.Accent, unit(on)), ui.Snappy))
+	x := b.AnimateTo("knob", unit(on), ui.Snappy)
+	pad := t.Space(0.5)
+	b.Draw(func(p *ui.Painter, r ui.Rect) {
+		d := r.H - 2*pad
+		p.Fill(ui.Rect{X: r.X + pad + x*(r.W-r.H), Y: r.Y + pad, W: d, H: d}, t.Background, d/2)
+	})
+}
+
+// Post is a blog post; zero Minutes hides read time.
+type Post struct {
+	Title, Excerpt, Tag, Author string
+	Photo, Cover                *ui.Bitmap
+	Date                        time.Time
+	Minutes                     int
+}
+
+// PostWords word a post; Date is a layout, Read minutes.
+type PostWords struct{ Date, Read string }
+
+func (w *PostWords) fill() {
+	def(&w.Date, "Jan 2, 2006")
+	def(&w.Read, "%d min read")
+}
+
+func validPost(component string, p Post) {
+	if strings.TrimSpace(p.Title) == "" || strings.TrimSpace(p.Author) == "" || p.Date.IsZero() || p.Minutes < 0 || p.Minutes > 600 {
+		panic(fmt.Sprintf("marketing: %s post %q needs an author, a date and 0 to 600 minutes", component, p.Title))
+	}
+}
+
+// meta is read time then the date, which truncates.
+func meta(c *ui.Context, p Post, w PostWords) {
+	t := c.Theme()
+	row := ui.Row(c).FillWidth().MinWidth(0).Gap(t.Space(1.5)).AlignItems(ui.Center)
+	seen := row.LayoutBounds().W
+	kit.Settle(c, row, []float32{seen}, func() []float32 { return []float32{row.LayoutBounds().W} })
+	// Read time gets at most half the line.
+	room := t.Space(20)
+	if seen > 0 {
+		room = max(t.Space(6), seen/2)
+	}
+	row.Children(func() {
+		if p.Minutes > 0 {
+			kit.Muted(c, fmt.Sprintf(w.Read, p.Minutes)).FontSize(t.Rem(0.72)).Shrink(0).MaxWidth(room).SingleLine()
+			dot(c)
+		}
+		kit.Muted(c, p.Date.Format(w.Date)).FontSize(t.Rem(0.72)).Grow(1).MinWidth(0).SingleLine()
+	})
 }
