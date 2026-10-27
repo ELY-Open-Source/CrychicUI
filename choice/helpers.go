@@ -1,6 +1,7 @@
 package choice
 
 import (
+	"fmt"
 	"math"
 	"slices"
 	"time"
@@ -99,6 +100,9 @@ func track(c *ui.Context, on bool) ui.Element {
 		knob.Translate(knob.AnimateTo("x", (w-h)*unit(on), ui.Snappy), 0)
 	})
 }
+
+// who names a component and its caller's label.
+func who(component, label string) string { return fmt.Sprintf("%s %q", component, label) }
 
 // distinct panics unless items are non-empty and unique.
 func distinct(component string, items []string) {

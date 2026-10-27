@@ -258,7 +258,7 @@ func demoCascade(c *ui.Context, log func(string)) {
 }
 
 func demoListbox(c *ui.Context, log func(string)) {
-	root := ui.Box(c).Width(220)
+	root := ui.Box(c).Width(320)
 	fruit := textState(root, "fruit", "Apple")
 	root.Children(func() {
 		if choice.Listbox(c, "Fruit", []string{"Apple", "Pear", "Plum", "Cherry"}, fruit).Changed() {
@@ -278,7 +278,7 @@ func demoTransfer(c *ui.Context, log func(string)) {
 }
 
 func demoValueSlider(c *ui.Context, log func(string)) {
-	root := ui.Box(c).Width(300).PaddingY(24)
+	root := ui.Box(c).Width(320).PaddingY(24)
 	v := numberState(root, "v", 40)
 	root.Children(func() {
 		if choice.ValueSlider(c, "Volume", v, 0, 100, choice.ValueSliderOptions{}).Changed() {
@@ -288,7 +288,7 @@ func demoValueSlider(c *ui.Context, log func(string)) {
 }
 
 func demoRangeSlider(c *ui.Context, log func(string)) {
-	root := ui.Box(c).Width(300)
+	root := ui.Box(c).Width(320)
 	low, high := numberState(root, "low", 200), numberState(root, "high", 800)
 	root.Children(func() {
 		if choice.RangeSlider(c, "Price", low, high, 0, 1000, 50, choice.RangeSliderOptions{Format: "$%.0f"}).Changed() {

@@ -1,6 +1,7 @@
 package choice
 
 import (
+	"fmt"
 	"slices"
 
 	"github.com/ELY-Open-Source/CrychicUI/icon"
@@ -14,13 +15,13 @@ var column = ui.ElementTransition{Animation: &ui.Snappy, Enter: &ui.Motion{X: -1
 // Cascade is sliding columns that drill down a tree.
 func Cascade(c *ui.Context, label string, items []TreeItem, path *[]string) ui.Element {
 	if label == "" || len(items) == 0 || path == nil {
-		panic("choice: Cascade needs a label, items and a path")
+		panic("choice: " + who("Cascade", label) + " needs a label, items and a path")
 	}
 	at := items
 	for _, step := range *path {
 		i := slices.IndexFunc(at, func(it TreeItem) bool { return it.Label == step })
 		if i < 0 {
-			panic("choice: Cascade path leaves the tree")
+			panic("choice: " + who("Cascade", label) + " path leaves the tree")
 		}
 		at = at[i].Children
 	}
@@ -34,12 +35,13 @@ func Cascade(c *ui.Context, label string, items []TreeItem, path *[]string) ui.E
 			for i, it := range level {
 				labels[i] = it.Label
 			}
-			distinct("Cascade", labels)
+			distinct(who("Cascade", label), labels)
 			chosen := ""
 			if depth < len(*path) {
 				chosen = (*path)[depth]
 			}
-			c.Key(depth)
+			// Columns are keyed by their ancestor path.
+			c.Key(fmt.Sprintf("%q", (*path)[:depth]))
 			col := ui.Column(c).Width(t.Space(40)).Padding(t.Space(1)).Gap(t.Space(0.5)).Transition(column)
 			if depth > 0 {
 				col.BorderStartWidth(1).BorderColor(t.Border)

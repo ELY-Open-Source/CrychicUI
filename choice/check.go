@@ -9,7 +9,7 @@ import (
 // Check is a check box whose mark draws in.
 func Check(c *ui.Context, label string, checked *bool) ui.Element {
 	if checked == nil || label == "" {
-		panic("choice: Check needs a label and state")
+		panic("choice: " + who("Check", label) + " needs a label and state")
 	}
 	t := c.Theme()
 	root := ui.CheckboxBase(c, checked).Label(label).Gap(t.Space(2))

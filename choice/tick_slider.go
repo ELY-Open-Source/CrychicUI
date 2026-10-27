@@ -21,7 +21,7 @@ func TickSlider(c *ui.Context, label string, value *float64, lo, hi, step float6
 	steps := (hi - lo) / step
 	n := int(math.Round(steps)) + 1
 	if !(step > 0) || math.IsInf(step, 0) || math.Abs(steps-math.Round(steps)) > 1e-9 || n < 2 || n > 21 {
-		panic("choice: TickSlider needs a step dividing the range into at most 20")
+		panic("choice: " + who("TickSlider", label) + " needs a step dividing the range into at most 20")
 	}
 	if len(o.Labels) == 0 {
 		for i := range n {
@@ -29,12 +29,12 @@ func TickSlider(c *ui.Context, label string, value *float64, lo, hi, step float6
 		}
 	}
 	if len(o.Labels) != n {
-		panic("choice: TickSlider needs one label per tick")
+		panic("choice: " + who("TickSlider", label) + " needs one label per tick")
 	}
 	t := c.Theme()
 	root := ui.Column(c).FillWidth().Gap(t.Space(1))
 	return root.Children(func() {
-		s := ui.SliderBase(c, value, lo, hi).Step(step).Label(label).FillWidth()
+		s := ui.SliderBase(c, value, lo, reach(lo, hi, step)).Step(step).Label(label).FillWidth()
 		rail(c, s, fraction(*value, lo, hi), false, nil)
 		if kit.Changed(s, sound.Tick) {
 			root.SetChanged()

@@ -65,7 +65,7 @@ func Knob(c *ui.Context, label string, value *float64, lo, hi float64, o KnobOpt
 	case root.Shortcut(0, ui.KeyEnd):
 		set(hi)
 	}
-	root.Range(lo, hi, *value).Step(o.Step)
+	root.Range(lo, reach(lo, hi, o.Step), *value).Step(o.Step)
 	frac := root.AnimateTo("frac", fraction(*value, lo, hi), ui.Snappy)
 	w := t.Space(1.5)
 	root.Draw(func(p *ui.Painter, r ui.Rect) {

@@ -55,6 +55,18 @@ func rail(c *ui.Context, s ui.Element, frac float32, vertical bool, extra func(k
 	})
 }
 
+// reach is hi as MyGo's step grid reaches it.
+func reach(lo, hi, step float64) float64 {
+	if step <= 0 {
+		return hi
+	}
+	// MyGo drops a top above hi before rounding.
+	if top := lo + math.Round((hi-lo)/step)*step; top > hi && snap(top, lo, step) == hi {
+		return top
+	}
+	return hi
+}
+
 // fraction is where v sits from lo to hi.
 func fraction(v, lo, hi float64) float32 {
 	return float32(max(0, min(1, (v-lo)/(hi-lo))))
@@ -75,7 +87,7 @@ func released(s ui.Element, component string, value float64) {
 func sliderArgs(component, label string, value *float64, lo, hi, step float64) {
 	if label == "" || value == nil || !(lo < hi) || math.IsInf(lo, 0) || math.IsInf(hi, 0) ||
 		!(*value >= lo && *value <= hi) || !(step >= 0) || math.IsInf(step, 0) {
-		panic("choice: " + component + " needs a label, finite lo < hi, a value within and a finite step")
+		panic("choice: " + who(component, label) + " needs a label, finite lo < hi, a value within and a finite step")
 	}
 }
 

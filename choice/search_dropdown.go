@@ -20,9 +20,9 @@ type SearchDropdownOptions struct {
 
 // SearchDropdown is a select whose popup filters as you type.
 func SearchDropdown(c *ui.Context, label string, options []string, selected *string, o SearchDropdownOptions) ui.Element {
-	distinct("SearchDropdown", options)
+	distinct(who("SearchDropdown", label), options)
 	if label == "" || selected == nil || !slices.Contains(options, *selected) {
-		panic("choice: SearchDropdown needs a label and a valid selection")
+		panic("choice: " + who("SearchDropdown", label) + " needs a label and a valid selection")
 	}
 	if o.Placeholder == "" {
 		o.Placeholder = "Search"
@@ -59,17 +59,19 @@ func SearchDropdown(c *ui.Context, label string, options []string, selected *str
 				pick = matches[0]
 			}
 		})
-		if len(matches) == 0 {
-			kit.Muted(c, o.Empty).Padding(t.Space(1.5), t.Space(2.5)).Transition(kit.Enter)
-		}
-		for _, option := range matches {
-			c.Key(option)
-			item := ui.ButtonBase(c).Label(option).Justify(ui.Start)
-			entry(c, item, option, option == *selected, item.Hovered()).Transition(kit.Enter)
-			if item.Clicked() {
-				pick = option
+		optionList(c, func() {
+			if len(matches) == 0 {
+				kit.Muted(c, o.Empty).Padding(t.Space(1.5), t.Space(2.5)).Transition(kit.Enter)
 			}
-		}
+			for _, option := range matches {
+				c.Key(option)
+				item := ui.ButtonBase(c).Label(option).Justify(ui.Start)
+				entry(c, item, option, option == *selected, item.Hovered()).Transition(kit.Enter)
+				if item.Clicked() {
+					pick = option
+				}
+			}
+		})
 		if pick != "" {
 			*open = false
 			sound.Play(sound.Select)

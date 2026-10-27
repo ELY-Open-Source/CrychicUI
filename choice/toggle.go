@@ -9,7 +9,7 @@ import (
 // Toggle is a switch whose knob springs.
 func Toggle(c *ui.Context, label string, on *bool) ui.Element {
 	if on == nil || label == "" {
-		panic("choice: Toggle needs a label and state")
+		panic("choice: " + who("Toggle", label) + " needs a label and state")
 	}
 	t := c.Theme()
 	root := ui.SwitchBase(c, on).Label(label).Gap(t.Space(2))

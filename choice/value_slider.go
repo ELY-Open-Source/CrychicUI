@@ -21,7 +21,7 @@ func ValueSlider(c *ui.Context, label string, value *float64, lo, hi float64, o 
 		o.Format = "%.0f"
 	}
 	t := c.Theme()
-	s := ui.SliderBase(c, value, lo, hi).Label(label).Step(o.Step)
+	s := ui.SliderBase(c, value, lo, reach(lo, hi, o.Step)).Label(label).Step(o.Step)
 	show := s.Hovered() || s.Pressed() || s.Focused()
 	text := fmt.Sprintf(o.Format, *value)
 	rail(c, s, fraction(*value, lo, hi), false, func(ui.Element) {

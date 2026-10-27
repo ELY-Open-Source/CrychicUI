@@ -9,7 +9,7 @@ import (
 // CheckCard is a selectable card with animated border and check.
 func CheckCard(c *ui.Context, title, body string, checked *bool) ui.Element {
 	if checked == nil || title == "" {
-		panic("choice: CheckCard needs a title and state")
+		panic("choice: " + who("CheckCard", title) + " needs a title and state")
 	}
 	t := c.Theme()
 	root := ui.CheckboxBase(c, checked).Label(title).FillWidth().Gap(t.Space(3)).Padding(t.Space(3)).Radius(t.Radius)

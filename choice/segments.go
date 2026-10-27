@@ -15,8 +15,13 @@ type thumbMatch struct{ id uint64 }
 // segmentControl is a segmented control whose thumb slides.
 func segmentControl(c *ui.Context, component, label string, items []SegmentItem, selected *int, iconOnly bool) ui.Element {
 	if label == "" || len(items) == 0 || selected == nil || *selected < 0 || *selected >= len(items) {
-		panic("choice: " + component + " needs a label, items and a valid selection")
+		panic("choice: " + who(component, label) + " needs a label, items and a valid selection")
 	}
+	labels := make([]string, len(items))
+	for i, item := range items {
+		labels[i] = item.Label
+	}
+	distinct(who(component, label), labels)
 	t := c.Theme()
 	parts := ui.SegmentedBase(c, selected, len(items))
 	root := parts.Track.Label(label).AlignSelf(ui.Start).Gap(t.Space(0.5)).Padding(t.Space(0.5)).Radius(t.Radius).
@@ -24,7 +29,7 @@ func segmentControl(c *ui.Context, component, label string, items []SegmentItem,
 	id, r := root.ID(), t.Radius-t.Space(0.5)
 	root.Children(func() {
 		for i, item := range items {
-			c.Key(i)
+			c.Key(item.Label)
 			seg := parts.Segment(i).Label(item.Label).Radius(r)
 			if iconOnly {
 				seg.Tooltip(item.Label)
@@ -61,7 +66,6 @@ func segmentControl(c *ui.Context, component, label string, items []SegmentItem,
 
 // Segments is a segmented control whose thumb slides.
 func Segments(c *ui.Context, label string, labels []string, selected *int) ui.Element {
-	distinct("Segments", labels)
 	items := make([]SegmentItem, len(labels))
 	for i, l := range labels {
 		items[i] = SegmentItem{Label: l}

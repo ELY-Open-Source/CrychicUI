@@ -37,6 +37,11 @@ func panel(c *ui.Context, p ui.Element) ui.Element {
 	return kit.Arrive(p, ui.Pose{Y: -4, Scale: 0.96, Fade: 1}, 0)
 }
 
+// optionList bounds a popup's options and scrolls the rest.
+func optionList(c *ui.Context, fn func()) ui.Element {
+	return ui.Scroll(c).FillWidth().MaxHeight(c.Theme().Space(72)).Children(fn)
+}
+
 // entry styles a popup row whose check pops in.
 func entry(c *ui.Context, item ui.Element, label string, chosen, hot bool) ui.Element {
 	t := c.Theme()

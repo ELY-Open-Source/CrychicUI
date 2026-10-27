@@ -9,7 +9,7 @@ import (
 // OptionCard is a radio card with an animated border.
 func OptionCard(c *ui.Context, title, body, value string, selected *string) ui.Element {
 	if selected == nil || title == "" {
-		panic("choice: OptionCard needs a title and selection")
+		panic("choice: " + who("OptionCard", title) + " needs a title and selection")
 	}
 	t := c.Theme()
 	root := ui.RadioBase(c, selected, value).Label(title).FillWidth().Gap(t.Space(3)).Padding(t.Space(3)).Radius(t.Radius)

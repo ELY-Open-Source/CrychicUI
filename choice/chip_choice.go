@@ -10,9 +10,9 @@ import (
 
 // ChipChoice is one choice among pill chips.
 func ChipChoice(c *ui.Context, label string, options []string, selected *string) ui.Element {
-	distinct("ChipChoice", options)
+	distinct(who("ChipChoice", label), options)
 	if label == "" || selected == nil || !slices.Contains(options, *selected) {
-		panic("choice: ChipChoice needs a label and a valid selection")
+		panic("choice: " + who("ChipChoice", label) + " needs a label and a valid selection")
 	}
 	t := c.Theme()
 	changed := false

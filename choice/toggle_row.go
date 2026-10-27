@@ -9,7 +9,7 @@ import (
 // ToggleRow is a setting row with title, description and switch.
 func ToggleRow(c *ui.Context, title, description string, on *bool) ui.Element {
 	if on == nil || title == "" {
-		panic("choice: ToggleRow needs a title and state")
+		panic("choice: " + who("ToggleRow", title) + " needs a title and state")
 	}
 	t := c.Theme()
 	root := ui.SwitchBase(c, on).Label(title).FillWidth().Gap(t.Space(3)).Padding(t.Space(2), 0)

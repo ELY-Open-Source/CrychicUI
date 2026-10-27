@@ -17,12 +17,12 @@ type RangeSliderOptions struct {
 // RangeSlider is two knobs with rolling values above.
 func RangeSlider(c *ui.Context, label string, low, high *float64, lo, hi, step float64, o RangeSliderOptions) ui.Element {
 	if low == nil || high == nil || !(step > 0) {
-		panic("choice: RangeSlider needs both values and a step")
+		panic("choice: " + who("RangeSlider", label) + " needs both values and a step")
 	}
 	sliderArgs("RangeSlider", label, low, lo, hi, step)
 	sliderArgs("RangeSlider", label, high, lo, hi, step)
 	if *low > *high || !onStep(*low, lo, step) || !onStep(*high, lo, step) {
-		panic("choice: RangeSlider needs low <= high, both on the step")
+		panic("choice: " + who("RangeSlider", label) + " needs low <= high, both on the step")
 	}
 	if o.Format == "" {
 		o.Format = "%.0f"
@@ -35,7 +35,7 @@ func RangeSlider(c *ui.Context, label string, low, high *float64, lo, hi, step f
 			ui.Spacer(c)
 			kit.Numeric(c, fmt.Sprintf(o.Format, *high)).TextColor(t.TextMuted)
 		})
-		if kit.Changed(ui.RangeSlider(c, low, high, lo, hi, step).Label(label).FillWidth(), sound.Tick) {
+		if kit.Changed(ui.RangeSlider(c, low, high, lo, reach(lo, hi, step), step).Label(label).FillWidth(), sound.Tick) {
 			root.SetChanged()
 			kit.Log("RangeSlider", "changed", "low", *low, "high", *high)
 		}

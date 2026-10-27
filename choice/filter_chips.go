@@ -12,10 +12,10 @@ import (
 
 // FilterChips is chips choosing several, with a rolling count.
 func FilterChips(c *ui.Context, label string, options []string, selected *[]string) ui.Element {
-	distinct("FilterChips", options)
-	subset("FilterChips", options, selected)
+	distinct(who("FilterChips", label), options)
+	subset(who("FilterChips", label), options, selected)
 	if label == "" {
-		panic("choice: FilterChips needs a label")
+		panic("choice: " + who("FilterChips", label) + " needs a label")
 	}
 	t := c.Theme()
 	root := ui.Column(c).Gap(t.Space(2))

@@ -35,9 +35,9 @@ type TreeDropdownOptions struct {
 // TreeDropdown is a select of nested items that expand.
 func TreeDropdown(c *ui.Context, label string, items []TreeItem, selected *string, o TreeDropdownOptions) ui.Element {
 	labels := treeLabels(items)
-	distinct("TreeDropdown", labels)
+	distinct(who("TreeDropdown", label), labels)
 	if label == "" || selected == nil || !slices.Contains(labels, *selected) {
-		panic("choice: TreeDropdown needs a label and a valid selection")
+		panic("choice: " + who("TreeDropdown", label) + " needs a label and a valid selection")
 	}
 	if o.Expand == "" {
 		o.Expand = "Expand %s"
@@ -83,7 +83,7 @@ func TreeDropdown(c *ui.Context, label string, items []TreeItem, selected *strin
 	}
 	sel.Popup(func(p ui.Element) {
 		panel(c, p)
-		level(items, 0)
+		optionList(c, func() { level(items, 0) })
 	})
 	if kit.Changed(root, sound.Select) {
 		kit.Log("TreeDropdown", "selected")

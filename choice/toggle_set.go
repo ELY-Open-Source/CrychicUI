@@ -10,10 +10,10 @@ import (
 
 // ToggleSet is joined toggles choosing several.
 func ToggleSet(c *ui.Context, label string, items []string, selected *[]string) ui.Element {
-	distinct("ToggleSet", items)
-	subset("ToggleSet", items, selected)
+	distinct(who("ToggleSet", label), items)
+	subset(who("ToggleSet", label), items, selected)
 	if label == "" {
-		panic("choice: ToggleSet needs a label")
+		panic("choice: " + who("ToggleSet", label) + " needs a label")
 	}
 	t := c.Theme()
 	raised := t.Background

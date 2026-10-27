@@ -14,9 +14,9 @@ type OptionGroupOptions struct {
 
 // OptionGroup is radios in a row or column.
 func OptionGroup(c *ui.Context, label string, options []string, selected *string, o OptionGroupOptions) ui.Element {
-	distinct("OptionGroup", options)
+	distinct(who("OptionGroup", label), options)
 	if label == "" || selected == nil || !slices.Contains(options, *selected) {
-		panic("choice: OptionGroup needs a label and a valid selection")
+		panic("choice: " + who("OptionGroup", label) + " needs a label and a valid selection")
 	}
 	t := c.Theme()
 	changed := false

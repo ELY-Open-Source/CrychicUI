@@ -21,9 +21,9 @@ func VerticalSlider(c *ui.Context, label string, value *float64, lo, hi float64,
 		o.Height = c.Theme().Space(40)
 	}
 	if !(o.Height > 0) || math.IsInf(float64(o.Height), 0) {
-		panic("choice: VerticalSlider needs a positive height")
+		panic("choice: " + who("VerticalSlider", label) + " needs a positive height")
 	}
-	s := ui.SliderBase(c, value, lo, hi).Vertical().Height(o.Height).Label(label).Step(o.Step)
+	s := ui.SliderBase(c, value, lo, reach(lo, hi, o.Step)).Vertical().Height(o.Height).Label(label).Step(o.Step)
 	rail(c, s, fraction(*value, lo, hi), true, nil)
 	released(s, "VerticalSlider", *value)
 	return s

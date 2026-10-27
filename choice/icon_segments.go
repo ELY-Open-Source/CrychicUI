@@ -6,7 +6,7 @@ import "github.com/egoist/mygo/ui"
 func IconSegments(c *ui.Context, label string, items []SegmentItem, selected *int) ui.Element {
 	for _, item := range items {
 		if item.Icon == "" || item.Label == "" {
-			panic("choice: IconSegments items need an icon and a label")
+			panic("choice: " + who("IconSegments", label) + " items need an icon and a label")
 		}
 	}
 	return segmentControl(c, "IconSegments", label, items, selected, true)

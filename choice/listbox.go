@@ -10,9 +10,9 @@ import (
 
 // Listbox is an inline list choosing one; its highlight slides.
 func Listbox(c *ui.Context, label string, options []string, selected *string) ui.Element {
-	distinct("Listbox", options)
+	distinct(who("Listbox", label), options)
 	if label == "" || selected == nil || !slices.Contains(options, *selected) {
-		panic("choice: Listbox needs a label and a valid selection")
+		panic("choice: " + who("Listbox", label) + " needs a label and a valid selection")
 	}
 	t := c.Theme()
 	root := ui.Box(c).Padding(t.Space(1)).Radius(t.Radius+2).Background(t.Background).Border(1, t.Border)
