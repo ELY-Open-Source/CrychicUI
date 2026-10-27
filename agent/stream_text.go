@@ -3,6 +3,7 @@ package agent
 import (
 	"time"
 	"unicode"
+	"unicode/utf8"
 
 	"github.com/egoist/mygo/ui"
 )
@@ -17,7 +18,7 @@ func StreamText(c *ui.Context, text string, done bool) ui.Element {
 		since := ui.Local(root, "since", func() time.Time { return c.Now() })
 		const step = 80 * time.Millisecond
 		n := int(c.Now().Sub(*since) / step)
-		shown = prefixWords(text, n)
+		shown = prefixTokens(text, n)
 		if len(shown) < len(text) {
 			c.After(step)
 		} else {
@@ -34,24 +35,43 @@ func StreamText(c *ui.Context, text string, done bool) ui.Element {
 	})
 }
 
-// prefixWords returns s through the end of its nth word.
-func prefixWords(s string, n int) string {
+// prefixTokens returns s through the end of its nth token.
+func prefixTokens(s string, n int) string {
 	if n <= 0 {
 		return ""
 	}
-	words, inWord := 0, false
+	tokens, inWord := 0, false
 	for i, r := range s {
-		if unicode.IsSpace(r) {
+		switch {
+		case unicode.IsSpace(r):
 			if inWord {
-				words++
+				tokens++
 				inWord = false
-				if words == n {
+				if tokens == n {
 					return s[:i]
 				}
 			}
-		} else {
+		case unspaced(r):
+			if inWord {
+				tokens++
+				inWord = false
+				if tokens == n {
+					return s[:i]
+				}
+			}
+			tokens++
+			if tokens == n {
+				return s[:i+utf8.RuneLen(r)]
+			}
+		default:
 			inWord = true
 		}
 	}
 	return s
+}
+
+// unspaced reports scripts written without spaces, one token per rune.
+func unspaced(r rune) bool {
+	return unicode.In(r, unicode.Han, unicode.Hiragana, unicode.Katakana) ||
+		(r >= 0x3000 && r <= 0x303f) || (r >= 0xff00 && r <= 0xffef)
 }
