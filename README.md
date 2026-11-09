@@ -1,5 +1,7 @@
 # CrychicUI
 
+[![Listed on Awesome MyGo](https://awesomemygo.dev/badge.svg)](https://awesomemygo.dev/ui)
+
 MyGo 原生 UI 的 Go 组件库：1500 个组件，分 38 类，每类一个包。沿用 MyGo 自己的外观：锌灰底色，跟随系统的强调色，6 DIP 圆角，4 DIP 间距单位，系统字体。每个组件都会动，每个可交互组件都有合成音效。
 
 界面由 MyGo 在 GPU 上自绘，不用 HTML、JavaScript 或 WebView。
