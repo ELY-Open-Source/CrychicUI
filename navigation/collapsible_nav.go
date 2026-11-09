@@ -31,10 +31,12 @@ func CollapsibleNav(c *ui.Context, label string, list []NavItem, active *int, op
 		if !*open {
 			name, glyph = o.Expand, "panel-left-open"
 		}
-		b := kit.Press(ui.ButtonBase(c).Label(name).Tooltip(name).Size(t.Space(10), t.Space(10)).Center().Radius(t.Radius)).
-			Expanded(*open)
+		b := kit.Press(ui.ButtonBase(c).Label(name).Tooltip(name).FillWidth().Radius(t.Radius)).Expanded(*open)
 		b.Background(b.AnimateColor("bg", t.SurfaceHover.Alpha(unit(b.Hovered())), ui.Snappy)).Children(func() {
-			ui.Icon(c, icon.Must(glyph)).Size(16, 16).ContentTransition(ui.ContentTransition{})
+			ui.Row(c).FillWidth().Gap(t.Space(3)).Padding(t.Space(2), t.Space(3)).AlignItems(ui.Center).Children(func() {
+				ui.Icon(c, icon.Must(glyph)).Size(16, 16).ContentTransition(ui.ContentTransition{})
+				ui.Text(c, name).SingleLine().TextColor(t.TextMuted).Opacity(k)
+			})
 		})
 		if kit.Clicked(b, sound.Toggle) {
 			*open = !*open

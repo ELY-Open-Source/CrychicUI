@@ -81,6 +81,12 @@ func TestCollapsibleNav(t *testing.T) {
 	if open || find(t, tt, "Mail").W >= wide/2 {
 		t.Errorf("open %v, width %v of %v", open, find(t, tt, "Mail").W, wide)
 	}
+	rows := []ui.Rect{find(t, tt, "Expand"), find(t, tt, "Inbox"), find(t, tt, "Drafts"), find(t, tt, "Sent")}
+	for i := 2; i < len(rows); i++ {
+		if a, b := rows[i-1].Y-rows[i-2].Y, rows[i].Y-rows[i-1].Y; a != b || rows[i].H != rows[0].H {
+			t.Errorf("collapsed rows uneven: %v", rows)
+		}
+	}
 	click(t, tt, "Expand")
 	settles(t, tt, "unfolding")
 	if !open || find(t, tt, "Mail").W != wide {
