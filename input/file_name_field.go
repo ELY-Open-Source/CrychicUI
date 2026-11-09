@@ -25,7 +25,7 @@ func FileNameField(c *ui.Context, label string, name *string, extension string, 
 		ui.Text(c, label).FontWeight(500)
 		row := ui.Row(c).FillWidth().AlignItems(ui.Center).Radius(t.Radius).Background(t.Background).Border(1, t.Border)
 		row.Children(func() {
-			in := ui.TextInput(c, name).Grow(1).Placeholder(o.Placeholder).Padding(t.Space(2), t.Space(3))
+			in := ui.TextInputBase(c, name).Grow(1).Placeholder(o.Placeholder).Padding(t.Space(2), t.Space(3))
 			changed(root, in)
 			kit.Muted(c, "."+extension).Padding(t.Space(2), t.Space(3), t.Space(2), 0)
 		})

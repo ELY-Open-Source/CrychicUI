@@ -69,6 +69,8 @@ health, home, marketing, content, desktop, geo · 6 gallery · 7 cmd/gallery
   runs inside a shown parent.
 - A one-column grid stacking layers in a set height takes `RowTracks(ui.Fr(1))`: an auto row grows to its tallest
   child, and `Fill` children fill the row, not the grid.
+- An input inside a field's own frame is `TextInputBase` or `TextAreaBase`: `TextInput` and `TextArea` bring
+  their own border and fill.
 - `Clip` clips children only: `Draw` or `DrawOver` paint that can pass the box goes through `kit.Inside`.
   `Painter.Line` draws only horizontal and vertical lines; stroke a `ui.Path` for others.
 - Files under 500 lines (lock files exempt). Comments one line, ten words at most, only when needed. No dead

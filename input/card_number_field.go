@@ -28,7 +28,7 @@ func CardNumberField(c *ui.Context, value *string, o CardNumberFieldOptions) ui.
 		ui.Text(c, o.Label).FontWeight(500)
 		row := ui.Row(c).FillWidth().AlignItems(ui.Center).Radius(t.Radius).Background(t.Background).Border(1, t.Border)
 		row.Children(func() {
-			in := ui.TextInput(c, value).Grow(1).Placeholder(o.Label).Padding(t.Space(2), t.Space(3))
+			in := ui.TextInputBase(c, value).Grow(1).Placeholder(o.Label).Padding(t.Space(2), t.Space(3))
 			if changed(root, in) {
 				*value = groupCardDigits(*value)
 			}

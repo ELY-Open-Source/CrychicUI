@@ -70,7 +70,7 @@ func Comments(c *ui.Context, comments *[]Comment, draft *string, o CommentsOptio
 			display.Avatar(c, o.Author, nil).Size(t.Space(7), t.Space(7)).FontSize(t.Rem(0.6))
 			field := ui.Row(c).Grow(1).MinWidth(0).Padding(t.Space(1), t.Space(2.5)).Radius(999).Border(1, t.Border)
 			field.Children(func() {
-				in := ui.TextInput(c, draft).Label(o.Placeholder).Placeholder(o.Placeholder).Grow(1).MinWidth(0)
+				in := ui.TextInputBase(c, draft).Label(o.Placeholder).Placeholder(o.Placeholder).Grow(1).MinWidth(0)
 				in.OnTextKey(func(k ui.TextKey) bool {
 					if k.Key != ui.KeyEnter || strings.TrimSpace(k.Text()) == "" {
 						return false

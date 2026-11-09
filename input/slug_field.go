@@ -35,7 +35,7 @@ func SlugField(c *ui.Context, title string, slug *string, locked *bool, o SlugFi
 		*lastTitle = title
 		row := ui.Row(c).FillWidth().AlignItems(ui.Center).Radius(t.Radius).Background(t.Background).Border(1, t.Border)
 		row.Children(func() {
-			in := ui.TextInput(c, slug).Grow(1).Placeholder(o.Label).Padding(t.Space(2), t.Space(3))
+			in := ui.TextInputBase(c, slug).Grow(1).Placeholder(o.Label).Padding(t.Space(2), t.Space(3))
 			if changed(root, in) {
 				*slug = slugify(*slug)
 				*locked = true

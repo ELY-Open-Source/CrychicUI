@@ -29,7 +29,7 @@ func Converter(c *ui.Context, amount *string, rate float64, from, to string, o C
 	}
 	root.Children(func() {
 		field().Children(func() {
-			in := ui.TextInput(c, amount).Label(from).Grow(1).MinWidth(0)
+			in := ui.TextInputBase(c, amount).Label(from).Grow(1).MinWidth(0)
 			if in.Changed() {
 				root.SetChanged()
 				sound.Play(sound.Tick)

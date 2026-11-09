@@ -27,7 +27,7 @@ func PasswordField(c *ui.Context, label string, value *string, o PasswordFieldOp
 		ui.Text(c, label).FontWeight(500)
 		row := ui.Row(c).FillWidth().AlignItems(ui.Center).Radius(t.Radius).Background(t.Background).Border(1, t.Border)
 		row.Children(func() {
-			in := ui.TextInput(c, value).Grow(1).Placeholder(o.Placeholder).Padding(t.Space(2), t.Space(3))
+			in := ui.TextInputBase(c, value).Grow(1).Placeholder(o.Placeholder).Padding(t.Space(2), t.Space(3))
 			if !*visible {
 				in.Password()
 			}

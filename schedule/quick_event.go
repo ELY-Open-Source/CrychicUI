@@ -30,7 +30,7 @@ func QuickEvent(c *ui.Context, title *string, created *bool, o QuickEventOptions
 			Radius(t.Radius).Border(1, t.Border)
 		field.Children(func() {
 			glyph(c, "calendar-plus", 16).TextColor(t.TextMuted)
-			in := ui.TextInput(c, title).Label(o.Placeholder).Placeholder(o.Placeholder).Grow(1).MinWidth(0)
+			in := ui.TextInputBase(c, title).Label(o.Placeholder).Placeholder(o.Placeholder).Grow(1).MinWidth(0)
 			in.OnTextKey(func(k ui.TextKey) bool {
 				if k.Key != ui.KeyEnter || strings.TrimSpace(k.Text()) == "" {
 					return false

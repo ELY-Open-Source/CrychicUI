@@ -81,7 +81,7 @@ func Spreadsheet(c *ui.Context, label string, cells [][]string, at *[2]int) ui.E
 					box.Background(box.AnimateColor("bg", t.Background.Mix(t.Accent, 0.14*unit(on)), ui.Snappy))
 					box.Children(func() {
 						if on && *editing {
-							in := ui.TextInput(c, draft).Label(fmt.Sprintf("%s%d", letters(col), r+1)).FillWidth().Bind(field)
+							in := ui.TextInputBase(c, draft).Label(fmt.Sprintf("%s%d", letters(col), r+1)).FillWidth().Bind(field)
 							switch {
 							case in.Submitted():
 								cells[r][col], *editing = *draft, false

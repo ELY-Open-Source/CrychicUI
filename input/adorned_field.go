@@ -26,7 +26,7 @@ func AdornedField(c *ui.Context, label string, value *string, prefix, suffix fun
 			if prefix != nil {
 				ui.Row(c).Children(prefix)
 			}
-			in := ui.TextInput(c, value).Grow(1).Placeholder(o.Placeholder).Padding(t.Space(2), 0)
+			in := ui.TextInputBase(c, value).Grow(1).Placeholder(o.Placeholder).Padding(t.Space(2), 0)
 			changed(root, in)
 			if suffix != nil {
 				ui.Row(c).Children(suffix)

@@ -41,7 +41,7 @@ func Coupon(c *ui.Context, code *string, codes []string, applied *string, o Coup
 		// A brief push sprung back by Bouncy makes the shake.
 		field.Translate(field.AnimateTo("shake", t.Space(3)*unit(kick), ui.Bouncy), 0).Children(func() {
 			ui.Icon(c, icon.Must("ticket-percent")).Size(16, 16).Shrink(0).TextColor(t.TextMuted)
-			in = ui.TextInput(c, code).Label(o.Placeholder).Placeholder(o.Placeholder).Grow(1)
+			in = ui.TextInputBase(c, code).Label(o.Placeholder).Placeholder(o.Placeholder).Grow(1)
 			apply = kit.Press(ui.ButtonBase(c).Label(o.Apply).Padding(t.Space(1.25), t.Space(3)).Radius(t.Radius)).Disabled(strings.TrimSpace(*code) == "")
 			apply.Background(apply.AnimateColor("bg", t.Accent.Mix(t.AccentHover, unit(apply.Hovered())), ui.Snappy)).TextColor(t.AccentText).
 				Children(func() { ui.Text(c, o.Apply).Bold().Shrink(0) })

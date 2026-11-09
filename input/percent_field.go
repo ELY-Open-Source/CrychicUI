@@ -22,7 +22,7 @@ func PercentField(c *ui.Context, label string, value *float64) ui.Element {
 		ui.Text(c, label).FontWeight(500)
 		row := ui.Row(c).FillWidth().AlignItems(ui.Center).Radius(t.Radius).Background(t.Background).Border(1, t.Border)
 		row.Children(func() {
-			in := ui.TextInput(c, text).Grow(1).Label(label).Padding(t.Space(2), 0, t.Space(2), t.Space(3))
+			in := ui.TextInputBase(c, text).Grow(1).Label(label).Padding(t.Space(2), 0, t.Space(2), t.Space(3))
 			in.OnTextKey(func(k ui.TextKey) bool {
 				if k.Key == ui.KeyUp {
 					*step = 1

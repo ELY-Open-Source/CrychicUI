@@ -30,7 +30,7 @@ func Composer(c *ui.Context, draft *string, onSend func(text string), o Composer
 	blank := strings.TrimSpace(*draft) == ""
 	root.Children(func() {
 		attach = round(c, o.Attach, "paperclip")
-		in := ui.TextArea(c, draft).Grow(1).Lines(1, 6).Placeholder(o.Placeholder).Label(o.Placeholder).OnTextKey(func(k ui.TextKey) bool {
+		in := ui.TextAreaBase(c, draft).Grow(1).Lines(1, 6).Padding(t.Space(1.5), 0).Placeholder(o.Placeholder).Label(o.Placeholder).OnTextKey(func(k ui.TextKey) bool {
 			if k.Key != ui.KeyEnter || k.Mods != 0 {
 				return false
 			}

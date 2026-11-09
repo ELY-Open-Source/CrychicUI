@@ -27,7 +27,7 @@ func SearchInput(c *ui.Context, value *string, o SearchInputOptions) ui.Element 
 	cleared := ui.Local(root, "cleared", func() bool { return false })
 	return root.Children(func() {
 		ui.Icon(c, icon.Must("search")).Size(16, 16).TextColor(t.TextMuted)
-		in := ui.TextInput(c, value).Grow(1).Placeholder(o.Placeholder).Padding(t.Space(2), 0)
+		in := ui.TextInputBase(c, value).Grow(1).Placeholder(o.Placeholder).Padding(t.Space(2), 0)
 		in.OnTextKey(func(k ui.TextKey) bool {
 			if k.Key != ui.KeyEscape || k.Text() == "" {
 				return false
