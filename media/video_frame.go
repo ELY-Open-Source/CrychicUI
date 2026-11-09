@@ -32,7 +32,7 @@ func VideoFrame(c *ui.Context, label string, poster *ui.Bitmap, pos *time.Durati
 		ink = t.Text
 	}
 	return root.Children(func() {
-		ui.Grid(c).Columns(1).FillWidth().AspectRatio(16.0 / 9).Radius(t.Radius).Clip().Background(kit.Shade(0.9)).
+		ui.Grid(c).Columns(1).RowTracks(ui.Fr(1)).FillWidth().AspectRatio(16.0 / 9).Radius(t.Radius).Clip().Background(kit.Shade(0.9)).
 			Children(func() {
 				shot := ui.Image(c, poster).ColumnStart(1).RowStart(1).Fill().Fit(ui.Cover)
 				shot.AnimatePose(ui.Pose{Scale: 1 + 0.03*unit(*playing)}, ui.Smooth)

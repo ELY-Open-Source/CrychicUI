@@ -10,7 +10,7 @@ MyGo 原生 UI 的 Go 组件库：1500 个组件，分 38 类，每类一个包�
 go get github.com/ELY-Open-Source/CrychicUI
 ```
 
-要求 Go 1.27.1 与 MyGo v0.5.5。
+要求 Go 1.27.3 与 MyGo v0.8.3。
 
 ## 使用
 
@@ -94,7 +94,7 @@ go run ./cmd/gallery
 ## 检查
 
 ```sh
-go vet ./... && go tool mygo vet ./... && go test ./...
+go vet ./... && go tool mygo vet . && go test ./...
 GOOS=js GOARCH=wasm go vet ./...
 cd web && npm install && npm test   # 构建 web/dist，Playwright 本地跑
 ```

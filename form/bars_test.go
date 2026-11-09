@@ -25,7 +25,9 @@ func TestActionBar(t *testing.T) {
 	}, 400, 300)
 	settles(t, tt, "ActionBar hidden")
 	find(t, tt, "content")
-	click(t, tt, "Save")
+	if err := tt.Click("Save"); err == nil {
+		t.Fatal("hidden bar's Save took a click")
+	}
 	if saved != 0 {
 		t.Fatal("hidden bar saved")
 	}
@@ -64,7 +66,9 @@ func TestDirtyBar(t *testing.T) {
 	dirty = false
 	tt.Frame()
 	settles(t, tt, "DirtyBar hidden")
-	click(t, tt, "Save")
+	if err := tt.Click("Save"); err == nil {
+		t.Fatal("hidden bar's Save took a click")
+	}
 	if discarded != 1 || saved != 1 {
 		t.Errorf("discarded %d, saved %d", discarded, saved)
 	}

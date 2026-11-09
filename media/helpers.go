@@ -149,7 +149,7 @@ func resize(k Crop, i int, dx, dy, least float64) Crop {
 // look draws an image in filter f.
 func look(c *ui.Context, image *ui.Bitmap, f Filter) ui.Element {
 	t := c.Theme()
-	return ui.Grid(c).Columns(1).Fill().Children(func() {
+	return ui.Grid(c).Columns(1).RowTracks(ui.Fr(1)).Fill().Children(func() {
 		img := ui.Image(c, image).ColumnStart(1).RowStart(1).Fill().Fit(ui.Cover)
 		var tint ui.Color
 		switch f {

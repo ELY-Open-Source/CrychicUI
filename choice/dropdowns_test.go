@@ -83,6 +83,7 @@ func TestPopupFollowsTriggerWidth(t *testing.T) {
 	tt2.Advance(time.Second)
 	w = 450
 	tt2.Frame()
+	tt2.Advance(time.Second) // rows ease to the new width
 	if r := find(t, tt2, "Rust"); r.W < 430 {
 		t.Errorf("SearchDropdown row %v after widening to 450", r)
 	}

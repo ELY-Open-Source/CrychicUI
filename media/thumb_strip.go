@@ -37,7 +37,7 @@ func ThumbStrip(c *ui.Context, label string, images []*ui.Bitmap, at *int, o Thu
 	_, _, prev, next := ends(c)
 	fade := ui.ElementTransition{Enter: &ui.Motion{}, Exit: &ui.Motion{}}
 	return root.Children(func() {
-		main := ui.Grid(c).Columns(1).FillWidth().Height(o.Height).Radius(t.Radius).Clip().Background(t.Surface)
+		main := ui.Grid(c).Columns(1).RowTracks(ui.Fr(1)).FillWidth().Height(o.Height).Radius(t.Radius).Clip().Background(t.Surface)
 		strip := ui.Row(c).FillWidth().Gap(t.Space(2)).FocusGroup(ui.Horizontal)
 		thumbs := make([]ui.Element, len(images))
 		strip.Children(func() {

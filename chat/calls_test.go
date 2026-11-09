@@ -163,7 +163,8 @@ func TestMarkdownMessage(t *testing.T) {
 	}), 500, 300)
 	settles(t, linked, "linked")
 	again := baseline()
-	click(t, linked, "Read docs")
+	r := find(t, linked, "Read docs") // the message layer hits first
+	linked.ClickAt(r.X+r.W/2, r.Y+r.H/2)
 	if got := linked.OpenedURLs(); len(got) != 1 || got[0] != "https://example.com/docs" {
 		t.Errorf("opened %v", got)
 	}
@@ -179,7 +180,8 @@ func TestMarkdownMessage(t *testing.T) {
 	}, 400, 300)
 	scrolled.Advance(2 * time.Second)
 	third := baseline()
-	click(t, scrolled, "Jump to target")
+	r = find(t, scrolled, "Jump to target")
+	scrolled.ClickAt(r.X+r.W/2, r.Y+r.H/2)
 	scrolled.Advance(time.Second)
 	if st.Y <= 0 {
 		t.Errorf("anchor did not scroll: Y %v of %v", st.Y, st.MaxY)

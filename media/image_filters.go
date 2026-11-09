@@ -54,7 +54,7 @@ func ImageFilters(c *ui.Context, label string, image *ui.Bitmap, filter *Filter,
 	_, _, prev, next := ends(c)
 	fade := ui.ElementTransition{Enter: &ui.Motion{}, Exit: &ui.Motion{}}
 	return root.Children(func() {
-		main := ui.Grid(c).Columns(1).FillWidth().Height(o.Height).Radius(t.Radius).Clip()
+		main := ui.Grid(c).Columns(1).RowTracks(ui.Fr(1)).FillWidth().Height(o.Height).Radius(t.Radius).Clip()
 		thumbs := make([]ui.Element, filterCount)
 		strip := ui.Row(c).FillWidth().Gap(t.Space(2)).FocusGroup(ui.Horizontal).Children(func() {
 			for f := range filterCount {

@@ -24,7 +24,7 @@ func ImageView(c *ui.Context, label string, image *ui.Bitmap, o ImageViewOptions
 	}
 	size("ImageView", label, &o.Ratio, 4.0/3)
 	t := c.Theme()
-	root := ui.Grid(c).Columns(1).FillWidth().AspectRatio(o.Ratio).Radius(t.Radius).Clip().Background(t.Surface).
+	root := ui.Grid(c).Columns(1).RowTracks(ui.Fr(1)).FillWidth().AspectRatio(o.Ratio).Radius(t.Radius).Clip().Background(t.Surface).
 		Role(ui.RoleImage).Label(label)
 	return root.Children(func() {
 		if image == nil {

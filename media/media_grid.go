@@ -70,7 +70,7 @@ func MediaGrid(c *ui.Context, label string, items []MediaItem, picked *int, o Me
 					tile.Checked(i == shown).Border(t.Space(0.5), tile.AnimateColor("ring", ring, ui.Snappy))
 					kit.Arrive(tile, ui.Pose{Fade: 1, Y: t.Space(2)}, time.Duration(i)*40*time.Millisecond)
 					tile.Children(func() {
-						ui.Grid(c).Columns(1).Fill().Children(func() {
+						ui.Grid(c).Columns(1).RowTracks(ui.Fr(1)).Fill().Children(func() {
 							pose := ui.Pose{}
 							if tile.Hovered() {
 								pose.Scale = 1.06

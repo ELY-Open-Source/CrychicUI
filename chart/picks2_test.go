@@ -77,7 +77,8 @@ func TestMarkPicks(t *testing.T) {
 			}
 			settles(t, tt, "chart")
 			before := baseline()
-			click(t, tt, k.tip)
+			r := find(t, tt, k.tip) // a dot can cover its bar
+			tt.ClickAt(r.X+r.W/2, r.Y+r.H/2)
 			tt.Frame()
 			if at != k.want || changed != 1 {
 				t.Errorf("at %d, want %d; changed %d", at, k.want, changed)

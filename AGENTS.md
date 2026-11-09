@@ -8,8 +8,8 @@ Progress truth: `TASKS.md`. Requirements: `PRD.md` and `docs/prd/catalog-*.md` (
 
 | Item | Value |
 | --- | --- |
-| Go | 1.27.1 |
-| MyGo | `github.com/egoist/mygo v0.5.5`, pinned; CLI pinned as `go tool mygo` |
+| Go | 1.27.3 (MyGo's minimum) |
+| MyGo | `github.com/egoist/mygo v0.8.3`, pinned; CLI pinned as `go tool mygo` |
 | Sound | `github.com/egoist/mygo/audio`, cues, notes and drums synthesized in `sound`; nothing else opens audio |
 | Icons | Lucide (ISC), `icon/svg` |
 | Web | `cmd/gallery` built for `js/wasm`, shipped in 20 MiB parts (Workers cap files at 25 MiB); MyGo's browser backend draws it with WebGL 2 |
@@ -63,10 +63,12 @@ health, home, marketing, content, desktop, geo · 6 gallery · 7 cmd/gallery
 - Copy shown by a component comes from the caller; built-in defaults are English and overridable.
 - Fail fast: panic on programmer errors. Never swallow an error.
 - Composites log state changes with `kit.Log`. Never log typed text or secrets: log counts.
-- No element or parts stored across builds; no goroutine touches elements. `go tool mygo vet ./...` passes.
+- No element or parts stored across builds; no goroutine touches elements. `go tool mygo vet .` passes; it runs `go vet ./...` itself.
 - A component deciding from laid-out sizes (`LayoutBounds`, a `ScrollState`'s `Max`) calls `kit.Settle` with the
   values it used; paint rebuilds when layout disagrees. Arrivals on first build use `kit.Arrive`; `Enter` only
   runs inside a shown parent.
+- A one-column grid stacking layers in a set height takes `RowTracks(ui.Fr(1))`: an auto row grows to its tallest
+  child, and `Fill` children fill the row, not the grid.
 - `Clip` clips children only: `Draw` or `DrawOver` paint that can pass the box goes through `kit.Inside`.
   `Painter.Line` draws only horizontal and vertical lines; stroke a `ui.Path` for others.
 - Files under 500 lines (lock files exempt). Comments one line, ten words at most, only when needed. No dead
@@ -90,10 +92,12 @@ Filler such as "A", "Item", "Notes" fails review.
 
 ## Tests
 
-- `go vet ./... && go tool mygo vet ./... && go test ./...` and `GOOS=js GOARCH=wasm go vet ./...` before done.
+- `go vet ./... && go tool mygo vet . && go test ./...` and `GOOS=js GOARCH=wasm go vet ./...` before done.
 - Behavior tests drive `ui.NewTester` and assert values; interactive tests assert the cue in `sound.Recent()`.
   Test binaries start muted, so tests make no sound.
   Advance the tester's clock; never sleep.
+- `tt.Click(label)` refuses a label whose center reaches another control or no visible area: click a covered
+  target by position (`find`, `tt.ClickAt`); assert the error for a hidden one.
 - `gallery` `TestCatalogComplete` holds the catalog at 1500 entries, IDs 1–1500, one entry per exported component;
   `TestEveryEntry` opens every entry in light and dark and checks it settles.
 - Web: `npm install && npm test` in `web/` builds `web/dist` and runs Playwright on a local server. It needs Node 22+

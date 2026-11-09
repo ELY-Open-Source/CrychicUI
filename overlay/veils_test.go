@@ -29,7 +29,8 @@ func TestBusyVeil(t *testing.T) {
 	if !tt.HasText("Saving") || !tt.FramePending() {
 		t.Fatalf("busy: no veil fading in: %q", tt.Texts())
 	}
-	click(t, tt, "Edit")
+	r := find(t, tt, "Edit") // the veil takes it
+	tt.ClickAt(r.X+r.W/2, r.Y+r.H/2)
 	tt.Key(0, ui.KeyTab)
 	tt.Key(0, ui.KeyEnter)
 	tt.Frame()
