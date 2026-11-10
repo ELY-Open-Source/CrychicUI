@@ -76,7 +76,7 @@ func TestBranchPicker(t *testing.T) {
 	if tt.HasText("main") || !tt.HasText("feature/review") {
 		t.Errorf("texts %q", tt.Texts())
 	}
-	tt.Key(ui.Ctrl, ui.KeyA)
+	tt.Key(ui.Cmd, ui.KeyA)
 	tt.Key(0, ui.KeyBackspace)
 	tt.Frame()
 	was := changed

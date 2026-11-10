@@ -97,7 +97,7 @@ func TestConverter(t *testing.T) {
 	settles(t, tt)
 	before := baseline()
 	click(t, tt, "USD")
-	tt.Key(ui.Ctrl, ui.KeyA)
+	tt.Key(ui.Cmd, ui.KeyA)
 	tt.Type("12")
 	tt.Frame()
 	if !tt.HasText("EUR 24.00") {

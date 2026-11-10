@@ -14,7 +14,7 @@ func TestRegexTesterClearsMatchedText(t *testing.T) {
 	tt := ui.NewTester(padded(func(c *ui.Context) { RegexTester(c, "Rx", &pattern, &text, RegexTesterOptions{}) }), 500, 500)
 	settles(t, tt, "regex")
 	click(t, tt, "Text")
-	tt.Key(ui.Ctrl, ui.KeyA)
+	tt.Key(ui.Cmd, ui.KeyA)
 	tt.Key(0, ui.KeyBackspace)
 	tt.Frame()
 	if text != "" || !tt.HasText("0 matches") {

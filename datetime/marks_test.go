@@ -230,7 +230,9 @@ func TestSunArcSun(t *testing.T) {
 	if tally(tt, ui.Rect{X: cx - rad - 2, Y: cy - 2, W: 4, H: 4}, th.TextMuted) < 8 {
 		t.Error("before sunrise the sun is not resting at the left")
 	}
-	panics(t, "sunset first", func() { render(func(c *ui.Context) { SunArc(c, time.Now(), time.Now()) }) })
+	noon := tt.Now()
+	panics(t, "sunset at sunrise", func() { render(func(c *ui.Context) { SunArc(c, noon, noon) }) })
+	panics(t, "sunset first", func() { render(func(c *ui.Context) { SunArc(c, noon, noon.Add(-time.Hour)) }) })
 }
 
 func TestDayProgress(t *testing.T) {

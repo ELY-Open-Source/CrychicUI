@@ -74,7 +74,7 @@ func TestCodeDemosLog(t *testing.T) {
 			if err := tt.Click("Unix seconds"); err != nil {
 				return err
 			}
-			tt.Key(ui.Ctrl, ui.KeyA)
+			tt.Key(ui.Cmd, ui.KeyA)
 			tt.Type("1704067200")
 			return nil
 		}, "epoch 1704067200"},

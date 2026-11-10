@@ -26,11 +26,14 @@ func TestHighlight(t *testing.T) {
 		th = *c.Theme()
 		Highlight(c, "mm")
 	}, 300, 200)
-	if !near(tt.Image(), 1, 17, th.Background) {
+	// Under the letters, in the marker's band.
+	r := find(t, tt, "mm")
+	x, y := int(r.X)+1, int(r.Y+r.H)-2
+	if !near(tt.Image(), x, y, th.Background) {
 		t.Error("marker showed before its sweep")
 	}
 	settles(t, tt, "Highlight sweep")
-	if near(tt.Image(), 1, 17, th.Background) {
+	if near(tt.Image(), x, y, th.Background) {
 		t.Error("marker never swept in")
 	}
 }

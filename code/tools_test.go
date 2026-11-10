@@ -31,7 +31,7 @@ func TestRegexTester(t *testing.T) {
 	}
 	cues(t, before, sound.Tick)
 	click(t, tt, "Pattern")
-	tt.Key(ui.Ctrl, ui.KeyA)
+	tt.Key(ui.Cmd, ui.KeyA)
 	tt.Type("([")
 	tt.Frame()
 	if !tt.HasText("bad pattern: error parsing regexp: missing closing ]: `[`") {
@@ -222,7 +222,7 @@ func TestUnixTime(t *testing.T) {
 
 	before := baseline()
 	click(t, tt, "Unix seconds")
-	tt.Key(ui.Ctrl, ui.KeyA)
+	tt.Key(ui.Cmd, ui.KeyA)
 	tt.Type("1704067200")
 	tt.Frame()
 	if epoch != 1704067200 || changed != 1 {
@@ -232,14 +232,14 @@ func TestUnixTime(t *testing.T) {
 	epoch = 1735689600
 	tt.Frame()
 	click(t, tt, "Unix seconds")
-	tt.Key(ui.Ctrl, ui.KeyA)
+	tt.Key(ui.Cmd, ui.KeyA)
 	tt.Type("1700000000")
 	tt.Frame()
 	if epoch != 1700000000 {
 		t.Fatalf("epoch after external update %d", epoch)
 	}
 	click(t, tt, "Unix seconds")
-	tt.Key(ui.Ctrl, ui.KeyA)
+	tt.Key(ui.Cmd, ui.KeyA)
 	tt.Type("x")
 	tt.Frame()
 	if !tt.HasText("not a whole number") {

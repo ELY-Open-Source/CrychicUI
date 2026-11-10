@@ -24,13 +24,13 @@ func TestCoordinatesEdits(t *testing.T) {
 	}
 	tt.Key(0, ui.KeyTab)
 	tt.Frame()
-	tt.Key(ui.Ctrl, ui.KeyA)
+	tt.Key(ui.Cmd, ui.KeyA)
 	tt.Type("95")
 	tt.Frame()
 	if at != studio || !exact(tt, "Enter a number from -85 to 85") {
 		t.Errorf("an out-of-range latitude changed the point to %v: %q", at, tt.Texts())
 	}
-	tt.Key(ui.Ctrl, ui.KeyA)
+	tt.Key(ui.Cmd, ui.KeyA)
 	tt.Type("-33.8688")
 	tt.Frame()
 	settles(t, tt)
@@ -276,7 +276,7 @@ func TestAddressLookupSuggests(t *testing.T) {
 	}
 	cues(t, before, sound.Select)
 	click(t, tt, "Start typing an address")
-	tt.Key(ui.Ctrl, ui.KeyA)
+	tt.Key(ui.Cmd, ui.KeyA)
 	tt.Type("zzz")
 	tt.Frame()
 	settles(t, tt)

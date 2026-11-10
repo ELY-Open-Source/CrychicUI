@@ -129,7 +129,7 @@ func TestRenameRowRejectsEmpty(t *testing.T) {
 	}
 	tt.ClickAt(r.X+5, r.Y+5)
 	tt.ClickAt(r.X+5, r.Y+5)
-	tt.Key(ui.Ctrl, ui.KeyA)
+	tt.Key(ui.Cmd, ui.KeyA)
 	tt.Key(0, ui.KeyBackspace)
 	tt.Key(0, ui.KeyTab)
 	tt.Frame()
@@ -150,7 +150,7 @@ func TestRenameRowExternalUpdate(t *testing.T) {
 	}
 	tt.ClickAt(r.X+5, r.Y+5)
 	tt.ClickAt(r.X+5, r.Y+5)
-	tt.Key(ui.Ctrl, ui.KeyA)
+	tt.Key(ui.Cmd, ui.KeyA)
 	tt.Key(0, ui.KeyBackspace)
 	tt.Key(0, ui.KeyTab)
 	tt.Frame()

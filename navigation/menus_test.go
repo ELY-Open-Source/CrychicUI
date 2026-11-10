@@ -57,8 +57,9 @@ func TestTOC(t *testing.T) {
 			break
 		}
 	}
-	if lit < int(title.Y+title.H)+90 {
-		t.Errorf("at the end the marker is at %d, under the title at %v", lit, title.Y+title.H)
+	last, ok := tt.AccessByRole(ui.RoleButton, heads[len(heads)-1])
+	if b := last.Bounds; !ok || lit < int(b.Y) || lit >= int(b.Y+b.H) {
+		t.Errorf("at the end the marker is at %d, the last heading at %v to %v", lit, b.Y, b.Y+b.H)
 	}
 }
 

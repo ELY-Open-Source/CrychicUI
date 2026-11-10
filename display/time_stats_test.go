@@ -132,8 +132,14 @@ func TestLiveClock(t *testing.T) {
 }
 
 func TestCountdownTo(t *testing.T) {
-	target := time.Now().Add(65 * time.Second)
-	tt := ui.NewTester(func(c *ui.Context) { CountdownTo(c, target) }, 400, 200)
+	var target time.Time
+	tt := ui.NewTester(func(c *ui.Context) {
+		if !target.IsZero() {
+			CountdownTo(c, target)
+		}
+	}, 400, 200)
+	// The countdown reads the Tester's clock, not the wall's.
+	target = tt.Now().Add(65 * time.Second)
 	tt.Frame()
 	if !tt.HasText("0d 00h 01m 05s") {
 		t.Fatalf("texts %q", tt.Texts())
