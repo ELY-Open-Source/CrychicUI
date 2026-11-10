@@ -82,6 +82,9 @@ health, home, marketing, content, desktop, geo · 6 gallery · 7 cmd/gallery
   an attribute, a later declaration an earlier one, em reads the element's final font size, and `var()` resolves
   in one place (`plain`, and `color` for colors). A value outside the subset (`calc()`, `inherit`, other units and
   color spaces) drops as CSS drops an invalid one and leaves the earlier value.
+- `diagram.Mermaid` keeps its scene in `ui.Local` and renders again only when the source, the palette, the font or
+  the font size changes. A source Pele rejects shows `feedback.Alert` with Pele's message; nothing panics on a
+  diagram's text. Its log holds byte counts, sizes and Pele's code, line and column, never the source.
 - `Clip` clips children only: `Draw` or `DrawOver` paint that can pass the box goes through `kit.Inside`.
   `Painter.Line` draws only horizontal and vertical lines; stroke a `ui.Path` for others.
 - Files under 500 lines (lock files exempt). Comments one line, ten words at most, only when needed. No dead
