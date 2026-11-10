@@ -93,7 +93,7 @@ func TestMermaidDrawsWherePeleDraws(t *testing.T) {
 	img := tt.Image()
 	for id, fill := range map[string]ui.Color{"Cart": theme.Surface, "Pay": theme.Surface, "Ship": ui.Hex("#00aa77")} {
 		spot := nodes[id]
-		if got := at(img, spot[0]-26, spot[1]-12); got != fill {
+		if got := at(img, spot[0], spot[1]-14); got != fill {
 			t.Errorf("node %s draws %+v, want %+v", id, got, fill)
 		}
 		if ink(img, spot[0]-12, spot[1]-6, 24, 12) == 0 {
@@ -140,7 +140,7 @@ func TestMermaidFitsItsWidth(t *testing.T) {
 		t.Fatalf("picture %+v, want 260 x %v of a scene %v wide", box, want, w)
 	}
 	k := 260 / w
-	if got := at(tt.Image(), (nodes["Ship"][0]-26)*k, (nodes["Ship"][1]-12)*k); got != ui.Hex("#00aa77") {
+	if got := at(tt.Image(), nodes["Ship"][0]*k, (nodes["Ship"][1]-14)*k); got != ui.Hex("#00aa77") {
 		t.Errorf("shrunk node draws %+v", got)
 	}
 }
@@ -162,7 +162,7 @@ func TestMermaidFollowsThemeAndTextScale(t *testing.T) {
 		t.Fatalf("dark theme: surface %+v, drew %d", theme.Surface, count("Mermaid drew"))
 	}
 	nodes, _, _ := spots(t, &theme)
-	if got := at(tt.Image(), nodes["Cart"][0]-26, nodes["Cart"][1]-12); got != theme.Surface {
+	if got := at(tt.Image(), nodes["Cart"][0], nodes["Cart"][1]-14); got != theme.Surface {
 		t.Errorf("Cart draws %+v in the dark, want %+v", got, theme.Surface)
 	}
 	tt.SetPreferences(ui.Preferences{TextScale: 1.5})

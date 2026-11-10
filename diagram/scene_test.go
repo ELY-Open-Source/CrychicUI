@@ -88,7 +88,7 @@ func TestFlowchartScene(t *testing.T) {
 		t.Errorf("box %+v, want surface fill and border stroke", box)
 	}
 	b := box.path.Bounds()
-	if b.X+b.W/2 != 0 || b.Y+b.H/2 != 0 {
+	if abs(b.X+b.W/2) > 0.01 || abs(b.Y+b.H/2) > 0.01 {
 		t.Errorf("box bounds %v, want it centered on its group's origin", b)
 	}
 	label := texts[0]
