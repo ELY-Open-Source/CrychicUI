@@ -11,10 +11,10 @@ const clicks = [
   ['/c/agent/prompt-box', 44, 92], ['/c/code/code-block', 460, 44], ['/c/files/file-list', 44, 76],
   ['/c/shop/product-card', 44, 364], ['/c/finance/balance', 364, 44], ['/c/dashboard/revenue', 188, 76],
   ['/c/schedule/availability', 92, 60], ['/c/project/board', 220, 172], ['/c/mail/inbox', 44, 76],
-  ['/c/social/post', 44, 412], ['/c/account/sign-in', 316, 236], ['/c/devtools/log-view', 460, 44],
+  ['/c/social/post', 44, 412], ['/c/account/sign-in', 220, 348], ['/c/devtools/log-view', 460, 44],
   ['/c/game/dice', 172, 156], ['/c/learn/flashcard', 28, 28], ['/c/health/water', 44, 108],
   ['/c/home/light', 364, 60], ['/c/marketing/cta', 236, 140], ['/c/content/doc-toc', 28, 76],
-  ['/c/desktop/title-tabs', 348, 44], ['/c/geo/map-canvas', 476, 44],
+  ['/c/desktop/title-tabs', 348, 44], ['/c/geo/map-canvas', 476, 44], ['/c/diagram/mermaid', 148, 32],
 ]
 
 const errors = []

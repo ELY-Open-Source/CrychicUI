@@ -179,8 +179,8 @@ func TestCategories(t *testing.T) {
 		}
 		seen[k.Key] = true
 	}
-	if len(Categories) != 38 {
-		t.Errorf("categories = %d, want 38", len(Categories))
+	if len(Categories) != 39 {
+		t.Errorf("categories = %d, want 39", len(Categories))
 	}
 }
 

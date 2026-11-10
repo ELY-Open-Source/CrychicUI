@@ -12,8 +12,8 @@ import (
 
 func TestCatalogComplete(t *testing.T) {
 	es := Entries()
-	if len(es) != 1500 {
-		t.Errorf("entries = %d, want 1500", len(es))
+	if len(es) != 1501 {
+		t.Errorf("entries = %d, want 1501", len(es))
 	}
 	for i, e := range es {
 		if e.ID != i+1 {
@@ -67,8 +67,8 @@ func TestCatalogComplete(t *testing.T) {
 			t.Errorf("entry %s names no exported component", name)
 		}
 	}
-	if len(built) != 1500 {
-		t.Errorf("exported components = %d, want 1500", len(built))
+	if len(built) != 1501 {
+		t.Errorf("exported components = %d, want 1501", len(built))
 	}
 }
 

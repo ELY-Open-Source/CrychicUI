@@ -2,7 +2,7 @@
 
 [![Listed on Awesome MyGo](https://awesomemygo.dev/badge.svg)](https://awesomemygo.dev/ui)
 
-MyGo 原生 UI 的 Go 组件库：1500 个组件，分 38 类，每类一个包。沿用 MyGo 自己的外观：锌灰底色，跟随系统的强调色，6 DIP 圆角，4 DIP 间距单位，系统字体。每个组件都会动，每个可交互组件都有合成音效。
+MyGo 原生 UI 的 Go 组件库：1501 个组件，分 39 类，每类一个包。沿用 MyGo 自己的外观：锌灰底色，跟随系统的强调色，6 DIP 圆角，4 DIP 间距单位，系统字体。每个组件都会动，每个可交互组件都有合成音效。
 
 界面由 MyGo 在 GPU 上自绘，不用 HTML、JavaScript 或 WebView。
 
@@ -73,8 +73,19 @@ func view(c *ui.Context) {
 | Content | `content` | 25 |
 | Desktop | `desktop` | 30 |
 | Geo | `geo` | 15 |
+| Diagram | `diagram` | 1 |
 
 `sound`、`icon`、`kit` 是组件共用的底层包。
+
+## Mermaid 图
+
+`diagram.Mermaid` 把 Mermaid 源码画成主题色的图：流程图、时序图、饼图等 33 种。图按自身尺寸显示，容器窄时等比缩小；源码有错时显示 Pele 的报错和行列号。
+
+```go
+diagram.Mermaid(c, "flowchart LR\n  Wedge[Wedge clay] --> Throw[Throw]", diagram.MermaidOptions{})
+```
+
+引擎是 [pele-go](https://github.com/Broderick-Westrope/pele-go)（[Pele](https://github.com/obsidianmd/pele) 的 Go 移植，MIT）。只有导入 `diagram` 的程序才链接它，体积增加约 6 MB。链接、远程图片和数学公式不绘制。
 
 ## 音效
 

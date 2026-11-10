@@ -1,6 +1,6 @@
 # AGENTS.md
 
-CrychicUI: 1500 components for MyGo native UI, in MyGo's own look, with motion and sound cues. Go module
+CrychicUI: 1501 components for MyGo native UI, in MyGo's own look, with motion and sound cues. Go module
 `github.com/ELY-Open-Source/CrychicUI`.
 Progress truth: `TASKS.md`. Requirements: `PRD.md` and `docs/prd/catalog-*.md` (both local, not committed).
 
@@ -114,7 +114,7 @@ Filler such as "A", "Item", "Notes" fails review.
   Advance the tester's clock; never sleep.
 - `tt.Click(label)` refuses a label whose center reaches another control or no visible area: click a covered
   target by position (`find`, `tt.ClickAt`); assert the error for a hidden one.
-- `gallery` `TestCatalogComplete` holds the catalog at 1500 entries, IDs 1–1500, one entry per exported component;
+- `gallery` `TestCatalogComplete` holds the catalog at 1501 entries, IDs 1–1501, one entry per exported component;
   `TestEveryEntry` opens every entry in light and dark and checks it settles.
 - Web: `npm install && npm test` in `web/` builds `web/dist` and runs Playwright on a local server. It needs Node 22+
   (Wrangler), `python3` on PATH (the test server) and `npx playwright install chromium` once;

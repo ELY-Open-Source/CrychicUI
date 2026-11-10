@@ -68,6 +68,7 @@ var Categories = []Category{
 	{"content", "Content", "book-open"},
 	{"desktop", "Desktop", "monitor"},
 	{"geo", "Geo", "map-pin"},
+	{"diagram", "Diagram", "workflow"},
 }
 
 // Entries lists every registered component in ID order.

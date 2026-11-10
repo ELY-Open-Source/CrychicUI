@@ -46,7 +46,7 @@ test('boots, reports, and logs its budget', async ({ page, request }) => {
     }, { timeout: 30000, intervals: [1000] }).toEqual(expected)
   }
   const stats = await page.evaluate(() => window.__crychic.stats())
-  expect(stats.categories).toBe(38)
+  expect(stats.categories).toBe(39)
   expect(Array.isArray(await page.evaluate(() => window.__crychic.recent()))).toBe(true)
   expect(await page.locator('#mygo canvas').count()).toBeGreaterThan(0)
   const boot = await page.evaluate(() => window.__crychicBoot)
