@@ -12,6 +12,7 @@ Progress truth: `TASKS.md`. Requirements: `PRD.md` and `docs/prd/catalog-*.md` (
 | MyGo | `github.com/egoist/mygo v0.8.3`, pinned; CLI pinned as `go tool mygo` |
 | Sound | `github.com/egoist/mygo/audio`, cues, notes and drums synthesized in `sound`; nothing else opens audio |
 | Icons | Lucide (ISC), `icon/svg` |
+| Diagrams | `github.com/Broderick-Westrope/pele-go v0.2.0` (MIT), pinned: Pele 1.10.0 in Go, Mermaid source to SVG, 33 types; only `diagram` imports it |
 | Web | `cmd/gallery` built for `js/wasm`, shipped in 20 MiB parts (Workers cap files at 25 MiB); MyGo's browser backend draws it with WebGL 2 |
 | Hosting | Cloudflare Workers static assets from `web/dist`; code on GitHub `github.com/ELY-Open-Source/CrychicUI` |
 
@@ -36,7 +37,7 @@ internal/archtest/  import and file rules
 Imports point down only. Same-tier imports are forbidden. `internal/archtest` enforces it.
 
 0 sound, icon · 1 kit · 2 layout, typography, button, display · 3 input, choice, feedback, motion, fx ·
-4 form, datetime, color, navigation, overlay, data, chart, media ·
+4 form, datetime, color, navigation, overlay, data, chart, media, diagram ·
 5 chat, agent, code, files, shop, finance, dashboard, schedule, project, mail, social, account, devtools, game, learn,
 health, home, marketing, content, desktop, geo · 6 gallery · 7 cmd/gallery
 
@@ -71,6 +72,16 @@ health, home, marketing, content, desktop, geo · 6 gallery · 7 cmd/gallery
   child, and `Fill` children fill the row, not the grid.
 - An input inside a field's own frame is `TextInputBase` or `TextAreaBase`: `TextInput` and `TextArea` bring
   their own border and fill.
+- `diagram` walks pele-go's SVG into paths and text once (`parse`), with theme colors for Pele's tokens. An
+  element, attribute, transform or Pele token (`--_*`, `--pele-*`) the walker does not know is an error, never a
+  guess, fallback or not: add it when pele-go moves. `testdata/corpus.json` holds Mermaid's documentation examples
+  for all 33 types.
+- Pele passes a diagram's own `style` values through, and the walker reads them as a CSS user agent of this subset:
+  colors as hex, names, `rgb()`, `hsl()` in degrees, `color-mix(in srgb)` and `var()`; opacity as a number or a
+  percentage; lengths in px, pt, pc, in, cm, mm, q, em and rem; font-size keywords and percentages. A style beats
+  an attribute, a later declaration an earlier one, em reads the element's final font size, and `var()` resolves
+  in one place (`plain`, and `color` for colors). A value outside the subset (`calc()`, `inherit`, other units and
+  color spaces) drops as CSS drops an invalid one and leaves the earlier value.
 - `Clip` clips children only: `Draw` or `DrawOver` paint that can pass the box goes through `kit.Inside`.
   `Painter.Line` draws only horizontal and vertical lines; stroke a `ui.Path` for others.
 - Files under 500 lines (lock files exempt). Comments one line, ten words at most, only when needed. No dead

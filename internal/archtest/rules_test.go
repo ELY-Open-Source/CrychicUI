@@ -19,7 +19,7 @@ func init() {
 	for t, pkgs := range map[int]string{
 		2: "layout typography button display",
 		3: "input choice feedback motion fx",
-		4: "form datetime color navigation overlay data chart media",
+		4: "form datetime color navigation overlay data chart media diagram",
 		5: "chat agent code files shop finance dashboard schedule project mail social account devtools game " +
 			"learn health home marketing content desktop geo",
 	} {
